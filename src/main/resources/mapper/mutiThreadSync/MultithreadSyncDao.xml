@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.basic.happytest.modules.multithreadSync.dao.MultithreadSyncDao">
+    <insert id="add" parameterType="com.basic.happytest.modules.multithreadSync.entity.MultithreadSync" useGeneratedKeys="true">
+        insert into t_multithread_sync(value_gen, description) values(#{valueGen}, #{description})
+    </insert>
+
+    <update id="increaseValue" parameterType="java.lang.Integer">
+        update t_multithread_sync set value_gen = value_gen+1 where id = #{id}
+    </update>
+
+    <select id="selectObjectById" resultType="com.basic.happytest.modules.multithreadSync.entity.MultithreadSync">
+        select * from t_multithread_sync where id = #{id}
+    </select>
+
+    <update id="updateValueById">
+        update t_multithread_sync set value_gen = #{newValue} where id = #{id}
+    </update>
+</mapper>
