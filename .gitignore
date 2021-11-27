@@ -3,7 +3,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-application.yml
+*.yml
 
 ### STS ###
 .apt_generated
