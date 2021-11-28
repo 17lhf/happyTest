@@ -12,9 +12,13 @@ import lombok.Setter;
 public class MultithreadSync {
 
     @TableId(type = IdType.AUTO)
-    Integer id;
-
-    Integer valueGen;
-
-    String description;
+    private Integer id;
+    /**
+     * 进行并发+1的值
+     */
+    private Integer valueGen;
+    /**
+     * 并发操作的描述
+     */
+    private String description;
 }
