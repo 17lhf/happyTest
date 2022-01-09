@@ -6,6 +6,12 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 多线程并发测试实体
+ * @author lhf
+ */
+
+
 @Getter
 @Setter
 @TableName("t_multithread_sync")

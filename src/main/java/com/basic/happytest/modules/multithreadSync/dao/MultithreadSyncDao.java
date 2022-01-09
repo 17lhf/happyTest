@@ -5,6 +5,11 @@ import com.basic.happytest.modules.multithreadSync.entity.MultithreadSync;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
+/**
+ * 多线程并发测试dao层
+ * @author lhf
+ */
+
 @Mapper
 @Repository
 public interface MultithreadSyncDao extends BaseMapper<MultithreadSync> {

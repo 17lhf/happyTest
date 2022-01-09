@@ -2,6 +2,11 @@ package com.basic.happytest.modules.multithreadSync.service;
 
 import com.basic.happytest.modules.multithreadSync.entity.MultithreadSync;
 
+/**
+ * 多线程并发测试服务层
+ * @author lhf
+ */
+
 public interface MultithreadSyncService {
 
     /**

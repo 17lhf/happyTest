@@ -1,4 +1,4 @@
-package com.basic.happytest.threadVariable;
+package com.basic.happytest.modules.threadVariable;
 
 import com.basic.happytest.modules.threadVariable.VolatileTestThread;
 import com.basic.happytest.modules.threadVariable.VolatileTestThread1;
@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * 多线程中的变量运行过程中的值变动问题
+ * @author lhf
+ * 参考阅读：深入理解Thread.sleep()的意义： https://blog.csdn.net/agony_sun/article/details/78031520
+ * 文章地址：https://www.bilibili.com/read/cv14195465
  */
 
 public class ThreadVariableTest {

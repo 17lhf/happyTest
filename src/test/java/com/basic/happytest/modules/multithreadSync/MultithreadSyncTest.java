@@ -1,4 +1,4 @@
-package com.basic.happytest.multithreadSync;
+package com.basic.happytest.modules.multithreadSync;
 
 import com.basic.happytest.modules.multithreadSync.entity.MultithreadSync;
 import com.basic.happytest.modules.multithreadSync.service.MultithreadSyncService;
@@ -7,6 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.concurrent.CountDownLatch;
+
+/**
+ * 多线程并发问题测试（事务&同步）
+ * @author lhf
+ */
+
 
 @SpringBootTest
 public class MultithreadSyncTest {

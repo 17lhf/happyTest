@@ -7,6 +7,11 @@ import com.basic.happytest.modules.multithreadSync.service.MultithreadSyncServic
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 多线程并发测试服务实现层
+ * @author lhf
+ */
+
 @Service
 public class MultithreadSyncServiceImpl extends ServiceImpl<MultithreadSyncDao, MultithreadSync> implements MultithreadSyncService {
     /**
