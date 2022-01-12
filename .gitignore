@@ -3,7 +3,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-*.yml
+# *.yml  #一般情况下该配置文件中会包含数据库账号密码等私密信息，所以需要格外注意是否放到公开的github上
 
 ### STS ###
 .apt_generated
