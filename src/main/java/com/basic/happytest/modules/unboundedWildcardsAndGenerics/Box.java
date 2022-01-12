@@ -24,6 +24,10 @@ public class Box<T> {
         this.list2 = list2;
     }
 
+    /**
+     * 用box的list的值来设置list的值
+     * @param box box对象
+     */
     public void getSet(Box<?> box){
         // box.setList(box.getList()); // 直接这样操作会报错
         helper(box);

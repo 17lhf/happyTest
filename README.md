@@ -1,9 +1,6 @@
 # happyTest
 一些寻常或奇怪的小测试集合
 
-## 注意
-请自行配置application.yml文件
-
 ## 已包含内容有：
 
 ###(1)multithreadSync
@@ -20,3 +17,6 @@ synchronized 和　@Trasational同时使用时，产生的并发问题
 
 ###(5)exploreJVM
 探索jvm中classLoader及双亲委托的内容
+
+###(6)judgeExp
+关于mybatis的dao层传递参数时，xml里的内置类型_parameter的使用的探索

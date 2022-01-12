@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.basic.happytest.modules.judgeExp.dao.JudgeExpDao">
+    <select id="listByNumValue" resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
+        select * from t_judge_experiment
+        where
+        1 = 1
+        <if test="_parameter != null"> <!-- 写成 "num != null" 也行 -->
+            and num_value = #{num}
+        </if>
+    </select>
+
+    <select id="listByStrValue" resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
+        select * from t_judge_experiment
+        where
+        1 = 1
+        <if test="str != null"> <!-- 写成 "_parameter != null" 也行-->
+            and str_value = #{str}
+        </if>
+    </select>
+
+    <select id="listByCond" resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
+        select * from t_judge_experiment
+        where
+        1 = 1
+        <if test="num != null">
+            and num_value = #{num}
+        </if>
+        <if test="str != null">
+            and str_value = #{str}
+        </if>
+    </select>
+
+    <select id="listByNumAndStr" resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
+        select * from t_judge_experiment
+        <where>
+            1=1
+            <if test='_parameter.get("param1") != null'> <!-- 也可以这么写： test='_parameter.get("num") != null' --><!-- 也可以这么写： test='num != null' -->
+                and num_value = #{num}
+            </if>
+            <if test='_parameter.get("param2") != null'><!-- 也可以这么写： test='_parameter.get("str") != null' --><!-- 也可以这么写： test='str != null' -->
+                and str_value = #{str}
+            </if>
+        </where>
+    </select>
+
+    <select id="listByTwoCondClass" resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
+        select * from t_judge_experiment
+        <where>
+            1=1
+            <if test='_parameter.get("param1").num != null'><!-- 也可以这么写：test='_parameter.get("condNum").num != null' --><!-- 也可以这么写： test='condNum.num != null' -->
+                and num_value = #{condNum.num}
+            </if>
+            <if test='_parameter.get("param2").str != null'><!-- 也可以这么写：test='_parameter.get("condStr").str != null' --><!-- 也可以这么写： test='condStr.str != null' -->
+                and str_value = #{condStr.str}
+            </if>
+        </where>
+    </select>
+</mapper>
+
+<!--
+如果只有一个参数，那么_parameter 就代表该参数
+如果有多个参数，那么_parameter.get("param1")可以得到第一个参数(可以是基础类型，也可以是自定义对象)
+_parameter.get("参数名")可以得到对应参数的值
+-->
