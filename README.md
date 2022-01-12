@@ -20,3 +20,6 @@ synchronized 和　@Trasational同时使用时，产生的并发问题
 
 ###(6)judgeExp
 关于mybatis的dao层传递参数时，xml里的内置类型_parameter的使用的探索
+
+###(7)ymlConfig
+关于优雅地读取配置文件中自定义的配置的实例

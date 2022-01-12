@@ -61,6 +61,17 @@
             <artifactId>bcpkix-jdk15on</artifactId><!-- 证书请求啥的都在这个包里 -->
             <version>1.70</version>
         </dependency>
+
+        <!--
+        解决读取配置文件数据时，（参考YmlConfig.java文件）配置类上面会提示：springboot configuration annotation proessor not configured 的问题
+        导入依赖包后会变成提示：Re-run Spring Boot Configuration Annotation Processor to update generated metadata
+        这时候可以不用去管，该提示影响代码执行。只是提醒用户，进行必要的重新编译。再当文件进行了有效的更新时，该提示也会消失。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>
