@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
+<!--
+    注意，如果mybatisplus的版本是1.0.5，只传入基本参数时，直接写num之类来test，会报映射错误的问题，只能用_parameter来取值
+    升到版本3.4.2就不会报错了
+-->
+
+<!--
+    如果只有一个参数，那么_parameter 就代表该参数
+    如果有多个参数，那么_parameter.get("param1")可以得到第一个参数(可以是基础类型，也可以是自定义对象)
+    _parameter.get("dao层对方法定义的参数名")可以得到对应参数的值
+-->
+
 <mapper namespace="com.basic.happytest.modules.judgeExp.dao.JudgeExpDao">
     <select id="listByNumValue" resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
         select * from t_judge_experiment
@@ -57,10 +68,22 @@
             </if>
         </where>
     </select>
-</mapper>
 
-<!--
-如果只有一个参数，那么_parameter 就代表该参数
-如果有多个参数，那么_parameter.get("param1")可以得到第一个参数(可以是基础类型，也可以是自定义对象)
-_parameter.get("参数名")可以得到对应参数的值
--->
+    <select id="listByZeroValue" resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
+        select * from t_judge_experiment
+        where
+        1 = 1
+        <if test="num != ''">
+            and num_value = #{num}
+        </if>
+    </select>
+
+    <select id="listByZeroNumValue" resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
+        select * from t_judge_experiment
+        where
+        1 = 1
+        <if test="num != ''">
+            and num_value = #{num}
+        </if>
+    </select>
+</mapper>

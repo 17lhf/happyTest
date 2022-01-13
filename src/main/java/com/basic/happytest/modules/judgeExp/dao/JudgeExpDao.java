@@ -18,6 +18,21 @@ import java.util.List;
 @Mapper
 @Repository
 public interface JudgeExpDao extends BaseMapper<JudgeExp> {
+
+    /**
+     * 探索当提供的值为基础数据类型数字0时，mybatis的xml条件判断会怎样
+     * @param num 要查的满足num_value应该等于的值
+     * @return 满足条件的列表
+     */
+    List<JudgeExp> listByZeroValue(Integer num);
+
+    /**
+     * 探索当提供的值为一个对象，但是对象里的值为基础数据类型数字0时，mybatis的xml条件判断会怎样
+     * @param condNum 装有 要查的满足num_value应该等于的值的 对象
+     * @return 满足条件的列表
+     */
+    List<JudgeExp> listByZeroNumValue(CondNum condNum);
+
     /**
      * 只用一个int值来查
      * @param num 要查的满足num_value应该等于的值

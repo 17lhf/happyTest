@@ -4,7 +4,7 @@
 ## 已包含内容有：
 
 ###(1)multithreadSync
-synchronized 和　@Trasational同时使用时，产生的并发问题
+synchronized 和 @Trasational同时使用时，产生的并发问题
 
 ###(2)threadVariable
 多线程的变量在执行中的变动影响与更新
@@ -19,7 +19,8 @@ synchronized 和　@Trasational同时使用时，产生的并发问题
 探索jvm中classLoader及双亲委托的内容
 
 ###(6)judgeExp
-关于mybatis的dao层传递参数时，xml里的内置类型_parameter的使用的探索
+关于mybatis的dao层传递参数时，xml里的内置类型_parameter的探索 \
+以及传入的数字值为0时，mybatis里的if条件判断会将其认为是‘’空字符串的问题
 
 ###(7)ymlConfig
 关于优雅地读取配置文件中自定义的配置的实例

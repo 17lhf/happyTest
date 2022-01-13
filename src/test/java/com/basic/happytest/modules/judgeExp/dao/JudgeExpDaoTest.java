@@ -12,6 +12,7 @@ import java.util.List;
 
 /**
  * 关于在mapper中写select语句时，特别是写test判断条件的时候，对于入参值的获取以及_parameter的使用测试
+ * 注意，部分注释写在了mapper.xml文件里
  * @author lhf
  * 扩展阅读： https://www.cnblogs.com/straybirds/p/9085414.html
  */
@@ -44,6 +45,11 @@ class JudgeExpDaoTest {
         judgeExp4.setNumValue(2);
         judgeExp4.setStrValue("3");
         judgeExpDao.insert(judgeExp4);
+
+        JudgeExp judgeExp5 = new JudgeExp();
+        judgeExp5.setNumValue(0);
+        judgeExp5.setStrValue("0");
+        judgeExpDao.insert(judgeExp5);
     }
 
     /**
@@ -128,7 +134,7 @@ class JudgeExpDaoTest {
         for (JudgeExp judgeExp: judgeExpList) {
             System.out.println("id = " + judgeExp.getId());
         }
-        /*System.out.println("=============================================");
+        System.out.println("=============================================");
         List<JudgeExp> judgeExpList1 = judgeExpDao.listByTwoCondClass(condNumNull, condStr);
         for (JudgeExp judgeExp: judgeExpList1) {
             System.out.println("id = " + judgeExp.getId());
@@ -137,6 +143,26 @@ class JudgeExpDaoTest {
         List<JudgeExp> judgeExpList2 = judgeExpDao.listByTwoCondClass(condNum, condStrNull);
         for (JudgeExp judgeExp: judgeExpList2) {
             System.out.println("id = " + judgeExp.getId());
-        }*/
+        }
+    }
+
+    /**
+     * 测试传入基本类型数字（int、long、double之类的数字）时，如果给的值为零，则if的条件判断时是否会被当做是空字符串‘’
+     * 解决办法：数字类型的值本身就不会是‘’这样的形式，索性可以去掉这一个判断。保留!=null、!=undefined即可。
+     */
+    @Test
+    void listByZeroValue() {
+        List<JudgeExp> judgeExpList = judgeExpDao.listByZeroValue(0);
+        for (JudgeExp judgeExp: judgeExpList) {
+            System.out.println("id = " + judgeExp.getId());
+        }
+        // 结果0的这个参数不起作用，说明真的被当做了空字符
+        System.out.println("=============================================");
+        CondNum condNum = new CondNum(0);
+        List<JudgeExp> judgeExpList1 = judgeExpDao.listByZeroNumValue(condNum);
+        for (JudgeExp judgeExp: judgeExpList1) {
+            System.out.println("id = " + judgeExp.getId());
+        }
+        // 结果condNum装的0的这个值不起作用，说明真的被当做了空字符
     }
 }
