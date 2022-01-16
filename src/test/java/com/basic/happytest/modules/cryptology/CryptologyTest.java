@@ -14,6 +14,7 @@ import java.security.NoSuchAlgorithmException;
  */
 
 class CryptologyTest {
+    // <editor-fold desc="一些会被用到的文件路径">
     // RSA私钥示例1
     static String RSA_PRV_KEY_PKCS1_NO_ENCRYPT = "static/cryptologyFiles/rsaPrivateKey1.key";
     static String RSA_PRV_KEY_PKCS8_NO_ENCRYPT = "static/cryptologyFiles/pkcs8RsaPrivateKey1.key";
@@ -23,6 +24,9 @@ class CryptologyTest {
     static String RSA_PRV_KEY_PKCS1_ENCRYPT = "static/cryptologyFiles/rsaProtectedByPwd.key";
     static String RSA_PRV_KEY_PKCS8_ENCRYPT = "static/cryptologyFiles/pkcs8RsaProtectedByPwd.key";
     static String RSA_PRV_KEY_PKCS8_ENCRYPT_PWD = "123456";
+    // RSA CSR示例
+    static String RSA_CSR_PEM = "static/cryptologyFiles/rsa1.csr";
+    static String RSA_CSR_DER = "static/cryptologyFiles/rsa1_der.csr";
     // ECC私钥示例1
     static String ECC_PRV_KEY_PKCS1_NO_ENCRYPT = "static/cryptologyFiles/ecPrivateKey1.key";
     static String ECC_PRV_KEY_PKCS1_ENCRYPT = "static/cryptologyFiles/ecProtectedPrvKey1.key";
@@ -33,9 +37,11 @@ class CryptologyTest {
     // ECC公钥示例1
     static String ECC_PUB_KEY = "static/cryptologyFiles/ecPublicKey1.key";
     // CA证书示例
-    static String CA_CERT = "static/cryptologyFiles/ca.crt";
+    static String CA_CERT_PEM = "static/cryptologyFiles/ca.crt";
+    static String CA_CERT_DER = "static/cryptologyFiles/ca.der";
     // CA私钥示例
     static String CA_KEY = "static/cryptologyFiles/ca.key";
+    // </editor-fold>
 
     /**
      * 依据相对路径获取绝对路径
@@ -56,7 +62,7 @@ class CryptologyTest {
 
     @Test
     void getPubKeyFromCert() throws Exception {
-       Cryptology.getPubKeyFromCert(getAbsolutePath(CA_CERT));
+       Cryptology.getPubKeyFromCert(getAbsolutePath(CA_CERT_PEM));
     }
 
     @Test
@@ -92,7 +98,7 @@ class CryptologyTest {
 
     @Test
     void issueCert() throws Exception {
-        String issuerCertPath = getAbsolutePath(CA_CERT);
+        String issuerCertPath = getAbsolutePath(CA_CERT_PEM);
         String issuerKeyPath = getAbsolutePath(CA_KEY);
         CsrInfos csrInfos = new CsrInfos();
         csrInfos.setCountry("CN");
@@ -128,5 +134,28 @@ class CryptologyTest {
     void loadPublicKey2() throws Exception {
         Cryptology.loadPublicKey2(getAbsolutePath(RSA_PUB_KEY), "RSA");
         Cryptology.loadPublicKey2(getAbsolutePath(ECC_PUB_KEY), "EC");
+    }
+
+    @Test
+    void loadCertFromFile() throws Exception {
+        Cryptology.loadCertFromFile(getAbsolutePath(CA_CERT_PEM), "PEM");
+        Cryptology.loadCertFromFile(getAbsolutePath(CA_CERT_DER), "DER");
+    }
+
+    @Test
+    void getCertMsg() throws Exception {
+        Cryptology.getCertMsg(Cryptology.loadCertFromFile(getAbsolutePath(CA_CERT_PEM), "PEM"));
+    }
+
+    @Test
+    void getPubKeyFromCsr() throws Exception {
+        PKCS10CertificationRequest csr = Cryptology.loadCsrFromFile(getAbsolutePath(RSA_CSR_PEM), "PEM");
+        // Cryptology.getPubKeyFromCsr(csr);
+    }
+
+    @Test
+    void testLoadCsrFromFile() throws Exception {
+        Cryptology.loadCsrFromFile(getAbsolutePath(RSA_CSR_PEM), "PEM");
+        Cryptology.loadCsrFromFile(getAbsolutePath(RSA_CSR_DER), "DER");
     }
 }

@@ -1,16 +1,20 @@
 package com.basic.happytest.modules.cryptology;
 
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.asn1.ASN1BitString;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
 import org.bouncycastle.operator.*;
 import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
@@ -23,13 +27,12 @@ import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.pem.PemObject;
 import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
+import sun.security.x509.X509CertImpl;
 
 import javax.security.auth.x500.X500Principal;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,7 +47,10 @@ import java.util.Base64;
 import java.util.Date;
 
 /**
- * 密码学相关的java操作(注意部分内容会使用到BC库)
+ * 密码学相关的java操作
+ * (注意部分内容会使用到BC库)
+ * （注意，很多地方异常的处理没有做，请自行解决）
+ * (注意，有些类在java安全库中有，在BC库中也有，要注意实际用的是哪一个)
  * @author lhf
  */
 
@@ -256,21 +262,55 @@ public class Cryptology {
         return publicKey;
     }
 
+    // todo 保存公钥对象的内容到文件中
+    // todo 保存私钥对象的内容到文件中
+
     /**
-     * 从证书中读取出公钥
+     * 从证书中读取出公钥（含加载pem格式证书）
      * @param path 证书文件路径
      * @return 公钥
      * @throws CertificateException 异常
      * @throws FileNotFoundException 异常
      */
     public static PublicKey getPubKeyFromCert(String path) throws Exception {
-        System.out.println("---------------begin getPubKeyFromCert---------------");
+        System.out.println("---------------begin get public key from CERT---------------");
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new FileInputStream(path));
         PublicKey publicKey = certificate.getPublicKey();
         System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
-        System.out.println("---------------end getPubKeyFromCert---------------");
+        System.out.println("---------------end get public key from CERT---------------");
         return publicKey;
+    }
+
+    /**
+     * 读取证书文件并加载成一个证书对象（复杂式写法）
+     * @param path 证书存储路径
+     * @param certEncodeType 证书编码类型，支持“PEM"和”DER“
+     * @return 证书对象
+     * @throws Exception 异常
+     */
+    public static X509Certificate loadCertFromFile(String path, String certEncodeType) throws Exception{
+        System.out.println("---------------begin load CERT from file(" + certEncodeType + ")---------------");
+        FileInputStream inputStream = new FileInputStream(path);
+        int length = inputStream.available();
+        byte[] bytes = new byte[length];
+        inputStream.read(bytes);
+        inputStream.close();
+        // 开始依据不同的编码类型来加载证书
+        X509Certificate x509Certificate;
+        if("PEM".equals(certEncodeType)) { // pem格式
+            String crtStr = new String(bytes, StandardCharsets.UTF_8);
+            crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", ""); // 为避免不同平台的回车换行问题，所以这里只匹配开头字符
+            crtStr = crtStr.replace("-----END CERTIFICATE-----", "");   // 为避免不同平台的回车换行问题，所以这里只匹配结尾字符
+            crtStr = crtStr.replaceAll("\n", "");      // 去掉换行
+            crtStr = crtStr.replaceAll("\r", "");      // 去掉某些平台带有的回车
+            x509Certificate = new X509CertImpl(Base64.getDecoder().decode(crtStr));
+        } else { // der格式
+            x509Certificate = new X509CertImpl(bytes);
+        }
+        System.out.println("Cert subject: " + x509Certificate.getSubjectX500Principal().getName());
+        System.out.println("---------------end load CERT from file(" + certEncodeType + ")---------------");
+        return x509Certificate;
     }
 
     /**
@@ -325,6 +365,59 @@ public class Cryptology {
     }
 
     /**
+     * 读取证书请求文件，并加载成一个证书请求对象
+     * @param path 证书请求路径
+     * @param csrEncodeType 证书请求文件的编码方式，支持“PEM”，“DER”
+     * @return 证书请求对象
+     * @throws Exception 异常
+     */
+    public static PKCS10CertificationRequest loadCsrFromFile(String path, String csrEncodeType) throws Exception{
+        System.out.println("---------------begin load CSR from file(" + csrEncodeType + ")---------------");
+        // 开始依据不同的编码类型来加载证书请求
+        PKCS10CertificationRequest csr;
+        if("PEM".equals(csrEncodeType)) { // pem格式
+            PEMParser pemParser = new PEMParser(new FileReader(path));
+            PemObject pemObject = pemParser.readPemObject();
+            byte[] content = pemObject.getContent();
+            csr = new PKCS10CertificationRequest(content);
+        } else { // der格式
+            FileInputStream inputStream = new FileInputStream(path);
+            int length = inputStream.available();
+            byte[] bytes = new byte[length];
+            inputStream.read(bytes);
+            inputStream.close();
+            csr = new PKCS10CertificationRequest(bytes);
+        }
+        System.out.println("CSR subject: " + csr.getSubject().toString());
+        System.out.println("---------------end load CSR from file(" + csrEncodeType + ")---------------");
+        return csr;
+    }
+
+    /**
+     * fixme 从证书请求中获取公钥(暂时没有找到相关的实现示例，也没有找到对应的方法)
+     * @param csr 证书请求对象
+     * @return 证书请求里的公钥
+     * @throws IOException 异常
+     */
+    public static PublicKey getPubKeyFromCsr(PKCS10CertificationRequest csr) throws IOException {
+        System.out.println("---------------begin get public key from CSR---------------");
+        SubjectPublicKeyInfo subjectPublicKeyInfo= csr.getSubjectPublicKeyInfo();
+        ASN1BitString pubKeyData = subjectPublicKeyInfo.getPublicKeyData();
+        AsymmetricKeyParameter asymmetricKeyParameter = PublicKeyFactory.createKey(pubKeyData.getBytes());
+        PublicKey publicKey = (PublicKey) asymmetricKeyParameter;
+        System.out.println("Public key algorithm is " + publicKey.getAlgorithm());
+        System.out.println("---------------end get public key from CSR---------------");
+        return publicKey;
+    }
+
+    // todo 获取证书请求的信息
+    public static void getCsrMsg(PKCS10CertificationRequest csr) {
+        SubjectPublicKeyInfo subjectPublicKeyInfo= csr.getSubjectPublicKeyInfo();
+        AlgorithmIdentifier algorithmIdentifier = subjectPublicKeyInfo.getAlgorithm();
+        System.out.println("Public key algorithm identifier is " + algorithmIdentifier.getAlgorithm().toString());
+    }
+
+    /**
      * 颁发证书
      * @param csr 证书请求
      * @param issuerCertPath 用来颁发证书的父证书（通常是ca证书）
@@ -369,4 +462,98 @@ public class Cryptology {
         return cert;
     }
 
+    /**
+     * todo 从der格式(为了方便传递，一般der格式内容会转为十六进制串来传递)转换成pem格式
+     * @param der 一个Hex-String形式的der格式证书请求内容
+     * @param type 文件类型，支持“CSR","CERT"
+     * @return pem格式的字符串
+     */
+    public static String csrDer2pem(String der, String type){
+        System.out.println("---------------begin (" + type + ") DER to PEM---------------");
+        PemObject pemObject;
+        if("CSR".equals(type)) {
+            pemObject = new PemObject("CERTIFICATE REQUEST", der.getBytes(StandardCharsets.UTF_8));
+        } else{
+            pemObject = new PemObject("CERTIFICATE", der.getBytes(StandardCharsets.UTF_8));
+        }
+        StringWriter stringWriter = new StringWriter();
+        JcaPEMWriter pemWriter = new JcaPEMWriter(stringWriter);
+        try {
+            pemWriter.writeObject(pemObject);
+            pemWriter.flush();
+        } catch (IOException e) {}
+        finally {
+            try {
+                pemWriter.close();
+            } catch (IOException e) {}
+        }
+        String pem = stringWriter.toString();
+        System.out.println(type + " in pem: " + pem);
+        System.out.println("---------------begin (" + type + ") DER to PEM---------------");
+        return pem;
+    };
+
+    /**
+     * todo 将传进来的pem格式证书字符串转为der格式（Hex-String）
+     * @param crtStr pem格式证书字符串
+     * @return der格式（Hex-String）证书
+     * @throws Exception 异常
+     */
+    public static String certPem2DerHexStr(String crtStr) throws Exception {
+        System.out.println("---------------begin CERT PEM to DER---------------");
+        // 去除头部尾部
+        crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----\n", "");
+        crtStr = crtStr.replace("\n-----END CERTIFICATE-----\n", "");
+        // 这种写法的话，要防止内容转为二进制后，里面附带换行
+        crtStr = crtStr.replaceAll("\n","");
+        // 转为证书对象
+        X509Certificate x509Certificate = new X509CertImpl(Base64.getDecoder().decode(crtStr));
+        byte[] bytes = x509Certificate.getEncoded();
+        // 获得der格式编码
+        String certDER = Hex.toHexString(bytes);
+        System.out.println("CERT in der(Hex-String): " + certDER);
+        System.out.println("---------------end CERT PEM to DER---------------");
+        return certDER;
+    }
+
+    /**
+     * 依据传入的证书对象，获取证书的所有信息
+     * @param x509Certificate 证书对象
+     * @throws IOException 异常
+     */
+    public static void getCertMsg(X509Certificate x509Certificate) throws IOException {
+        System.out.println("---------------begin get certificate message---------------");
+        System.out.println("Cert version is " + x509Certificate.getVersion());
+        System.out.println("Cert serial number: " + x509Certificate.getSerialNumber());
+        System.out.println("Cert sign algorithm is " + x509Certificate.getSigAlgName());
+        System.out.println("Cert hash value is " + Hex.toHexString(x509Certificate.getSignature()));
+
+        Date notBefore = x509Certificate.getNotBefore();
+        Date notAfter = x509Certificate.getNotAfter();
+        System.out.println("Cert valid time is from " + notBefore.toString() + " to " + notAfter.toString());
+
+        System.out.println("Subject: " + x509Certificate.getSubjectX500Principal().getName());
+        System.out.println("Issuer subject: " + x509Certificate.getIssuerX500Principal().getName());
+        sun.security.x509.X500Name x500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getSubjectX500Principal());
+        System.out.println("Common Name(CN): " + x500Name.getCommonName());
+        System.out.println("Country(C): " + x500Name.getCountry());
+        System.out.println("State(S): " + x500Name.getState());
+        System.out.println("Locality(L): " + x500Name.getLocality());
+        System.out.println("Organization(O): " + x500Name.getOrganization());
+        System.out.println("Organization Unit(OU): " + x500Name.getOrganizationalUnit());
+        // 由于邮箱地址实际上创建证书请求时是选填的，所以好像没有提供获取EmailAddress(E)的方法
+        sun.security.x509.X500Name issuerX500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getIssuerX500Principal());
+        System.out.println("Issuer CN: " + issuerX500Name.getCommonName()); // 颁发者的subject信息获取方式同自身，所以这里不做重复
+        System.out.println("---------------end get certificate message---------------");
+    }
+
+    // todo 私钥加密
+    // todo 私钥解密
+    // todo 公钥加密
+    // todo 公钥解密
+    // todo 生成p12
+    // todo 解析p12
+    // todo 验证一个公钥和一个私钥是否匹配
+    // todo 验证一个私钥与一本证书是否匹配
+    // todo 验证证书链是否正确
 }
