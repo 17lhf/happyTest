@@ -9,9 +9,10 @@ import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * 实验当传参只传一个参数时对应的xml怎么写的 dao层
+ * 实验当传参传参数时对应的xml里的if语句应该怎么写的 dao层
  * @author lhf
  */
 
@@ -69,4 +70,12 @@ public interface JudgeExpDao extends BaseMapper<JudgeExp> {
      * @return 满足条件的列表
      */
     List<JudgeExp> listByTwoCondClass(CondNum condNum, CondStr condStr);
+
+    /**
+     * 从外部来的查询条件进行查询（主要是研究外部传来的0在xml里应该怎么避免if判断时被认为是空字符串）
+     * 注意：Map<String, Object> params值必须是写成Object才行
+     * @param params 参数(只使用num_value查询条件)
+     * @return 满足条件的列表
+     */
+    List<JudgeExp> listSelectFromExternal(Map<String, Object> params);
 }

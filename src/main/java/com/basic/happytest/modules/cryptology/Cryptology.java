@@ -300,8 +300,8 @@ public class Cryptology {
         X509Certificate x509Certificate;
         if("PEM".equals(certEncodeType)) { // pem格式
             String crtStr = new String(bytes, StandardCharsets.UTF_8);
-            crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", ""); // 为避免不同平台的回车换行问题，所以这里只匹配开头字符
-            crtStr = crtStr.replace("-----END CERTIFICATE-----", "");   // 为避免不同平台的回车换行问题，所以这里只匹配结尾字符
+            crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", ""); // 为避免不同平台的回车换行问题，所以这里只匹配开头的文件类型描述
+            crtStr = crtStr.replace("-----END CERTIFICATE-----", "");   // 为避免不同平台的回车换行问题，所以这里只匹配结尾的文件类型描述
             crtStr = crtStr.replaceAll("\n", "");      // 去掉换行
             crtStr = crtStr.replaceAll("\r", "");      // 去掉某些平台带有的回车
             x509Certificate = new X509CertImpl(Base64.getDecoder().decode(crtStr));

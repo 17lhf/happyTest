@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 关于在mapper中写select语句时，特别是写test判断条件的时候，对于入参值的获取以及_parameter的使用测试
@@ -156,7 +158,6 @@ class JudgeExpDaoTest {
         for (JudgeExp judgeExp: judgeExpList) {
             System.out.println("id = " + judgeExp.getId());
         }
-        // 结果0的这个参数不起作用，说明真的被当做了空字符
         System.out.println("=============================================");
         CondNum condNum = new CondNum(0);
         List<JudgeExp> judgeExpList1 = judgeExpDao.listByZeroNumValue(condNum);
@@ -164,5 +165,37 @@ class JudgeExpDaoTest {
             System.out.println("id = " + judgeExp.getId());
         }
         // 结果condNum装的0的这个值不起作用，说明真的被当做了空字符
+    }
+
+    /**
+     * 测试传入用map的object封装的0值时，则if的条件判断时对应的0值是否会被当做是空字符串‘’
+     * 这里还测试了由系统外部传值过来的情况，看Controller层
+     * 解决办法：数字类型的值本身就不会是‘’这样的形式，索性可以去掉这一个判断。保留!=null、!=undefined即可。
+     */
+    @Test
+    void listSelectFromExternal() {
+        Map<String, Object> map = new HashMap<>(1);
+        map.put("numValue", (Object) 0);
+
+        System.out.println("=============================================");
+        // 结果0的这个参数不起作用，说明真的被当做了空字符
+        List<JudgeExp> judgeExpList1 = judgeExpDao.listSelectFromExternal(map);
+        for (JudgeExp judgeExp: judgeExpList1) {
+            System.out.println("id = " + judgeExp.getId());
+        }
+
+        System.out.println("=============================================");
+        // 结果0的这个参数起作用了，没有被当做空字符
+        Map<String, Object> map1 = new HashMap<>(1);
+        map1.put("numValue", (Object) "0");
+        List<JudgeExp> judgeExpList2 = judgeExpDao.listSelectFromExternal(map1);
+        for (JudgeExp judgeExp: judgeExpList2) {
+            System.out.println("id = " + judgeExp.getId());
+        }
+
+        // 注意，这里其实还没结束，因为从外部传来的数据是用json格式发过来，json是字符串键值对的结构，其实扔过来接收时，就会认为是字符串，
+        // 所以，如果其他端把自己的数字值0以json报文发过来，然后我们拿去作为查询条件，xml里的if条件判断是会认为是字符串0，而不是数字0
+        // 于是，看似有问题，实际其实不会出问题
+        // 当然，这样并不好。因为本身数字就不会出现空字符串形式的情况，所以数字值的xml位置，还是不要写!=''最好
     }
 }

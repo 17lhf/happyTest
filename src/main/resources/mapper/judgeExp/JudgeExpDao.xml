@@ -12,6 +12,10 @@
     _parameter.get("dao层对方法定义的参数名")可以得到对应参数的值
 -->
 
+<!--
+    一些技巧写法在下方具体的语句里
+-->
+
 <mapper namespace="com.basic.happytest.modules.judgeExp.dao.JudgeExpDao">
     <select id="listByNumValue" resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
         select * from t_judge_experiment
@@ -73,7 +77,7 @@
         select * from t_judge_experiment
         where
         1 = 1
-        <if test="num != ''">
+        <if test="num != ''"><!--<if test="num != '' or num == 0"> 规避问题的写法，注意，针对的是数字 -->
             and num_value = #{num}
         </if>
     </select>
@@ -84,6 +88,15 @@
         1 = 1
         <if test="num != ''">
             and num_value = #{num}
+        </if>
+    </select>
+
+    <select id="listSelectFromExternal" resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
+        select *
+        from t_judge_experiment
+        where 1 = 1
+        <if test="numValue != ''">
+            and num_value = #{numValue}
         </if>
     </select>
 </mapper>
