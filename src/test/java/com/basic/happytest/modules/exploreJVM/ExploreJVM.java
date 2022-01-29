@@ -2,6 +2,8 @@ package com.basic.happytest.modules.exploreJVM;
 
 import com.basic.happytest.modules.unboundedWildcardsAndGenerics.Box;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 摸索JVM的一些内容
@@ -10,6 +12,8 @@ import org.junit.jupiter.api.Test;
  */
 
 public class ExploreJVM {
+    private Logger logger = LoggerFactory.getLogger(ExploreJVM.class);
+
     @Test
     public void testJVM(){
         // 以下这些路径，其实就是这三个类加载器将会查询的环境属性，然后进行资源的加载
