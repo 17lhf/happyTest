@@ -1,16 +1,15 @@
 package com.basic.happytest.modules.cryptology;
 
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.asn1.ASN1BitString;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
-import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
@@ -25,6 +24,7 @@ import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemWriter;
 import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.x509.X509CertImpl;
@@ -262,6 +262,9 @@ public class Cryptology {
         return publicKey;
     }
 
+    // todo 将pem格式密钥转换成der格式
+    // todo 将der格式密钥转换成pem格式
+
     // todo 保存公钥对象的内容到文件中
     // todo 保存私钥对象的内容到文件中
 
@@ -394,27 +397,57 @@ public class Cryptology {
     }
 
     /**
-     * fixme 从证书请求中获取公钥(暂时没有找到相关的实现示例，也没有找到对应的方法)
+     * 从证书请求中获取公钥
      * @param csr 证书请求对象
+     * @param alo 算法，可选：RSA、EC
      * @return 证书请求里的公钥
      * @throws IOException 异常
      */
-    public static PublicKey getPubKeyFromCsr(PKCS10CertificationRequest csr) throws IOException {
+    public static PublicKey getPubKeyFromCsr(PKCS10CertificationRequest csr, String alo) throws Exception {
         System.out.println("---------------begin get public key from CSR---------------");
-        SubjectPublicKeyInfo subjectPublicKeyInfo= csr.getSubjectPublicKeyInfo();
-        ASN1BitString pubKeyData = subjectPublicKeyInfo.getPublicKeyData();
-        AsymmetricKeyParameter asymmetricKeyParameter = PublicKeyFactory.createKey(pubKeyData.getBytes());
-        PublicKey publicKey = (PublicKey) asymmetricKeyParameter;
+        StringWriter output = new StringWriter();
+        PemWriter pemWriter = new PemWriter(output);
+        PemObject pkPemObject = new PemObject("PUBLIC KEY", csr.getSubjectPublicKeyInfo().getEncoded());
+        pemWriter.writeObject(pkPemObject);
+        pemWriter.close();
+        System.out.println("PEM String is: \n" + output.getBuffer());
+        X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(pkPemObject.getContent());
+        KeyFactory factory = KeyFactory.getInstance(alo, BouncyCastleProvider.PROVIDER_NAME);
+        PublicKey publicKey = factory.generatePublic(pubKeySpec);
         System.out.println("Public key algorithm is " + publicKey.getAlgorithm());
         System.out.println("---------------end get public key from CSR---------------");
         return publicKey;
     }
 
-    // todo 获取证书请求的信息
+    /**
+     * todo 获取证书请求中包含的一些信息
+     * @param csr 证书请求对象
+     */
     public static void getCsrMsg(PKCS10CertificationRequest csr) {
+        System.out.println("---------------begin get csr message---------------");
         SubjectPublicKeyInfo subjectPublicKeyInfo= csr.getSubjectPublicKeyInfo();
         AlgorithmIdentifier algorithmIdentifier = subjectPublicKeyInfo.getAlgorithm();
-        System.out.println("Public key algorithm identifier is " + algorithmIdentifier.getAlgorithm().toString());
+        System.out.println("Public key algorithm identifier is : " + algorithmIdentifier.getAlgorithm().toString());
+        System.out.println("Csr signature is : " + Hex.toHexString(csr.getSignature()));
+        Extensions extensions = csr.getRequestedExtensions();
+        // 其实挺多时候用纯软生成证书请求时，没有设置扩展字段
+        if(extensions != null) {
+            ASN1ObjectIdentifier[] extensionOIDs = extensions.getExtensionOIDs();
+            for (int i = 0; i < extensionOIDs.length; i++) {
+                System.out.println("ExtensionOIDs[" + i + "]: " + extensionOIDs[i]);
+            }
+            ASN1ObjectIdentifier[] criticalExtensionOIDs = extensions.getCriticalExtensionOIDs();
+            for (int i = 0; i < criticalExtensionOIDs.length; i++) {
+                System.out.println("CriticalExtensionOIDs[" + i + "]: " + criticalExtensionOIDs[i]);
+            }
+            ASN1ObjectIdentifier[] nonCriticalExtensionOIDs = extensions.getNonCriticalExtensionOIDs();
+            for (int i = 0; i < nonCriticalExtensionOIDs.length; i++) {
+                System.out.println("NonCriticalExtensionOIDs[" + i + "]: " + nonCriticalExtensionOIDs[i]);
+            }
+        }
+        X500Name x500Name = csr.getSubject();
+        System.out.println("Csr subject is: " + x500Name.toString());
+        System.out.println("---------------end get csr message---------------");
     }
 
     /**

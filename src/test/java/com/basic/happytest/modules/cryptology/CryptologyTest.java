@@ -150,12 +150,36 @@ class CryptologyTest {
     @Test
     void getPubKeyFromCsr() throws Exception {
         PKCS10CertificationRequest csr = Cryptology.loadCsrFromFile(getAbsolutePath(RSA_CSR_PEM), "PEM");
-        // Cryptology.getPubKeyFromCsr(csr);
+        Cryptology.getPubKeyFromCsr(csr, "RSA");
+
+        CsrInfos csrInfos = new CsrInfos();
+        csrInfos.setCountry("CN");
+        csrInfos.setState("FuJian");
+        csrInfos.setLocal("FuZhou");
+        csrInfos.setOrganization("Organization");
+        csrInfos.setOrganizationUnit("Organization Unit");
+        csrInfos.setCommonName("lhf");
+        csrInfos.setEmailAddress("lhf@qq.com");
+        Cryptology.getPubKeyFromCsr(Cryptology.generateP10CertRequest("EC", csrInfos), "EC");
     }
 
     @Test
     void testLoadCsrFromFile() throws Exception {
         Cryptology.loadCsrFromFile(getAbsolutePath(RSA_CSR_PEM), "PEM");
         Cryptology.loadCsrFromFile(getAbsolutePath(RSA_CSR_DER), "DER");
+    }
+
+    @Test
+    void getCsrMsg() throws Exception {
+        CsrInfos csrInfos = new CsrInfos();
+        csrInfos.setCountry("CN");
+        csrInfos.setState("FuJian");
+        csrInfos.setLocal("FuZhou");
+        csrInfos.setOrganization("Organization");
+        csrInfos.setOrganizationUnit("Organization Unit");
+        csrInfos.setCommonName("lhf");
+        csrInfos.setEmailAddress("lhf@qq.com");
+        PKCS10CertificationRequest csr = Cryptology.generateP10CertRequest("RSA", csrInfos);
+        Cryptology.getCsrMsg(csr);
     }
 }
