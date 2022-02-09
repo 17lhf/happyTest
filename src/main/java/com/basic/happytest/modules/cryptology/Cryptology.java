@@ -368,6 +368,57 @@ public class Cryptology {
     }
 
     /**
+     * todo 生成密钥对并生成附带一些扩展字段的证书请求
+     * @param alo 算法，可选：RSA、EC
+     * @param csrInfos 证书请求的subject信息，除了emailAddress以外都必填
+     * @return 证书请求对象
+     * @throws Exception 异常
+     */
+    public static PKCS10CertificationRequest generateAttachExtensionsP10Csr(String alo, CsrInfos csrInfos) throws Exception{
+        System.out.println("---------------begin generate attach Extensions P10 Csr---------------");
+        PublicKey publicKey = null;
+        PrivateKey privateKey = null;
+        String sigAlo; // 签名算法
+        // 区分两种算法的密钥生成
+        // RSA
+        if (StringUtils.equals(alo, "RSA")){
+            KeyPair keyPair = generateKeyPair("RSA");
+            publicKey = keyPair.getPublic();
+            privateKey = keyPair.getPrivate();
+            sigAlo = "SHA256withRSA";
+        } else { // ECC
+            KeyPair keyPair = generateECCKeyPair();
+            publicKey = keyPair.getPublic();
+            privateKey = keyPair.getPrivate();
+            sigAlo = "SHA256withECDSA";
+        }
+        // 申请者信息
+        String subjectStr = "C=" + csrInfos.getCountry() + ",ST="+csrInfos.getState()
+                + ",L=" + csrInfos.getLocal() + ",O=" + csrInfos.getOrganization()
+                + ",OU=" + csrInfos.getOrganizationUnit() + ",CN="+csrInfos.getCommonName();
+        if(StringUtils.isBlank(csrInfos.getEmailAddress())){
+            subjectStr += (",E=" + csrInfos.getEmailAddress());
+        }
+        // 开始构造CSR
+        X500Principal subject = new X500Principal(subjectStr);
+        PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(subject, publicKey);
+        JcaContentSignerBuilder csBuilder = new JcaContentSignerBuilder(sigAlo); // 签名算法
+        ContentSigner signer = null;
+        try {
+            signer = csBuilder.build(privateKey);
+        } catch (OperatorCreationException e) {
+            e.printStackTrace();
+        }
+        PKCS10CertificationRequest csr = p10Builder.build(signer); // PKCS10的证书请求
+        // 输出：1.2.840.113549.1.1.11 表示 SHA256withRSA
+        // 输出： 1.2.840.10045.4.3.2 表示 SHA256withECDSA
+        System.out.println("Signature Algorithm OID: " + csr.getSignatureAlgorithm().getAlgorithm().toString());
+        System.out.println("Subject of PKCS10 Certification Request: " + csr.getSubject());
+        System.out.println("---------------end generate attach Extensions P10 Csr---------------");
+        return csr;
+    }
+
+    /**
      * 读取证书请求文件，并加载成一个证书请求对象
      * @param path 证书请求路径
      * @param csrEncodeType 证书请求文件的编码方式，支持“PEM”，“DER”
@@ -494,6 +545,8 @@ public class Cryptology {
         System.out.println("---------------end issueCert---------------");
         return cert;
     }
+
+    // todo 颁发证书，同时设置一些扩展字段
 
     /**
      * todo 从der格式(为了方便传递，一般der格式内容会转为十六进制串来传递)转换成pem格式
