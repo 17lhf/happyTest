@@ -1,6 +1,8 @@
 # happyTest
 一些寻常或奇怪的小测试集合
 
+建议实现方法结合单元测试的示例来阅读
+
 ## 已包含内容有： 
 ###(1)multithreadSync 
 synchronized 和 @Trasational同时使用时，产生的多线程并发问题
@@ -26,3 +28,6 @@ synchronized 和 @Trasational同时使用时，产生的多线程并发问题
 
 ###(8)lombokExplore 
 关于lombok的注解里的坑
+
+###(9)fileIO
+关于一些比较怪的文件操作及流的实例

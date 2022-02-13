@@ -44,6 +44,13 @@
             <version>3.12.0</version>
         </dependency>
 
+        <!-- 包含了工具类，流的实现， 文件过滤器，文件比较器，endian转换类，还有其他更多的内容 -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
@@ -85,6 +92,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.6.0</version>
                 <configuration>
                     <excludes>
                         <exclude>
@@ -92,6 +100,16 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <!-- 使得maven打包时，也会将空文件夹一并打包，不然空文件夹默认是会被忽略 todo 实际测试发现无效 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <!-- 注意:这个参数maven-war-plugin 2.4及以上的版本才支持 -->
+                    <includeEmptyDirectories>true</includeEmptyDirectories>
                 </configuration>
             </plugin>
         </plugins>

@@ -29,6 +29,7 @@ import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.x509.X509CertImpl;
 
+import javax.crypto.spec.DHPrivateKeySpec;
 import javax.security.auth.x500.X500Principal;
 import java.io.*;
 import java.math.BigInteger;
@@ -45,6 +46,7 @@ import java.security.interfaces.ECPublicKey;
 import java.security.spec.*;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * 密码学相关的java操作
@@ -81,21 +83,49 @@ public class Cryptology {
     }
 
     /**
-     * 生成密钥对
+     * 生成密钥对(由于对DH和DSA不熟，所以参数未进行解释)
      * @param alo 生成密钥对使用的算法，可选算法：DiffieHellman(等同于：DH)、DSA、RSA
+     * @param keySize RSA时推荐长度为：2048/1024/3096 DH时推荐为：1024 DSA时推荐长度为：1024
      * @return 密钥对
      * @throws NoSuchAlgorithmException 异常
      */
-    public static KeyPair generateKeyPair(String alo) throws Exception {
-        System.out.println("---------------begin generateKeyPair---------------");
+    public static KeyPair generateKeyPair(String alo, Integer keySize) throws Exception {
+        System.out.println("---------------begin generate key pair---------------");
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(alo);
+        keyPairGenerator.initialize(keySize); // 默认的长度可能会因为算法提供者或版本而发生改变，所以不推荐使用默认的长度
         System.out.println("Provider: " + keyPairGenerator.getProvider());
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
         PublicKey publicKey = keyPair.getPublic();
         PrivateKey privateKey = keyPair.getPrivate();
         System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
         System.out.println("Private key algorithm: " + privateKey.getAlgorithm());
-        System.out.println("-----------------end generateKeyPair----------------");
+        System.out.println("Key format = " + privateKey.getFormat()); // java中一直要求的是PKCS8格式的密钥
+
+        KeyFactory keyFactory = KeyFactory.getInstance(alo);
+        if(Objects.equals(alo, "RSA")) {
+            RSAPrivateKeySpec keySpec= keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
+            BigInteger modulus = keySpec.getModulus();
+            // RSA密钥的长度实际上指的是公钥模的长度（以Bit为单位）
+            int length = modulus.toString(2).length(); // 转换为二进制
+            System.out.println("RSA key size: " + length);
+        } else if (Objects.equals(alo, "DSA")){
+            DSAPrivateKeySpec keySpec = keyFactory.getKeySpec(privateKey, DSAPrivateKeySpec.class);
+            System.out.println("P(the private key) = " + keySpec.getP());
+            System.out.println("X(the prime) = " + keySpec.getX());
+            System.out.println("Q(the sub-prime) = " + keySpec.getQ());
+            System.out.println("G(base) = " + keySpec.getG());
+            int length = keySpec.getG().toString(2).length();
+            System.out.println("DSA key size: " + length);
+        } else {
+            DHPrivateKeySpec keySpec = keyFactory.getKeySpec(privateKey, DHPrivateKeySpec.class);
+            System.out.println("P = " + keySpec.getP());
+            System.out.println("X = " + keySpec.getX());
+            System.out.println("G = " + keySpec.getG());
+            int length = keySpec.getP().toString(2).length();
+            System.out.println("DH key size: " + length);
+        }
+        System.out.println("---------------end generate key pair---------------");
+        System.out.println();
         return keyPair;
     }
 
@@ -262,11 +292,68 @@ public class Cryptology {
         return publicKey;
     }
 
-    // todo 将pem格式密钥转换成der格式
-    // todo 将der格式密钥转换成pem格式
+    /**
+     * 输出pem格式的密钥内容到控制台
+     * @param alo 生成密钥对使用的算法，可选算法：DiffieHellman(等同于：DH)、DSA、RSA
+     * @param keySize RSA时推荐长度为：2048/1024/3096 DH时推荐为：1024 DSA时推荐长度为：1024
+     * @throws Exception 异常
+     */
+    public static void key2PemOutPut(String alo, Integer keySize) throws Exception {
+        KeyPair keyPair = generateKeyPair(alo, keySize);
+        System.out.println("---------------begin out put pem format key---------------");
+        PrivateKey privateKey = keyPair.getPrivate();
+        PublicKey publicKey = keyPair.getPublic();
+        StringWriter output = new StringWriter(keySize);
+        PemWriter pemWriter = new PemWriter(output);
+        PemObject pemObject = new PemObject("PRIVATE KEY", privateKey.getEncoded());
+        pemWriter.writeObject(pemObject);
+        pemWriter.close();
+        System.out.println(output.getBuffer());
 
-    // todo 保存公钥对象的内容到文件中
-    // todo 保存私钥对象的内容到文件中
+        StringWriter output2 = new StringWriter(keySize);
+        PemWriter pemWriter2 = new PemWriter(output2);
+        PemObject pemObject2 = new PemObject("PUBLIC KEY", publicKey.getEncoded());
+        pemWriter2.writeObject(pemObject2);
+        pemWriter2.close();
+        System.out.println();
+        System.out.println(output2);
+        System.out.println("---------------end out put pem format key---------------");
+        System.out.println();
+    }
+
+    /**
+     * 输入pem格式的密钥到指定文件中
+     * @param alo 生成密钥对使用的算法，可选算法：DiffieHellman(等同于：DH)、DSA、RSA
+     * @param keySize RSA时推荐长度为：2048/1024/3096 DH时推荐为：1024 DSA时推荐长度为：1024
+     * @param basePath 输出密钥文件到的文件夹目录路径
+     * @throws Exception 异常
+     */
+    public static void key2PemFile(String alo, Integer keySize, String basePath) throws Exception {
+        KeyPair keyPair = generateKeyPair(alo, keySize);
+        System.out.println("---------------begin out put pem format key to file---------------");
+        PrivateKey privateKey = keyPair.getPrivate();
+        PublicKey publicKey = keyPair.getPublic();
+
+        String prvKeyPath = basePath + System.currentTimeMillis() + "_prvKey.key";
+        File prvFile = new File(prvKeyPath);
+        prvFile.createNewFile();
+        PrintWriter printWriter = new PrintWriter(prvFile);
+        PemWriter pemWriter = new PemWriter(printWriter);
+        PemObject pemObject = new PemObject("PRIVATE KEY", privateKey.getEncoded());
+        pemWriter.writeObject(pemObject);
+        pemWriter.close();
+
+        String pubKeyPath = basePath + System.currentTimeMillis() + "_pubKey.key";
+        File pubFile = new File(pubKeyPath);
+        PrintWriter printWriter2 = new PrintWriter(pubFile);
+        PemWriter pemWriter2 = new PemWriter(printWriter2);
+        PemObject pemObject2 = new PemObject("PUBLIC KEY", publicKey.getEncoded());
+        pemWriter2.writeObject(pemObject2);
+        pemWriter2.close();
+        System.out.println("---------------end out put pem format key to file---------------");
+        loadPublicKey(pubKeyPath);
+        loadPKCS8PrivateKey(prvKeyPath);
+    }
 
     /**
      * 从证书中读取出公钥（含加载pem格式证书）
@@ -331,7 +418,7 @@ public class Cryptology {
         // 区分两种算法的密钥生成
         // RSA
         if (StringUtils.equals(alo, "RSA")){
-            KeyPair keyPair = generateKeyPair("RSA");
+            KeyPair keyPair = generateKeyPair("RSA", 2048);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withRSA";
@@ -382,7 +469,7 @@ public class Cryptology {
         // 区分两种算法的密钥生成
         // RSA
         if (StringUtils.equals(alo, "RSA")){
-            KeyPair keyPair = generateKeyPair("RSA");
+            KeyPair keyPair = generateKeyPair("RSA", 2048);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withRSA";
@@ -547,20 +634,31 @@ public class Cryptology {
     }
 
     // todo 颁发证书，同时设置一些扩展字段
+    // todo 将证书对象存入文件
+
 
     /**
-     * todo 从der格式(为了方便传递，一般der格式内容会转为十六进制串来传递)转换成pem格式
+     * 从der格式(为了方便传递，一般der格式内容会转为十六进制串来传递)转换成pem格式
      * @param der 一个Hex-String形式的der格式证书请求内容
-     * @param type 文件类型，支持“CSR","CERT"
+     * @param type 文件类型，支持“CSR","CERT","PRV_KEY","PUB_KEY"
      * @return pem格式的字符串
      */
-    public static String csrDer2pem(String der, String type){
+    public static String der2pem(String der, String type){
         System.out.println("---------------begin (" + type + ") DER to PEM---------------");
         PemObject pemObject;
-        if("CSR".equals(type)) {
-            pemObject = new PemObject("CERTIFICATE REQUEST", der.getBytes(StandardCharsets.UTF_8));
-        } else{
-            pemObject = new PemObject("CERTIFICATE", der.getBytes(StandardCharsets.UTF_8));
+        byte[] derBytes = Hex.decode(der);
+        switch (type){
+            case "CSR":
+                pemObject = new PemObject("CERTIFICATE REQUEST", derBytes);
+                break;
+            case "CERT":
+                pemObject = new PemObject("CERTIFICATE", derBytes);
+                break;
+            case "PRV_KEY":
+                pemObject = new PemObject("PRIVATE KEY", derBytes);
+                break;
+            default:
+                pemObject = new PemObject("PUBLIC KEY", derBytes);
         }
         StringWriter stringWriter = new StringWriter();
         JcaPEMWriter pemWriter = new JcaPEMWriter(stringWriter);
@@ -574,7 +672,7 @@ public class Cryptology {
             } catch (IOException e) {}
         }
         String pem = stringWriter.toString();
-        System.out.println(type + " in pem: " + pem);
+        System.out.println(type + " in pem: \n" + pem);
         System.out.println("---------------begin (" + type + ") DER to PEM---------------");
         return pem;
     };

@@ -1,11 +1,15 @@
 package com.basic.happytest.modules.cryptology;
 
+import com.basic.happytest.modules.fileIO.FileIO;
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.ClassPathResource;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 
 /**
@@ -15,6 +19,8 @@ import java.security.NoSuchAlgorithmException;
 
 class CryptologyTest {
     // <editor-fold desc="一些会被用到的文件路径">
+    // 存储生成的文件的路径
+    static String STORE_PATH = "static/cryptologyFiles/storeFiles/";
     // RSA私钥示例1
     static String RSA_PRV_KEY_PKCS1_NO_ENCRYPT = "static/cryptologyFiles/rsaPrivateKey1.key";
     static String RSA_PRV_KEY_PKCS8_NO_ENCRYPT = "static/cryptologyFiles/pkcs8RsaPrivateKey1.key";
@@ -43,26 +49,21 @@ class CryptologyTest {
     static String CA_KEY = "static/cryptologyFiles/ca.key";
     // </editor-fold>
 
-    /**
-     * 依据相对路径获取绝对路径
-     * @param path resource文件夹底下的相对路径
-     * @return 绝对路径
-     * @throws IOException 异常
-     */
-    String getAbsolutePath(String path) throws IOException {
-        String pemPath = (new ClassPathResource(path)).getFile().getPath();
-        System.out.println("文件路径为： " + pemPath);
-        return pemPath;
+    @Test
+    void testGetAbsoluteFolderPath() throws IOException {
+        FileIO.getAbsolutePath(STORE_PATH);
     }
 
     @Test
     void generateKeyPair() throws Exception {
-        Cryptology.generateKeyPair("RSA");
+        Cryptology.generateKeyPair("RSA", 2048);
+        Cryptology.generateKeyPair("DH", 1024);
+        Cryptology.generateKeyPair("DSA", 1024);
     }
 
     @Test
     void getPubKeyFromCert() throws Exception {
-       Cryptology.getPubKeyFromCert(getAbsolutePath(CA_CERT_PEM));
+       Cryptology.getPubKeyFromCert(FileIO.getAbsolutePath(CA_CERT_PEM));
     }
 
     @Test
@@ -93,13 +94,13 @@ class CryptologyTest {
 
     @Test
     void loadRSAPrivateKey() throws Exception {
-        Cryptology.loadRSAPrivateKey(getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
+        Cryptology.loadRSAPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
     }
 
     @Test
     void issueCert() throws Exception {
-        String issuerCertPath = getAbsolutePath(CA_CERT_PEM);
-        String issuerKeyPath = getAbsolutePath(CA_KEY);
+        String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
+        String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
         CsrInfos csrInfos = new CsrInfos();
         csrInfos.setCountry("CN");
         csrInfos.setState("FuJian");
@@ -114,42 +115,42 @@ class CryptologyTest {
 
     @Test
     void loadPKCS8EncryptedPrivateKey() throws Exception {
-        Cryptology.loadPKCS8EncryptedPrivateKey(getAbsolutePath(RSA_PRV_KEY_PKCS8_ENCRYPT), RSA_PRV_KEY_PKCS8_ENCRYPT_PWD);
-        Cryptology.loadPKCS8EncryptedPrivateKey(getAbsolutePath(ECC_PRV_KEY_PKCS8_ENCRYPT), ECC_PRV_KEY_PKCS8_ENCRYPT_PWD);
+        Cryptology.loadPKCS8EncryptedPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_ENCRYPT), RSA_PRV_KEY_PKCS8_ENCRYPT_PWD);
+        Cryptology.loadPKCS8EncryptedPrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_ENCRYPT), ECC_PRV_KEY_PKCS8_ENCRYPT_PWD);
     }
 
     @Test
     void loadPrivateKey() throws Exception {
-        Cryptology.loadPKCS8PrivateKey(getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
-        Cryptology.loadPKCS8PrivateKey(getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
+        Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+        Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
     }
 
     @Test
     void loadPublicKey() throws Exception {
-        Cryptology.loadPublicKey(getAbsolutePath(RSA_PUB_KEY));
-        Cryptology.loadPublicKey(getAbsolutePath(ECC_PUB_KEY));
+        Cryptology.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY));
+        Cryptology.loadPublicKey(FileIO.getAbsolutePath(ECC_PUB_KEY));
     }
 
     @Test
     void loadPublicKey2() throws Exception {
-        Cryptology.loadPublicKey2(getAbsolutePath(RSA_PUB_KEY), "RSA");
-        Cryptology.loadPublicKey2(getAbsolutePath(ECC_PUB_KEY), "EC");
+        Cryptology.loadPublicKey2(FileIO.getAbsolutePath(RSA_PUB_KEY), "RSA");
+        Cryptology.loadPublicKey2(FileIO.getAbsolutePath(ECC_PUB_KEY), "EC");
     }
 
     @Test
     void loadCertFromFile() throws Exception {
-        Cryptology.loadCertFromFile(getAbsolutePath(CA_CERT_PEM), "PEM");
-        Cryptology.loadCertFromFile(getAbsolutePath(CA_CERT_DER), "DER");
+        Cryptology.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), "PEM");
+        Cryptology.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_DER), "DER");
     }
 
     @Test
     void getCertMsg() throws Exception {
-        Cryptology.getCertMsg(Cryptology.loadCertFromFile(getAbsolutePath(CA_CERT_PEM), "PEM"));
+        Cryptology.getCertMsg(Cryptology.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), "PEM"));
     }
 
     @Test
     void getPubKeyFromCsr() throws Exception {
-        PKCS10CertificationRequest csr = Cryptology.loadCsrFromFile(getAbsolutePath(RSA_CSR_PEM), "PEM");
+        PKCS10CertificationRequest csr = Cryptology.loadCsrFromFile(FileIO.getAbsolutePath(RSA_CSR_PEM), "PEM");
         Cryptology.getPubKeyFromCsr(csr, "RSA");
 
         CsrInfos csrInfos = new CsrInfos();
@@ -165,8 +166,8 @@ class CryptologyTest {
 
     @Test
     void testLoadCsrFromFile() throws Exception {
-        Cryptology.loadCsrFromFile(getAbsolutePath(RSA_CSR_PEM), "PEM");
-        Cryptology.loadCsrFromFile(getAbsolutePath(RSA_CSR_DER), "DER");
+        Cryptology.loadCsrFromFile(FileIO.getAbsolutePath(RSA_CSR_PEM), "PEM");
+        Cryptology.loadCsrFromFile(FileIO.getAbsolutePath(RSA_CSR_DER), "DER");
     }
 
     @Test
@@ -181,5 +182,29 @@ class CryptologyTest {
         csrInfos.setEmailAddress("lhf@qq.com");
         PKCS10CertificationRequest csr = Cryptology.generateP10CertRequest("RSA", csrInfos);
         Cryptology.getCsrMsg(csr);
+    }
+
+    @Test
+    void key2PemOutPut() throws Exception {
+        Cryptology.key2PemOutPut("RSA", 2048);
+        // Cryptology.key2PemOutPut("DSA", 1024);
+        // Cryptology.key2PemOutPut("DH", 1024);
+    }
+
+    @Test
+    void key2PemFile() throws Exception {
+        Cryptology.key2PemFile("RSA", 2048, FileIO.getAbsolutePath(STORE_PATH) + "/");
+    }
+
+    @Test
+    void der2pem() throws Exception {
+        /*String pem = Cryptology.der2pem(Hex.toHexString(Cryptology.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY)).getEncoded()), "PUB_KEY");
+        System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath(RSA_PUB_KEY))));*/
+        String pem = Cryptology.der2pem(Hex.toHexString(Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT)).getEncoded()), "PRV_KEY");
+        System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT))));
+        /*String pem = Cryptology.der2pem(Hex.toHexString(Cryptology.loadCsrFromFile(FileIO.getAbsolutePath(RSA_CSR_PEM), "PEM").getEncoded()), "CSR");
+        System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath(RSA_CSR_PEM))));*/
+        /*String pem = Cryptology.der2pem(Hex.toHexString(Cryptology.loadCertFromFile(FileIO.getAbsolutePath(), "PEM").getEncoded()), "CERT");
+        System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath())));*/
     }
 }
