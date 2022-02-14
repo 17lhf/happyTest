@@ -74,4 +74,18 @@ public class FileIO {
         }
         return new String(filecontent, encoding);
     }
+
+    /**
+     * 删除指定路径的文件, 若找不到则抛异常
+     * @param filePath 文件绝对路径
+     * @return 是否成功
+     * @throws Exception 异常
+     */
+    public static boolean deleteFile(String filePath) throws Exception {
+        File file = new File(filePath);
+        if(file.exists()){
+            return file.delete();
+        }
+        throw new FileNotFoundException();
+    }
 }

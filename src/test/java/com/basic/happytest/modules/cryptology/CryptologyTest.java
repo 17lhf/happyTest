@@ -8,8 +8,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Base64;
 
 
 /**
@@ -206,5 +209,24 @@ class CryptologyTest {
         System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath(RSA_CSR_PEM))));*/
         /*String pem = Cryptology.der2pem(Hex.toHexString(Cryptology.loadCertFromFile(FileIO.getAbsolutePath(), "PEM").getEncoded()), "CERT");
         System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath())));*/
+    }
+
+    @Test
+    void cert2PemFile() throws Exception {
+        Cryptology.cert2PemFile(Cryptology.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), "PEM"),
+                FileIO.getAbsolutePath(STORE_PATH) + "/");
+    }
+
+    @Test
+    void encryptAndDecryptData() throws Exception {
+        String s = "abc123,.中文";
+        byte[] sBytes = s.getBytes(StandardCharsets.UTF_8);
+        KeyPair keyPair = Cryptology.generateKeyPair("RSA", 2048);
+        String encData1 = Cryptology.encryptData(keyPair.getPrivate(), "RSA", sBytes, 1);
+        String encData2 = Cryptology.encryptData(keyPair.getPrivate(), "RSA", sBytes, 2);
+        String decData1 = Cryptology.decryptData(keyPair.getPublic(), "RSA", Hex.decode(encData1), 1);
+        String decData2 = Cryptology.decryptData(keyPair.getPublic(), "RSA", Base64.getDecoder().decode(encData2), 2);
+        System.out.println(new String(Hex.decode(decData1), StandardCharsets.UTF_8));
+        System.out.println(new String(Base64.getDecoder().decode(decData2), StandardCharsets.UTF_8));
     }
 }

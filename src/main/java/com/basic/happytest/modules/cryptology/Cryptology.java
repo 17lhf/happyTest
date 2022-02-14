@@ -1,5 +1,6 @@
 package com.basic.happytest.modules.cryptology;
 
+import com.basic.happytest.modules.fileIO.FileIO;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
@@ -29,6 +30,8 @@ import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.x509.X509CertImpl;
 
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.DHPrivateKeySpec;
 import javax.security.auth.x500.X500Principal;
 import java.io.*;
@@ -356,54 +359,6 @@ public class Cryptology {
     }
 
     /**
-     * 从证书中读取出公钥（含加载pem格式证书）
-     * @param path 证书文件路径
-     * @return 公钥
-     * @throws CertificateException 异常
-     * @throws FileNotFoundException 异常
-     */
-    public static PublicKey getPubKeyFromCert(String path) throws Exception {
-        System.out.println("---------------begin get public key from CERT---------------");
-        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-        X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new FileInputStream(path));
-        PublicKey publicKey = certificate.getPublicKey();
-        System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
-        System.out.println("---------------end get public key from CERT---------------");
-        return publicKey;
-    }
-
-    /**
-     * 读取证书文件并加载成一个证书对象（复杂式写法）
-     * @param path 证书存储路径
-     * @param certEncodeType 证书编码类型，支持“PEM"和”DER“
-     * @return 证书对象
-     * @throws Exception 异常
-     */
-    public static X509Certificate loadCertFromFile(String path, String certEncodeType) throws Exception{
-        System.out.println("---------------begin load CERT from file(" + certEncodeType + ")---------------");
-        FileInputStream inputStream = new FileInputStream(path);
-        int length = inputStream.available();
-        byte[] bytes = new byte[length];
-        inputStream.read(bytes);
-        inputStream.close();
-        // 开始依据不同的编码类型来加载证书
-        X509Certificate x509Certificate;
-        if("PEM".equals(certEncodeType)) { // pem格式
-            String crtStr = new String(bytes, StandardCharsets.UTF_8);
-            crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", ""); // 为避免不同平台的回车换行问题，所以这里只匹配开头的文件类型描述
-            crtStr = crtStr.replace("-----END CERTIFICATE-----", "");   // 为避免不同平台的回车换行问题，所以这里只匹配结尾的文件类型描述
-            crtStr = crtStr.replaceAll("\n", "");      // 去掉换行
-            crtStr = crtStr.replaceAll("\r", "");      // 去掉某些平台带有的回车
-            x509Certificate = new X509CertImpl(Base64.getDecoder().decode(crtStr));
-        } else { // der格式
-            x509Certificate = new X509CertImpl(bytes);
-        }
-        System.out.println("Cert subject: " + x509Certificate.getSubjectX500Principal().getName());
-        System.out.println("---------------end load CERT from file(" + certEncodeType + ")---------------");
-        return x509Certificate;
-    }
-
-    /**
      * 生成密钥对并生成证书请求
      * @param alo 算法，可选：RSA、EC
      * @param csrInfos 证书请求的subject信息，除了emailAddress以外都必填
@@ -634,8 +589,77 @@ public class Cryptology {
     }
 
     // todo 颁发证书，同时设置一些扩展字段
-    // todo 将证书对象存入文件
 
+    /**
+     * 将一个证书对象以PEM格式存入对应路径的文件中(本方法最后会删除生成文件，使用时注意去掉这个操作)
+     * @param x509Certificate 证书对象
+     * @param basePath 要存放的路径目录
+     * @throws Exception 异常
+     */
+    public static void cert2PemFile(X509Certificate x509Certificate, String basePath) throws Exception{
+        System.out.println("---------------begin store certificate object to pem file---------------");
+        String certPath = basePath + System.currentTimeMillis() + "_cert.crt";
+        File certFile = new File(certPath);
+        certFile.createNewFile();
+        PrintWriter printWriter = new PrintWriter(certFile);
+        PemWriter pemWriter = new PemWriter(printWriter);
+        PemObject pemObject = new PemObject("CERTIFICATE", x509Certificate.getEncoded());
+        pemWriter.writeObject(pemObject);
+        pemWriter.close();
+        System.out.println("---------------end store certificate object to pem file---------------");
+        // 校验生成的文件是否正确
+        getPubKeyFromCert(certPath);
+        // 删除生成的文件
+        FileIO.deleteFile(certPath);
+    }
+
+    /**
+     * 从证书中读取出公钥（含加载pem格式证书）
+     * @param path 证书文件路径
+     * @return 公钥
+     * @throws CertificateException 异常
+     * @throws FileNotFoundException 异常
+     */
+    public static PublicKey getPubKeyFromCert(String path) throws Exception {
+        System.out.println("---------------begin get public key from CERT---------------");
+        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new FileInputStream(path));
+        PublicKey publicKey = certificate.getPublicKey();
+        System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
+        System.out.println("---------------end get public key from CERT---------------");
+        return publicKey;
+    }
+
+    /**
+     * 读取证书文件并加载成一个证书对象（复杂式写法）
+     * @param path 证书存储路径
+     * @param certEncodeType 证书编码类型，支持“PEM"和”DER“
+     * @return 证书对象
+     * @throws Exception 异常
+     */
+    public static X509Certificate loadCertFromFile(String path, String certEncodeType) throws Exception{
+        System.out.println("---------------begin load CERT from file(" + certEncodeType + ")---------------");
+        FileInputStream inputStream = new FileInputStream(path);
+        int length = inputStream.available();
+        byte[] bytes = new byte[length];
+        inputStream.read(bytes);
+        inputStream.close();
+        // 开始依据不同的编码类型来加载证书
+        X509Certificate x509Certificate;
+        if("PEM".equals(certEncodeType)) { // pem格式
+            String crtStr = new String(bytes, StandardCharsets.UTF_8);
+            crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", ""); // 为避免不同平台的回车换行问题，所以这里只匹配开头的文件类型描述
+            crtStr = crtStr.replace("-----END CERTIFICATE-----", "");   // 为避免不同平台的回车换行问题，所以这里只匹配结尾的文件类型描述
+            crtStr = crtStr.replaceAll("\n", "");      // 去掉换行
+            crtStr = crtStr.replaceAll("\r", "");      // 去掉某些平台带有的回车
+            x509Certificate = new X509CertImpl(Base64.getDecoder().decode(crtStr));
+        } else { // der格式
+            x509Certificate = new X509CertImpl(bytes);
+        }
+        System.out.println("Cert subject: " + x509Certificate.getSubjectX500Principal().getName());
+        System.out.println("---------------end load CERT from file(" + certEncodeType + ")---------------");
+        return x509Certificate;
+    }
 
     /**
      * 从der格式(为了方便传递，一般der格式内容会转为十六进制串来传递)转换成pem格式
@@ -731,10 +755,64 @@ public class Cryptology {
         System.out.println("---------------end get certificate message---------------");
     }
 
-    // todo 私钥加密
-    // todo 私钥解密
-    // todo 公钥加密
-    // todo 公钥解密
+    /**
+     * 加密
+     * @param key 用来加密的密钥
+     * @param alo 密钥对应的算法，支持“RSA”、“EC"
+     * @param data 等待被加密的数据，数据不能太长
+     * @param resultType 期望返回的结果的格式，1-HexString, 2-Base64
+     * @return 密文数据
+     * @throws Exception 异常
+     */
+    public static String encryptData(Key key, String alo, byte[] data, Integer resultType) throws Exception{
+        System.out.println("---------------begin encrypt data---------------");
+        System.out.println("alo is: " + alo);
+        System.out.println("data length is: " + data.length);
+        Cipher cipher = Cipher.getInstance(alo);
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        byte[] res = cipher.doFinal(data);
+        String resStr;
+        if (resultType == 1){
+            System.out.println("result type is Hex String");
+            resStr = Hex.toHexString(res);
+        } else {
+            System.out.println("result type is Base64 String");
+            resStr = Base64.getEncoder().encodeToString(res);
+        }
+        System.out.println("encrypt data is: " + resStr);
+        System.out.println("---------------end encrypt data---------------");
+        return resStr;
+    }
+
+    /**
+     * 解密
+     * @param key 用来解密的密钥
+     * @param alo 密钥对应的算法，支持“RSA”、“EC"
+     * @param encData 等待被解密的密文数据
+     * @param resultType 期望返回的结果的格式，1-HexString, 2-Base64
+     * @return 明文数据
+     * @throws Exception 异常
+     */
+    public static String decryptData(Key key, String alo, byte[] encData, Integer resultType) throws Exception{
+        System.out.println("---------------begin decrypt data---------------");
+        System.out.println("alo is: " + alo);
+        System.out.println("encrypted data length is: " + encData.length);
+        Cipher cipher = Cipher.getInstance(alo);
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        byte[] res = cipher.doFinal(encData);
+        String resStr;
+        if (resultType == 1){
+            System.out.println("result type is Hex String");
+            resStr = Hex.toHexString(res);
+        } else {
+            System.out.println("result type is Base64 String");
+            resStr = Base64.getEncoder().encodeToString(res);
+        }
+        System.out.println("decrypt data is: " + resStr);
+        System.out.println("---------------end decrypt data---------------");
+        return resStr;
+    }
+
     // todo 生成p12
     // todo 解析p12
     // todo 验证一个公钥和一个私钥是否匹配

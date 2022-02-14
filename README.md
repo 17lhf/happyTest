@@ -27,7 +27,7 @@ synchronized 和 @Trasational同时使用时，产生的多线程并发问题
 关于优雅地读取配置文件中自定义的配置的实例
 
 ###(8)lombokExplore 
-关于lombok的注解里的坑
+关于lombok的注解里的坑（推荐最多只用lombok的getter和setter两个注解，其他的自己实现）
 
 ###(9)fileIO
 关于一些比较怪的文件操作及流的实例
