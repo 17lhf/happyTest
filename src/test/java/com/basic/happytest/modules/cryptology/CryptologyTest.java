@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
 
@@ -36,6 +38,8 @@ class CryptologyTest {
     // RSA CSR示例
     static String RSA_CSR_PEM = "static/cryptologyFiles/rsa1.csr";
     static String RSA_CSR_DER = "static/cryptologyFiles/rsa1_der.csr";
+    // RSA CERT示例
+    static String RSA_CERT_PEM = "static/cryptologyFiles/rsa1.crt";
     // ECC私钥示例1
     static String ECC_PRV_KEY_PKCS1_NO_ENCRYPT = "static/cryptologyFiles/ecPrivateKey1.key";
     static String ECC_PRV_KEY_PKCS1_ENCRYPT = "static/cryptologyFiles/ecProtectedPrvKey1.key";
@@ -86,13 +90,13 @@ class CryptologyTest {
         csrInfos.setOrganizationUnit("Organization Unit");
         csrInfos.setCommonName("lhf");
         csrInfos.setEmailAddress("lhf@qq.com");
-        Cryptology.generateP10CertRequest("RSA", csrInfos);
-        Cryptology.generateP10CertRequest("EC", csrInfos);
+        Cryptology.generateP10CertRequest("RSA", 2048, csrInfos);
+        Cryptology.generateP10CertRequest("EC", 256, csrInfos);
     }
 
     @Test
     void generateECCKeyPair() throws Exception {
-        Cryptology.generateECCKeyPair();
+        Cryptology.generateECCKeyPair(256);
     }
 
     @Test
@@ -112,7 +116,7 @@ class CryptologyTest {
         csrInfos.setOrganizationUnit("Organization Unit");
         csrInfos.setCommonName("lhf");
         csrInfos.setEmailAddress("lhf@qq.com");
-        PKCS10CertificationRequest csr = Cryptology.generateP10CertRequest("RSA", csrInfos);
+        PKCS10CertificationRequest csr = Cryptology.generateP10CertRequest("RSA", 2048, csrInfos);
         Cryptology.issueCert(csr, issuerCertPath, issuerKeyPath, 3650);
     }
 
@@ -164,7 +168,7 @@ class CryptologyTest {
         csrInfos.setOrganizationUnit("Organization Unit");
         csrInfos.setCommonName("lhf");
         csrInfos.setEmailAddress("lhf@qq.com");
-        Cryptology.getPubKeyFromCsr(Cryptology.generateP10CertRequest("EC", csrInfos), "EC");
+        Cryptology.getPubKeyFromCsr(Cryptology.generateP10CertRequest("EC", 256, csrInfos), "EC");
     }
 
     @Test
@@ -183,7 +187,7 @@ class CryptologyTest {
         csrInfos.setOrganizationUnit("Organization Unit");
         csrInfos.setCommonName("lhf");
         csrInfos.setEmailAddress("lhf@qq.com");
-        PKCS10CertificationRequest csr = Cryptology.generateP10CertRequest("RSA", csrInfos);
+        PKCS10CertificationRequest csr = Cryptology.generateP10CertRequest("RSA",2048, csrInfos);
         Cryptology.getCsrMsg(csr);
     }
 
@@ -221,12 +225,41 @@ class CryptologyTest {
     void encryptAndDecryptData() throws Exception {
         String s = "abc123,.中文";
         byte[] sBytes = s.getBytes(StandardCharsets.UTF_8);
-        KeyPair keyPair = Cryptology.generateKeyPair("RSA", 2048);
-        String encData1 = Cryptology.encryptData(keyPair.getPrivate(), "RSA", sBytes, 1);
-        String encData2 = Cryptology.encryptData(keyPair.getPrivate(), "RSA", sBytes, 2);
-        String decData1 = Cryptology.decryptData(keyPair.getPublic(), "RSA", Hex.decode(encData1), 1);
-        String decData2 = Cryptology.decryptData(keyPair.getPublic(), "RSA", Base64.getDecoder().decode(encData2), 2);
-        System.out.println(new String(Hex.decode(decData1), StandardCharsets.UTF_8));
-        System.out.println(new String(Base64.getDecoder().decode(decData2), StandardCharsets.UTF_8));
+
+
+        String ecAlo = "ECIES";
+        int ecSize = 256;
+        KeyPair ecKeyPair = Cryptology.generateECCKeyPair(ecSize);
+        byte[] ecEncData = Cryptology.encryptData(ecKeyPair.getPublic(), ecAlo, sBytes);
+        byte[] ecDecData = Cryptology.decryptData(ecKeyPair.getPrivate(), ecAlo, ecEncData);
+        System.out.println(new String(ecDecData, StandardCharsets.UTF_8));
+
+        String alo = "RSA";
+        Integer size = 2048;
+        KeyPair keyPair = Cryptology.generateKeyPair(alo, size);
+        byte[] encData1 = Cryptology.encryptData(keyPair.getPrivate(), alo, sBytes);
+        byte[] encData2 = Cryptology.encryptData(keyPair.getPrivate(), alo, sBytes);
+        byte[] decData1 = Cryptology.decryptData(keyPair.getPublic(), alo, encData1);
+        byte[] decData2 = Cryptology.decryptData(keyPair.getPublic(), alo, encData2);
+        System.out.println(new String(decData1, StandardCharsets.UTF_8));
+        System.out.println(new String(decData2, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void keyAloSupportedInBCLibrary() {
+        Cryptology.keyAloSupportedInBCLibrary();
+    }
+
+    @Test
+    void certPem2DerHexStr() throws Exception {
+        Cryptology.certPem2DerHexStr(FileIO.getFileContent(FileIO.getAbsolutePath(CA_CERT_PEM)));
+    }
+
+    @Test
+    void generateP12() throws Exception {
+        X509Certificate rootCert = Cryptology.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), "PEM");
+        X509Certificate subCert = Cryptology.loadCertFromFile(FileIO.getAbsolutePath(RSA_CERT_PEM), "PEM");
+        PrivateKey privateKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+        Cryptology.generateP12(rootCert, subCert, privateKey, "123456", FileIO.getAbsolutePath(STORE_PATH) + "/");
     }
 }

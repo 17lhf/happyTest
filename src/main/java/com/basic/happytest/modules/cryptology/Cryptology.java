@@ -31,7 +31,6 @@ import sun.security.util.DerValue;
 import sun.security.x509.X509CertImpl;
 
 import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.DHPrivateKeySpec;
 import javax.security.auth.x500.X500Principal;
 import java.io.*;
@@ -53,9 +52,11 @@ import java.util.Objects;
 
 /**
  * 密码学相关的java操作
- * (注意部分内容会使用到BC库)
- * （注意，很多地方异常的处理没有做，请自行解决）
+ * (注意，部分内容会使用到BC库，特别是ECC算法相关，因为jdk不支持ECC)
+ * (注意，java里面很多地方其实都是用的PKCS8标准来处理密钥，所以导入到处都会默认以PKCS8标准)
+ * (注意，很多地方异常的处理没有做，请自行解决)
  * (注意，有些类在java安全库中有，在BC库中也有，要注意实际用的是哪一个)
+ * (注意，部分方法用到了sun.*的包，可能会导致打包时报找不到的错误(原因请看README.md)（虽然本项目不知为何不会报错）)
  * @author lhf
  */
 
@@ -67,6 +68,16 @@ public class Cryptology {
             Security.addProvider(new BouncyCastleProvider());
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * 获取BC库支持的密钥算法
+     */
+    public static void keyAloSupportedInBCLibrary() {
+        Provider provider = new org.bouncycastle.jce.provider.BouncyCastleProvider();
+        for (Provider.Service service : provider.getServices()) {
+            System.out.println(service.getType() + ": " + service.getAlgorithm());
         }
     }
 
@@ -134,15 +145,16 @@ public class Cryptology {
 
     /**
      * 生成ECC密钥对
+     * @param keySize 密钥长度, 推荐256
      * @return 密钥对
      * @throws NoSuchAlgorithmException 异常
      * @throws NoSuchProviderException 异常
      */
-    public static KeyPair generateECCKeyPair() throws Exception {
+    public static KeyPair generateECCKeyPair(int keySize) throws Exception {
         System.out.println("---------------begin generateECCKeyPair---------------");
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
         System.out.println("Provider: " + keyPairGenerator.getProvider());
-        keyPairGenerator.initialize(256);
+        keyPairGenerator.initialize(keySize);
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
         PublicKey publicKey = keyPair.getPublic();
         PrivateKey privateKey = keyPair.getPrivate();
@@ -153,7 +165,7 @@ public class Cryptology {
         ECPoint ecPoint = ecPublicKey.getW();
         BigInteger x = ecPoint.getAffineX();
         BigInteger y = ecPoint.getAffineY();
-        System.out.println("基点坐标为（" + x + "," + y + ")");
+        System.out.println("基点坐标为（" + x + "," + y + ")"); // 公共点坐标
         ECParameterSpec ecParameterSpec = ecPublicKey.getParams();
         System.out.println("辅因子： " + ecParameterSpec.getCofactor());
         EllipticCurve ellipticCurve = ecParameterSpec.getCurve();
@@ -170,6 +182,7 @@ public class Cryptology {
 
     /**
      * 读取RSA私钥文件(pkcs1标准格式的私钥, 且无口令保护, 参考测试用的文件)
+     * （方法使用了sun.*包，可能会导致打包失败，请看readme.md文件描述）
      * @param pemFilePath 文件路径
      * @return RSA私钥
      * @throws GeneralSecurityException 异常
@@ -361,11 +374,12 @@ public class Cryptology {
     /**
      * 生成密钥对并生成证书请求
      * @param alo 算法，可选：RSA、EC
+     * @param keySize 密钥长度，RSA时推荐2048，EC时推荐256
      * @param csrInfos 证书请求的subject信息，除了emailAddress以外都必填
      * @return 证书请求对象
      * @throws Exception 异常
      */
-    public static PKCS10CertificationRequest generateP10CertRequest(String alo, CsrInfos csrInfos) throws Exception {
+    public static PKCS10CertificationRequest generateP10CertRequest(String alo, int keySize, CsrInfos csrInfos) throws Exception {
         System.out.println("---------------begin generateP10CertRequest---------------");
         PublicKey publicKey = null;
         PrivateKey privateKey = null;
@@ -373,12 +387,12 @@ public class Cryptology {
         // 区分两种算法的密钥生成
         // RSA
         if (StringUtils.equals(alo, "RSA")){
-            KeyPair keyPair = generateKeyPair("RSA", 2048);
+            KeyPair keyPair = generateKeyPair("RSA", keySize);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withRSA";
         } else { // ECC
-            KeyPair keyPair = generateECCKeyPair();
+            KeyPair keyPair = generateECCKeyPair(keySize);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withECDSA";
@@ -429,7 +443,7 @@ public class Cryptology {
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withRSA";
         } else { // ECC
-            KeyPair keyPair = generateECCKeyPair();
+            KeyPair keyPair = generateECCKeyPair(256);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withECDSA";
@@ -632,6 +646,7 @@ public class Cryptology {
 
     /**
      * 读取证书文件并加载成一个证书对象（复杂式写法）
+     * （方法使用了sun.*包，可能会导致打包失败，请看readme.md文件描述）
      * @param path 证书存储路径
      * @param certEncodeType 证书编码类型，支持“PEM"和”DER“
      * @return 证书对象
@@ -702,18 +717,19 @@ public class Cryptology {
     };
 
     /**
-     * todo 将传进来的pem格式证书字符串转为der格式（Hex-String）
+     * 将传进来的pem格式证书字符串转为der格式（Hex-String）
+     * （方法使用了sun.*包，可能会导致打包失败，请看readme.md文件描述）
      * @param crtStr pem格式证书字符串
      * @return der格式（Hex-String）证书
      * @throws Exception 异常
      */
     public static String certPem2DerHexStr(String crtStr) throws Exception {
         System.out.println("---------------begin CERT PEM to DER---------------");
-        // 去除头部尾部
-        crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----\n", "");
-        crtStr = crtStr.replace("\n-----END CERTIFICATE-----\n", "");
-        // 这种写法的话，要防止内容转为二进制后，里面附带换行
-        crtStr = crtStr.replaceAll("\n","");
+
+        crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", ""); // 为避免不同平台的回车换行问题，所以这里只匹配开头的文件类型描述
+        crtStr = crtStr.replace("-----END CERTIFICATE-----", "");   // 为避免不同平台的回车换行问题，所以这里只匹配结尾的文件类型描述
+        crtStr = crtStr.replaceAll("\n", "");      // 去掉换行
+        crtStr = crtStr.replaceAll("\r", "");      // 去掉某些平台带有的回车
         // 转为证书对象
         X509Certificate x509Certificate = new X509CertImpl(Base64.getDecoder().decode(crtStr));
         byte[] bytes = x509Certificate.getEncoded();
@@ -757,65 +773,88 @@ public class Cryptology {
 
     /**
      * 加密
+     * 注意：如果是ECC，则只能用公钥加密，不支持私钥加密数据
      * @param key 用来加密的密钥
-     * @param alo 密钥对应的算法，支持“RSA”、“EC"
+     * @param alo 密钥对应的算法，支持“RSA”、“ECIES"(ECIES表示ECC)
      * @param data 等待被加密的数据，数据不能太长
-     * @param resultType 期望返回的结果的格式，1-HexString, 2-Base64
      * @return 密文数据
      * @throws Exception 异常
      */
-    public static String encryptData(Key key, String alo, byte[] data, Integer resultType) throws Exception{
+    public static byte[] encryptData(Key key, String alo, byte[] data) throws Exception{
         System.out.println("---------------begin encrypt data---------------");
         System.out.println("alo is: " + alo);
         System.out.println("data length is: " + data.length);
-        Cipher cipher = Cipher.getInstance(alo);
+        Cipher cipher = Cipher.getInstance(alo, BouncyCastleProvider.PROVIDER_NAME);
         cipher.init(Cipher.ENCRYPT_MODE, key);
         byte[] res = cipher.doFinal(data);
-        String resStr;
-        if (resultType == 1){
-            System.out.println("result type is Hex String");
-            resStr = Hex.toHexString(res);
-        } else {
-            System.out.println("result type is Base64 String");
-            resStr = Base64.getEncoder().encodeToString(res);
-        }
-        System.out.println("encrypt data is: " + resStr);
+        System.out.println("Hex String type encrypted result data is: " + Hex.toHexString(res));
+        System.out.println("Base64 String type encrypted result data is: " + Base64.getEncoder().encodeToString(res));
         System.out.println("---------------end encrypt data---------------");
-        return resStr;
+        return res;
     }
 
     /**
      * 解密
+     * 注意：如果是ECC，则只能用私钥解密，不支持公钥解密数据
      * @param key 用来解密的密钥
-     * @param alo 密钥对应的算法，支持“RSA”、“EC"
+     * @param alo 密钥对应的算法，支持“RSA”、“ECIES"(ECIES表示ECC)
      * @param encData 等待被解密的密文数据
-     * @param resultType 期望返回的结果的格式，1-HexString, 2-Base64
      * @return 明文数据
      * @throws Exception 异常
      */
-    public static String decryptData(Key key, String alo, byte[] encData, Integer resultType) throws Exception{
+    public static byte[] decryptData(Key key, String alo, byte[] encData) throws Exception{
         System.out.println("---------------begin decrypt data---------------");
         System.out.println("alo is: " + alo);
         System.out.println("encrypted data length is: " + encData.length);
-        Cipher cipher = Cipher.getInstance(alo);
+        Cipher cipher = Cipher.getInstance(alo, BouncyCastleProvider.PROVIDER_NAME);
         cipher.init(Cipher.DECRYPT_MODE, key);
         byte[] res = cipher.doFinal(encData);
-        String resStr;
-        if (resultType == 1){
-            System.out.println("result type is Hex String");
-            resStr = Hex.toHexString(res);
-        } else {
-            System.out.println("result type is Base64 String");
-            resStr = Base64.getEncoder().encodeToString(res);
-        }
-        System.out.println("decrypt data is: " + resStr);
+        System.out.println("Hex String type decrypt result data is: " + Hex.toHexString(res));
+        System.out.println("Base64 String type decrypt result data is: " + Base64.getEncoder().encodeToString(res));
         System.out.println("---------------end decrypt data---------------");
-        return resStr;
+        return res;
     }
 
-    // todo 生成p12
+    // 验证一个公钥和一个私钥是否匹配，其实就是加密一个数据，然后解密，看看解密后的结果与原始数据是否一致（目前没有找到更便捷的流程）
+    // 验证一个私钥与一本证书是否匹配，其实就是先从证书中提取公钥，然后就是和上一个一样的流程（目前没有找到更便捷的流程）
+
+    /**
+     * todo 生成p12文件到指定文件夹中
+     * 这种方式生成的p12文件在openssl处进行解析验证时，会出现无法正常显示证书的问题
+     * @param rootCert 根证书
+     * @param subCert 子证书
+     * @param subKey 子证书对应的私钥
+     * @param p12Pwd 生成的p12文件的口令
+     * @param outputFolderPath 指定的p12文件输出文件夹
+     * @throws Exception 异常
+     */
+    public static void generateP12(java.security.cert.Certificate rootCert, java.security.cert.Certificate subCert, PrivateKey subKey,
+                                   String p12Pwd, String outputFolderPath) throws Exception{
+        System.out.println("---------------begin generate P12---------------");
+        System.out.println("keyStore default type is: " + KeyStore.getDefaultType());
+        KeyStore keyStore = KeyStore.getInstance("PKCS12",  new BouncyCastleProvider());
+        keyStore.load(null, null);
+        java.security.cert.Certificate[] certificates = new java.security.cert.Certificate[2];
+        certificates[0] = rootCert;
+        certificates[1] = subCert;
+        // 将给定的密钥分配给给定的别名，并使用给定的密码对其进行保护。
+        // 将给定的密钥分配给给定的别名，并使用给定的密码对其进行保护。
+        //如果给定的密钥类型为 java.security.PrivateKey，它必须附带一个证书链来验证相应的公钥。
+        //如果给定的别名已存在，则与其关联的密钥库信息将被给定的密钥（可能还有证书链）覆盖。
+        keyStore.setKeyEntry("subPrvKey", subKey, p12Pwd.toCharArray(), certificates);
+        keyStore.setCertificateEntry("rootCert", rootCert);
+        keyStore.setCertificateEntry("subCert", subCert);
+        keyStore.store(new FileOutputStream(outputFolderPath + System.currentTimeMillis() + ".p12"), p12Pwd.toCharArray());
+        System.out.println("---------------end generate P12---------------");
+        // 验证
+        java.security.cert.Certificate rootCert2 = keyStore.getCertificate("rootCert");
+        System.out.println(rootCert2.getType());
+        System.out.println(rootCert2.getPublicKey().getAlgorithm());
+    }
+
     // todo 解析p12
-    // todo 验证一个公钥和一个私钥是否匹配
-    // todo 验证一个私钥与一本证书是否匹配
+
     // todo 验证证书链是否正确
+
+
 }
