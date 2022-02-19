@@ -819,8 +819,10 @@ public class Cryptology {
     // 验证一个私钥与一本证书是否匹配，其实就是先从证书中提取公钥，然后就是和上一个一样的流程（目前没有找到更便捷的流程）
 
     /**
-     * todo 生成p12文件到指定文件夹中
-     * 这种方式生成的p12文件在openssl处进行解析验证时，会出现无法正常显示证书的问题
+     * 生成p12文件到指定文件夹中
+     * 这种方式生成的p12文件等同于在openssl1.1.1版本中生成的p12文件
+     * 在openssl3.0处进行解析验证时，会出现无法正常显示证书的问题
+     * 因为使用的加密方式是比较旧的RC2-40-CBC，该加密方式已被认为是不安全的，于是openssl在3.0中进行了剔除，3.0之前版本的openssl可以照常解析
      * @param rootCert 根证书
      * @param subCert 子证书
      * @param subKey 子证书对应的私钥
@@ -834,22 +836,20 @@ public class Cryptology {
         System.out.println("keyStore default type is: " + KeyStore.getDefaultType());
         KeyStore keyStore = KeyStore.getInstance("PKCS12",  new BouncyCastleProvider());
         keyStore.load(null, null);
-        java.security.cert.Certificate[] certificates = new java.security.cert.Certificate[2];
-        certificates[0] = rootCert;
-        certificates[1] = subCert;
+        java.security.cert.Certificate[] certificates = new java.security.cert.Certificate[1];
+        certificates[0] = subCert;
         // 将给定的密钥分配给给定的别名，并使用给定的密码对其进行保护。
-        // 将给定的密钥分配给给定的别名，并使用给定的密码对其进行保护。
-        //如果给定的密钥类型为 java.security.PrivateKey，它必须附带一个证书链来验证相应的公钥。
-        //如果给定的别名已存在，则与其关联的密钥库信息将被给定的密钥（可能还有证书链）覆盖。
-        keyStore.setKeyEntry("subPrvKey", subKey, p12Pwd.toCharArray(), certificates);
+        // 如果给定的密钥类型为 java.security.PrivateKey，它必须附带一个证书链来验证相应的公钥。
+        // 如果给定的别名已存在，则与其关联的密钥库信息将被给定的密钥（可能还有证书链）覆盖
+        // 此处用来校验的证书的certificates的数组第一个元素（即一个证书对象），会被用别名来保存进p12，所以推荐只放一个私钥对应的证书
+        keyStore.setKeyEntry("sub", subKey, p12Pwd.toCharArray(), certificates);
+        // 如果准备在p12中放证书链，则可以把ca证书放进去
         keyStore.setCertificateEntry("rootCert", rootCert);
-        keyStore.setCertificateEntry("subCert", subCert);
         keyStore.store(new FileOutputStream(outputFolderPath + System.currentTimeMillis() + ".p12"), p12Pwd.toCharArray());
         System.out.println("---------------end generate P12---------------");
         // 验证
-        java.security.cert.Certificate rootCert2 = keyStore.getCertificate("rootCert");
-        System.out.println(rootCert2.getType());
-        System.out.println(rootCert2.getPublicKey().getAlgorithm());
+        Cryptology.getCertMsg((X509Certificate) keyStore.getCertificate("rootCert"));
+        Cryptology.getCertMsg((X509Certificate) keyStore.getCertificate("sub"));
     }
 
     // todo 解析p12
