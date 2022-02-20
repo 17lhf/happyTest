@@ -681,6 +681,24 @@ public class Cryptology {
     }
 
     /**
+     * 验证子证书是否由父证书颁发(这里其实只做了密钥签名验证，未用sn之类的数据验证)
+     * @param subCert 子证书
+     * @param rootCert 父证书
+     * @return true-是，false-不是
+     */
+    public static boolean validCertChain(X509Certificate subCert, X509Certificate rootCert){
+        boolean isOK;
+        try {
+            subCert.verify(rootCert.getPublicKey());
+            isOK = true;
+        } catch (Exception e){
+            isOK = false;
+        }
+        System.out.println("SubCert is issued by rootCert ? " + isOK);
+        return isOK;
+    }
+
+    /**
      * 从der格式(为了方便传递，一般der格式内容会转为十六进制串来传递)转换成pem格式
      * @param der 一个Hex-String形式的der格式证书请求内容
      * @param type 文件类型，支持“CSR","CERT","PRV_KEY","PUB_KEY"
@@ -893,7 +911,7 @@ public class Cryptology {
      * @param data 原始数据
      * @param hashType 签名过程中要用到的摘要算法, 支持：SHA1,SHA256 (较常用的是SHA256)
      * @param signatureValue 签名值
-     * @return 是否正确
+     * @return true-正确，false-错误
      * @throws Exception 异常
      */
     public static boolean validSignature(PublicKey pubKey, String keyAlo, byte[] data, String hashType, byte[] signatureValue) throws Exception {
@@ -917,15 +935,20 @@ public class Cryptology {
      * 这种方式生成的p12文件等同于在openssl1.1.1版本中生成的p12文件
      * 在openssl3.0处进行解析验证时，会出现无法正常显示证书的问题
      * 因为使用的加密方式是比较旧的RC2-40-CBC，该加密方式已被认为是不安全的，于是openssl在3.0中进行了剔除，3.0之前版本的openssl可以照常解析
-     * @param rootCert 根证书
+     * @param rootCert 根证书(可为null)
+     * @param rootCertAlias 根证书别名(可为null)
      * @param subCert 子证书
+     * @param prvKeyAndSubCertAlias 私钥及子证书的别名
      * @param subKey 子证书对应的私钥
+     * @param keyPwd 保护私钥的密码
      * @param p12Pwd 生成的p12文件的口令
      * @param outputFolderPath 指定的p12文件输出文件夹
      * @throws Exception 异常
      */
-    public static void generateP12(java.security.cert.Certificate rootCert, java.security.cert.Certificate subCert, PrivateKey subKey,
-                                   String p12Pwd, String outputFolderPath) throws Exception{
+    public static void generateP12(java.security.cert.Certificate rootCert, String rootCertAlias,
+                                   java.security.cert.Certificate subCert,
+                                   String prvKeyAndSubCertAlias, PrivateKey subKey, String keyPwd,
+                                   String p12Pwd, String outputFolderPath) throws Exception {
         System.out.println("---------------begin generate P12---------------");
         System.out.println("keyStore default type is: " + KeyStore.getDefaultType());
         KeyStore keyStore = KeyStore.getInstance("PKCS12",  new BouncyCastleProvider());
@@ -936,17 +959,52 @@ public class Cryptology {
         // 如果给定的密钥类型为 java.security.PrivateKey，它必须附带一个证书链来验证相应的公钥。
         // 如果给定的别名已存在，则与其关联的密钥库信息将被给定的密钥（可能还有证书链）覆盖
         // 此处用来校验的证书的certificates的数组第一个元素（即一个证书对象），会被用别名来保存进p12，所以推荐只放一个私钥对应的证书
-        keyStore.setKeyEntry("sub", subKey, p12Pwd.toCharArray(), certificates);
+        keyStore.setKeyEntry(prvKeyAndSubCertAlias, subKey, keyPwd.toCharArray(), certificates);
         // 如果准备在p12中放证书链，则可以把ca证书放进去
-        keyStore.setCertificateEntry("rootCert", rootCert);
+        if(rootCert != null || StringUtils.isNotBlank(rootCertAlias)){
+            keyStore.setCertificateEntry(rootCertAlias, rootCert);
+        }
         // 将生成的p12输出到一个文件中
         keyStore.store(new FileOutputStream(outputFolderPath + System.currentTimeMillis() + ".p12"), p12Pwd.toCharArray());
         System.out.println("---------------end generate P12---------------");
         // 验证
-        Cryptology.getCertMsg((X509Certificate) keyStore.getCertificate("rootCert"));
-        Cryptology.getCertMsg((X509Certificate) keyStore.getCertificate("sub"));
+        if(rootCert != null || StringUtils.isNotBlank(rootCertAlias)){
+            Cryptology.getCertMsg((X509Certificate) keyStore.getCertificate(rootCertAlias));
+        }
+        Cryptology.getCertMsg((X509Certificate) keyStore.getCertificate(prvKeyAndSubCertAlias));
     }
 
-    // todo 解析p12
-    // todo 验证证书链是否正确
+    /**
+     * 从文件中加载p12,并试着解析并获取其中的数据
+     * @param path p12存储的绝对路径
+     * @param p12Pwd p12的保护口令
+     * @param prvKeyAlias 私钥的别名
+     * @param keyPwd 保护私钥的口令
+     * @param subCertAlias 子证书的别名
+     * @param rootCertAlias 根证书的别名（如果没有则输入为null）
+     * @throws Exception 异常
+     */
+    public static void loadAndParseP12(String path, String p12Pwd, String prvKeyAlias, String keyPwd, String subCertAlias,
+                                String rootCertAlias) throws Exception{
+        System.out.println("---------------begin parse P12---------------");
+        File file = new File(path);
+        if (!file.exists()){
+            throw new FileNotFoundException();
+        }
+        InputStream inputStream = new FileInputStream(file);
+        KeyStore keyStore = KeyStore.getInstance("PKCS12",  new BouncyCastleProvider());
+        keyStore.load(inputStream, p12Pwd.toCharArray());
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey(prvKeyAlias, keyPwd.toCharArray());
+        System.out.println("Private key algorithm is: " + privateKey.getAlgorithm());
+        System.out.println("Private key be created to this object date is: " + keyStore.getCreationDate(prvKeyAlias).toString());
+        X509Certificate subCert = (X509Certificate) keyStore.getCertificate(subCertAlias);
+        Cryptology.getCertMsg(subCert);
+        System.out.println("SubCert be created to this object date is: " + keyStore.getCreationDate(subCertAlias));
+        if(StringUtils.isNotBlank(rootCertAlias)){
+            X509Certificate rootCert = (X509Certificate) keyStore.getCertificate(rootCertAlias);
+            Cryptology.getCertMsg(rootCert);
+        }
+        System.out.println("SubCert alias is: " + keyStore.getCertificateAlias(subCert));
+        System.out.println("---------------begin parse P12---------------");
+    }
 }

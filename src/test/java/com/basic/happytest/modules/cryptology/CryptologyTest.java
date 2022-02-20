@@ -267,7 +267,9 @@ class CryptologyTest {
         X509Certificate rootCert = Cryptology.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), "PEM");
         X509Certificate subCert = Cryptology.loadCertFromFile(FileIO.getAbsolutePath(RSA_CERT_PEM), "PEM");
         PrivateKey privateKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
-        Cryptology.generateP12(rootCert, subCert, privateKey, "123456", FileIO.getAbsolutePath(STORE_PATH) + "/");
+        Cryptology.generateP12(rootCert, "rootCert",
+                subCert, "sub",
+                privateKey, "654321", "123456", FileIO.getAbsolutePath(STORE_PATH) + "/");
     }
 
     @Test
@@ -315,5 +317,19 @@ class CryptologyTest {
         byte[] res11 = Cryptology.signData(ecPrvKey, "ECDSA", dataBytes, "SHA256");
         PublicKey ecPubKey = Cryptology.loadPublicKey(FileIO.getAbsolutePath(ECC_PUB_KEY));
         Cryptology.validSignature(ecPubKey, "ECDSA", dataBytes, "SHA256", res11);
+    }
+
+    @Test
+    void validCertChain() throws Exception {
+        X509Certificate subCert = Cryptology.loadCertFromFile(FileIO.getAbsolutePath(RSA_CERT_PEM), "PEM");
+        X509Certificate rootCert = Cryptology.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), "PEM");
+        Cryptology.validCertChain(subCert, rootCert);
+        Cryptology.validCertChain(rootCert, subCert);
+    }
+
+    @Test
+    void loadAndParseP12() throws Exception {
+       Cryptology.loadAndParseP12(FileIO.getAbsolutePath(STORE_PATH) + "/genByJavaRSA1.p12",
+               "123456", "sub", "654321", "sub", "rootCert");
     }
 }
