@@ -6,15 +6,13 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Base64;
 
 
 /**
@@ -75,9 +73,9 @@ class CryptologyTest {
 
     @Test
     void getDigestValue() throws NoSuchAlgorithmException {
-        Cryptology.getDigestValue("Message", "MD5");
-        Cryptology.getDigestValue("Message", "SHA-1");
-        Cryptology.getDigestValue("Message", "SHA-256");
+        Cryptology.digestData("Message".getBytes(StandardCharsets.UTF_8), "MD5");
+        Cryptology.digestData("Message".getBytes(StandardCharsets.UTF_8), "SHA-1");
+        Cryptology.digestData("Message".getBytes(StandardCharsets.UTF_8), "SHA-256");
     }
 
     @Test
@@ -101,7 +99,7 @@ class CryptologyTest {
 
     @Test
     void loadRSAPrivateKey() throws Exception {
-        Cryptology.loadRSAPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
+        Cryptology.loadRSAPKCS1PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
     }
 
     @Test
@@ -238,11 +236,20 @@ class CryptologyTest {
         Integer size = 2048;
         KeyPair keyPair = Cryptology.generateKeyPair(alo, size);
         byte[] encData1 = Cryptology.encryptData(keyPair.getPrivate(), alo, sBytes);
-        byte[] encData2 = Cryptology.encryptData(keyPair.getPrivate(), alo, sBytes);
+        byte[] encData2 = Cryptology.encryptData(keyPair.getPrivate(), "RSA/ECB/PKCS1Padding", sBytes);
+        byte[] encData3 = Cryptology.encryptData(keyPair.getPrivate(), "RSA/ECB/OAEPWithSHA-1AndMGF1Padding", sBytes);
+        byte[] encData4 = Cryptology.encryptData(keyPair.getPrivate(), "RSA/ECB/OAEPWithSHA-256AndMGF1Padding", sBytes);
+        byte[] encData5 = Cryptology.encryptData(keyPair.getPrivate(), "RSA/ECB/NoPadding", sBytes);
         byte[] decData1 = Cryptology.decryptData(keyPair.getPublic(), alo, encData1);
-        byte[] decData2 = Cryptology.decryptData(keyPair.getPublic(), alo, encData2);
+        byte[] decData2 = Cryptology.decryptData(keyPair.getPublic(), "RSA/ECB/PKCS1Padding", encData2);
+        byte[] decData3 = Cryptology.decryptData(keyPair.getPublic(), "RSA/ECB/OAEPWithSHA-1AndMGF1Padding", encData3);
+        byte[] decData4 = Cryptology.decryptData(keyPair.getPublic(), "RSA/ECB/OAEPWithSHA-256AndMGF1Padding", encData4);
+        byte[] decData5 = Cryptology.decryptData(keyPair.getPublic(), "RSA/ECB/NoPadding", encData5);
         System.out.println(new String(decData1, StandardCharsets.UTF_8));
         System.out.println(new String(decData2, StandardCharsets.UTF_8));
+        System.out.println(new String(decData3, StandardCharsets.UTF_8));
+        System.out.println(new String(decData4, StandardCharsets.UTF_8));
+        System.out.println(new String(decData5, StandardCharsets.UTF_8));
     }
 
     @Test
@@ -261,5 +268,52 @@ class CryptologyTest {
         X509Certificate subCert = Cryptology.loadCertFromFile(FileIO.getAbsolutePath(RSA_CERT_PEM), "PEM");
         PrivateKey privateKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         Cryptology.generateP12(rootCert, subCert, privateKey, "123456", FileIO.getAbsolutePath(STORE_PATH) + "/");
+    }
+
+    @Test
+    void signData() throws Exception {
+        String data = "a data to be signed";
+        byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
+
+        // RSA
+        PrivateKey privateKey = Cryptology.loadRSAPKCS1PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
+        System.out.println();
+        byte[] res1 = Cryptology.signData(privateKey, "RSA", dataBytes, "SHA256");
+        System.out.println();
+        byte[] res2 = Cryptology.signData2(privateKey, "RSA", dataBytes, "SHA256");
+        System.out.println(Hex.toHexString(res1).equals(Hex.toHexString(res2)));
+        PublicKey publicKey = Cryptology.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY));
+        System.out.println();
+        /*Cryptology.decryptData(publicKey, "RSA", res1);
+        System.out.println();
+        Cryptology.decryptData(publicKey, "RSA", res2);
+        System.out.println();*/
+        Cryptology.decryptData(publicKey, "RSA/ECB/PKCS1Padding", res1);
+        System.out.println();
+        Cryptology.decryptData(publicKey, "RSA/ECB/PKCS1Padding", res2);
+
+        // ECC
+        PrivateKey ecPrvKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
+        System.out.println();
+        Cryptology.signData(ecPrvKey, "ECDSA", dataBytes, "SHA256");
+    }
+
+    @Test
+    void validSignature() throws Exception {
+        String data = "a data to be signed";
+        byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
+        // RSA
+        PrivateKey privateKey = Cryptology.loadRSAPKCS1PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
+        System.out.println();
+        byte[] res1 = Cryptology.signData(privateKey, "RSA", dataBytes, "SHA256");
+        PublicKey publicKey = Cryptology.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY));
+        System.out.println();
+        Cryptology.validSignature(publicKey, "RSA", dataBytes, "SHA256", res1);
+        // ECC
+        PrivateKey ecPrvKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
+        System.out.println();
+        byte[] res11 = Cryptology.signData(ecPrvKey, "ECDSA", dataBytes, "SHA256");
+        PublicKey ecPubKey = Cryptology.loadPublicKey(FileIO.getAbsolutePath(ECC_PUB_KEY));
+        Cryptology.validSignature(ecPubKey, "ECDSA", dataBytes, "SHA256", res11);
     }
 }
