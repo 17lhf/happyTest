@@ -332,4 +332,22 @@ class CryptologyTest {
        Cryptology.loadAndParseP12(FileIO.getAbsolutePath(STORE_PATH) + "/genByJavaRSA1.p12",
                "123456", "sub", "654321", "sub", "rootCert");
     }
+
+    @Test
+    public void genP10() throws Exception{
+        PublicKey publicKey = Cryptology.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY));
+        PrivateKey privateKey = Cryptology.loadRSAPKCS1PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
+        CsrInfos csrInfos = new CsrInfos();
+        csrInfos.setCountry("CN");
+        csrInfos.setState("FuJian");
+        csrInfos.setLocal("FuZhou");
+        csrInfos.setOrganization("Organization");
+        csrInfos.setOrganizationUnit("Organization Unit");
+        csrInfos.setCommonName("genP10");
+        csrInfos.setEmailAddress("lhf@qq.com");
+        byte[] csrInfoBytes = Cryptology.getP10CsrInfoToBeSign(csrInfos, publicKey);
+        byte[] signature = Cryptology.signData(privateKey, "RSA", csrInfoBytes, "SHA256");
+        PKCS10CertificationRequest csr = Cryptology.constructP10Csr(signature, csrInfoBytes);
+        Cryptology.csr2PemFile(csr, FileIO.getAbsolutePath(STORE_PATH) + "/");
+    }
 }

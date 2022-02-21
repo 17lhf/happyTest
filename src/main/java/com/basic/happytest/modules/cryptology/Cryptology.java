@@ -3,8 +3,15 @@ package com.basic.happytest.modules.cryptology;
 import com.basic.happytest.modules.fileIO.FileIO;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.DERBitString;
+import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.pkcs.CertificationRequest;
+import org.bouncycastle.asn1.pkcs.CertificationRequestInfo;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -476,6 +483,69 @@ public class Cryptology {
         System.out.println("Subject of PKCS10 Certification Request: " + csr.getSubject());
         System.out.println("---------------end generate attach Extensions P10 Csr---------------");
         return csr;
+    }
+
+    /**
+     * 利用公钥和subject生成csr中待签名的部分（分步进行csr生成环节1）
+     * @param csrInfos subject
+     * @param publicKey 公钥
+     * @return csr中待签名的部分
+     * @throws Exception 异常
+     */
+    public static byte[] getP10CsrInfoToBeSign(CsrInfos csrInfos, PublicKey publicKey) throws Exception {
+        System.out.println("---------------begin get P10 Csr info to be signed---------------");
+        X500NameBuilder x500NameBuilder = new X500NameBuilder();
+        x500NameBuilder.addRDN(BCStyle.C, csrInfos.getCountry())
+                .addRDN(BCStyle.ST, csrInfos.getState())
+                .addRDN(BCStyle.L, csrInfos.getLocal())
+                .addRDN(BCStyle.O, csrInfos.getOrganization())
+                .addRDN(BCStyle.OU, csrInfos.getOrganizationUnit())
+                .addRDN(BCStyle.CN, csrInfos.getCommonName())
+                .addRDN(BCStyle.EmailAddress, csrInfos.getEmailAddress());
+        X500Name subject = x500NameBuilder.build();
+        SubjectPublicKeyInfo publicKeyInfo = SubjectPublicKeyInfo.getInstance(publicKey.getEncoded());
+        //<editor-fold desc="待签名的CSR数据, 这里没有设置附带属性">
+        CertificationRequestInfo certificationRequestInfo = new CertificationRequestInfo(subject, publicKeyInfo, new DERSet());
+        //</editor-fold>
+        System.out.println("---------------end get P10 Csr info to be signed---------------");
+        return certificationRequestInfo.getEncoded();
+    }
+
+    /**
+     * 将获取到的被私钥签名后的签名值与csr中待签名的数据进行拼装，生成csr（分步进行csr生成环节2）
+     * @param sign 私钥签名后的签名值
+     * @param csrInfoBytes csr中待签名的数据
+     * @return csr
+     */
+    public static PKCS10CertificationRequest constructP10Csr(byte[] sign, byte[] csrInfoBytes){
+        System.out.println("---------------begin construct P10 CSR---------------");
+        AlgorithmIdentifier algorithmIdentifier = new AlgorithmIdentifier(PKCSObjectIdentifiers.sha256WithRSAEncryption);
+        CertificationRequestInfo certificationRequestInfo = CertificationRequestInfo.getInstance(csrInfoBytes);
+        //<editor-fold desc="组装成最终的CSR">
+        PKCS10CertificationRequest pkcs10CertificationRequest = new PKCS10CertificationRequest(new CertificationRequest(certificationRequestInfo, algorithmIdentifier,
+                new DERBitString(sign)));
+        //</editor-fold>
+        System.out.println("---------------end construct P10 CSR---------------");
+        return pkcs10CertificationRequest;
+    }
+
+    /**
+     * 将csr对象存入pem格式的文件中
+     * @param csr csr对象
+     * @param basePath 基本路径
+     * @throws Exception 异常
+     */
+    public static void csr2PemFile(PKCS10CertificationRequest csr, String basePath) throws Exception {
+        System.out.println("---------------begin store P10 CSR to pem file---------------");
+        String csrPath = basePath + System.currentTimeMillis() + "_csr.csr";
+        File csrFile = new File(csrPath);
+        csrFile.createNewFile();
+        PrintWriter printWriter = new PrintWriter(csrFile);
+        PemWriter pemWriter = new PemWriter(printWriter);
+        PemObject pemObject = new PemObject("CERTIFICATE REQUEST", csr.getEncoded());
+        pemWriter.writeObject(pemObject);
+        pemWriter.close();
+        System.out.println("---------------end store P10 CSR to pem file---------------");
     }
 
     /**
