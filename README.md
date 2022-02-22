@@ -1,16 +1,15 @@
 # happyTest
-一些寻常或奇怪的小测试集合
-
+一些寻常或奇怪的小测试集合<br />
 建议实现方法结合单元测试的示例来阅读
 
 ## 已包含内容有： 
-###(1)multithreadSync 
+### (1)multithreadSync 
 <B>synchronized 和 @Trasational同时使用时，产生的多线程并发问题</B>
 
-###(2)threadVariable 
+### (2)threadVariable 
 <B>多线程的变量在执行中的变动影响与更新</B>
 
-###(3)cryptology 
+### (3)cryptology 
 <B>密码学相关的库、方法使用实例</B><br/>
 由于其中部分地方使用到了sun.*包，所以需要注意，这类包已经是“Deprecated and restricted API”，不推荐使用<br/>
 需要谨慎考虑用到这个包的几个方法，最好是用平替的方法<br/>
@@ -24,21 +23,35 @@ file lib/ct.sym with class stubs.<br/>
 并不是100％的Java实现。也就是说：“sun.*”包并不是API公开接口的一部分，调用“sun”包的程序并不能确保工作在所有Java平台上，事实
 上，这样的程序并不能工作在今后的Java平台上。
 
-###(4)unboundedWildcardsAndGenerics 
+### (4)unboundedWildcardsAndGenerics 
 <B>用List&lt;?&gt;和List&lt;T&gt;来学习类型参数“&lt;T&gt;”和无界通配符“&lt;?&gt;”的区别</B>
 
-###(5)exploreJVM 
+### (5)exploreJVM 
 <B>探索jvm中classLoader及双亲委托的内容</B>
 
-###(6)judgeExp 
+### (6)judgeExp 
 <B>关于mybatis的dao层传递参数时，xml里的if条件判断使用内置类型_parameter的探索</B><br/>
 <B>以及传入的数字值为0时，mybatis里的if条件判断会将其认为是‘’空字符串的问题</B>(有解决策略，也有规避方式)
 
-###(7)ymlConfig 
+### (7)ymlConfig 
 <B>关于优雅地读取配置文件中自定义的配置的实例</B>
 
-###(8)lombokExplore 
+### (8)lombokExplore 
 <B>关于lombok的注解里的坑</B>（推荐最多只用lombok的getter和setter两个注解，其他的自己实现）
 
-###(9)fileIO
+### (9)fileIO
 <B>关于一些比较怪的文件操作及流的实例</B>
+
+### (n) 补充
+<B>1.Linux运行jar包</B><br/>
+nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
+通过–spring.profiles.active指定不同的环境(如开发dev、测试test、生产prod等，主要看配置文件里怎么定义) <br />
+nohup 表示本jar包是不挂断地运行命令，退出终端不会影响程序的运行。在默认情况下（非重定向时），会输出一个名叫 nohup.out 的文件到当前目
+录下，如果当前目录的 nohup.out 文件不可写，输出重定向到 $HOME/nohup.out 文件中 <br />
+& 是指在后台运行，但当用户推出(挂起)的时候，命令自动也跟着退出 <br />
+两者结合就是：在后台不挂断地运行 <br />
+<B>2.获取在后台不断运行中的jar包的进程的信号编号</B><br/>
+ps aux|grep java <br />
+<B>3.立即强制停止运行在后台不断运行中的jar包进程</B><br/>
+kill -9 jar包对应的信号编号 <br />
+

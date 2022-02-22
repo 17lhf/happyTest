@@ -20,9 +20,8 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
-import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
+import org.bouncycastle.openssl.PKCS8Generator;
+import org.bouncycastle.openssl.jcajce.*;
 import org.bouncycastle.operator.*;
 import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
@@ -47,9 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.*;
@@ -265,7 +262,7 @@ public class Cryptology {
      * @throws Exception 异常
      */
     public static PrivateKey loadPKCS8PrivateKey(String filePath) throws Exception {
-        System.out.println("---------------begin loadPrivateKey---------------");
+        System.out.println("---------------begin load Private Key---------------");
         try (PEMParser pemParser = new PEMParser(new FileReader(filePath))) {
             Object pem = pemParser.readObject();
             if (pem instanceof PrivateKeyInfo) {
@@ -274,11 +271,40 @@ public class Cryptology {
                 PrivateKeyInfo keyInfo = (PrivateKeyInfo) pem;
                 PrivateKey privateKey = converter.getPrivateKey(keyInfo);
                 System.out.println("Private key algorithm: " + privateKey.getAlgorithm());
-                System.out.println("---------------end loadPrivateKey---------------");
+                System.out.println("---------------end load Private Key---------------");
                 return privateKey;
             }
             throw new RuntimeException("invalid key file.");
         }
+    }
+
+    /**
+     * 从文件中获取PKCS8的无口令保护的私钥，然后转成以指定口令保护的PKCS8私钥，并将结果存入文件
+     * @param filePath PKCS8的无口令保护的私钥存储路径
+     * @param pwd 即将生成的私钥文件的保护口令
+     * @param outputBasePath 结果输出的文件夹路径
+     */
+    public static void encryptP8KeyFromFileAnd2File(String filePath, String pwd, String outputBasePath) throws Exception{
+        System.out.println("---------------begin transform P8 Key which from file to protected by password and store in file---------------");
+        // PKCS8Generator中有很多用于保护密钥的算法可供选择 todo 解释？
+        JceOpenSSLPKCS8EncryptorBuilder encryptorBuilder = new JceOpenSSLPKCS8EncryptorBuilder(PKCS8Generator.PBE_SHA1_RC2_40);
+        // 设置安全随机数生成器 todo 解释？
+        encryptorBuilder.setRandom(new SecureRandom());
+        // 设置保护口令
+        encryptorBuilder.setPassword(pwd.toCharArray());
+        OutputEncryptor encryptor = encryptorBuilder.build();
+        // 读取私钥
+        PrivateKey privateKey = Cryptology.loadPKCS8PrivateKey(filePath);
+        // todo 解释？
+        JcaPKCS8Generator gen2 = new JcaPKCS8Generator(privateKey, encryptor);
+        PemObject pemObject = gen2.generate();
+        // 将结果输出到文件
+        File prvFile = new File(outputBasePath + System.currentTimeMillis() + "_protectedPrvKey.key");
+        PrintWriter printWriter = new PrintWriter(prvFile);
+        PemWriter pemWriter = new PemWriter(printWriter);
+        pemWriter.writeObject(pemObject);
+        pemWriter.close();
+        System.out.println("---------------end transform P8 Key which from file to protected by password and store in file---------------");
     }
 
     /**
@@ -476,12 +502,15 @@ public class Cryptology {
         } catch (OperatorCreationException e) {
             e.printStackTrace();
         }
+        // todo 设置扩展字段
+
         PKCS10CertificationRequest csr = p10Builder.build(signer); // PKCS10的证书请求
+        System.out.println("---------------end generate attach Extensions P10 Csr---------------");
+
         // 输出：1.2.840.113549.1.1.11 表示 SHA256withRSA
         // 输出： 1.2.840.10045.4.3.2 表示 SHA256withECDSA
         System.out.println("Signature Algorithm OID: " + csr.getSignatureAlgorithm().getAlgorithm().toString());
         System.out.println("Subject of PKCS10 Certification Request: " + csr.getSubject());
-        System.out.println("---------------end generate attach Extensions P10 Csr---------------");
         return csr;
     }
 
@@ -835,9 +864,9 @@ public class Cryptology {
     /**
      * 依据传入的证书对象，获取证书的所有信息
      * @param x509Certificate 证书对象
-     * @throws IOException 异常
+     * @throws Exception 异常
      */
-    public static void getCertMsg(X509Certificate x509Certificate) throws IOException {
+    public static void getCertMsg(X509Certificate x509Certificate) throws Exception{
         System.out.println("---------------begin get certificate message---------------");
         System.out.println("Cert version is " + x509Certificate.getVersion());
         System.out.println("Cert serial number: " + x509Certificate.getSerialNumber());
@@ -859,7 +888,21 @@ public class Cryptology {
         System.out.println("Organization Unit(OU): " + x500Name.getOrganizationalUnit());
         // 由于邮箱地址实际上创建证书请求时是选填的，所以好像没有提供获取EmailAddress(E)的方法
         sun.security.x509.X500Name issuerX500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getIssuerX500Principal());
-        System.out.println("Issuer CN: " + issuerX500Name.getCommonName()); // 颁发者的subject信息获取方式同自身，所以这里不做重复
+        // 颁发者的subject信息获取方式同自身，所以这里不做重复
+        System.out.println("Issuer CN: " + issuerX500Name.getCommonName());
+
+        // 检查证书的有效期
+        try {
+            x509Certificate.checkValidity();
+            System.out.println("Certificate is in valid time range.");
+        } catch (CertificateExpiredException e) {
+            System.out.println("Certificate is expired.");
+        } catch (CertificateNotYetValidException e) {
+            System.out.println("Certificate is not yet valid.");
+        }
+
+        // 从SubjectAltName扩展 (OID = 2.5.29.17) 获取不可变的主题备用名称集合
+        // x509Certificate.getSubjectAlternativeNames();
         System.out.println("---------------end get certificate message---------------");
     }
 

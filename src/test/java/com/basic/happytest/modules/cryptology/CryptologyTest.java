@@ -350,4 +350,10 @@ class CryptologyTest {
         PKCS10CertificationRequest csr = Cryptology.constructP10Csr(signature, csrInfoBytes);
         Cryptology.csr2PemFile(csr, FileIO.getAbsolutePath(STORE_PATH) + "/");
     }
+
+    @Test
+    void encryptP8KeyFromFileAnd2File() throws Exception {
+        Cryptology.encryptP8KeyFromFileAnd2File(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT),
+                "123456", FileIO.getAbsolutePath(STORE_PATH) + "/");
+    }
 }
