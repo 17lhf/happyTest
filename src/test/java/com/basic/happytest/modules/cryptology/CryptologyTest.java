@@ -185,7 +185,8 @@ class CryptologyTest {
         csrInfos.setOrganizationUnit("Organization Unit");
         csrInfos.setCommonName("lhf");
         csrInfos.setEmailAddress("lhf@qq.com");
-        PKCS10CertificationRequest csr = Cryptology.generateP10CertRequest("RSA",2048, csrInfos);
+        // PKCS10CertificationRequest csr = Cryptology.generateP10CertRequest("RSA",2048, csrInfos);
+        PKCS10CertificationRequest csr = Cryptology.generateAttachExtensionsP10Csr("RSA",2048, csrInfos);
         Cryptology.getCsrMsg(csr);
     }
 
@@ -216,6 +217,24 @@ class CryptologyTest {
     @Test
     void cert2PemFile() throws Exception {
         Cryptology.cert2PemFile(Cryptology.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), "PEM"),
+                FileIO.getAbsolutePath(STORE_PATH) + "/");
+    }
+
+    @Test
+    void genCertAnd2PemFile() throws Exception {
+        CsrInfos csrInfos = new CsrInfos();
+        csrInfos.setCountry("CN");
+        csrInfos.setState("FuJian");
+        csrInfos.setLocal("FuZhou");
+        csrInfos.setOrganization("Organization");
+        csrInfos.setOrganizationUnit("Organization Unit");
+        csrInfos.setCommonName("GenAttachExtensionCert");
+        csrInfos.setEmailAddress("lhf@qq.com");
+        // PKCS10CertificationRequest csr = Cryptology.generateP10CertRequest("RSA",2048, csrInfos);
+        PKCS10CertificationRequest csr = Cryptology.generateAttachExtensionsP10Csr("RSA",2048, csrInfos);
+        String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
+        String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
+        Cryptology.cert2PemFile(Cryptology.issueCert(csr, issuerCertPath, issuerKeyPath, 3650),
                 FileIO.getAbsolutePath(STORE_PATH) + "/");
     }
 

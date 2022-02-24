@@ -9,12 +9,11 @@ import org.bouncycastle.asn1.pkcs.CertificationRequest;
 import org.bouncycastle.asn1.pkcs.CertificationRequestInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
-import org.bouncycastle.asn1.x509.Extensions;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
@@ -34,6 +33,7 @@ import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
 import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
+import sun.security.x509.AVA;
 import sun.security.x509.X509CertImpl;
 
 import javax.crypto.Cipher;
@@ -46,7 +46,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
-import java.security.cert.*;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.*;
@@ -284,18 +287,21 @@ public class Cryptology {
      * @param pwd 即将生成的私钥文件的保护口令
      * @param outputBasePath 结果输出的文件夹路径
      */
-    public static void encryptP8KeyFromFileAnd2File(String filePath, String pwd, String outputBasePath) throws Exception{
+    public static void encryptP8KeyFromFileAnd2File(String filePath, String pwd,
+                                                    String outputBasePath) throws Exception{
         System.out.println("---------------begin transform P8 Key which from file to protected by password and store in file---------------");
-        // PKCS8Generator中有很多用于保护密钥的算法可供选择 todo 解释？
+        // PKCS8Generator中有很多用于保护密钥的算法可供选择设置
+        // 这里是一个加密器构造器，后续将用这个加密器构造器的设置好的内容创建一个加密器
         JceOpenSSLPKCS8EncryptorBuilder encryptorBuilder = new JceOpenSSLPKCS8EncryptorBuilder(PKCS8Generator.PBE_SHA1_RC2_40);
-        // 设置安全随机数生成器 todo 解释？
+        // SecureRandom该类提供加密强随机数生成器(RNG), 线程安全
         encryptorBuilder.setRandom(new SecureRandom());
         // 设置保护口令
         encryptorBuilder.setPassword(pwd.toCharArray());
+        // OutputEncryptor 操作器的常规接口，能够生成将输出加密数据的输出流
         OutputEncryptor encryptor = encryptorBuilder.build();
-        // 读取私钥
+        // 读取无加密保护的私钥
         PrivateKey privateKey = Cryptology.loadPKCS8PrivateKey(filePath);
-        // todo 解释？
+        // PKCS8生成器
         JcaPKCS8Generator gen2 = new JcaPKCS8Generator(privateKey, encryptor);
         PemObject pemObject = gen2.generate();
         // 将结果输出到文件
@@ -416,7 +422,8 @@ public class Cryptology {
      * @return 证书请求对象
      * @throws Exception 异常
      */
-    public static PKCS10CertificationRequest generateP10CertRequest(String alo, int keySize, CsrInfos csrInfos) throws Exception {
+    public static PKCS10CertificationRequest generateP10CertRequest(String alo, int keySize,
+                                                                    CsrInfos csrInfos) throws Exception {
         System.out.println("---------------begin generateP10CertRequest---------------");
         PublicKey publicKey = null;
         PrivateKey privateKey = null;
@@ -461,13 +468,15 @@ public class Cryptology {
     }
 
     /**
-     * todo 生成密钥对并生成附带一些扩展字段的证书请求
+     * 生成密钥对并生成附带一些扩展字段的证书请求
      * @param alo 算法，可选：RSA、EC
+     * @param keySize 密钥长度，RSA时推荐2048，EC时推荐256
      * @param csrInfos 证书请求的subject信息，除了emailAddress以外都必填
      * @return 证书请求对象
      * @throws Exception 异常
      */
-    public static PKCS10CertificationRequest generateAttachExtensionsP10Csr(String alo, CsrInfos csrInfos) throws Exception{
+    public static PKCS10CertificationRequest generateAttachExtensionsP10Csr(String alo, int keySize,
+                                                                            CsrInfos csrInfos) throws Exception{
         System.out.println("---------------begin generate attach Extensions P10 Csr---------------");
         PublicKey publicKey = null;
         PrivateKey privateKey = null;
@@ -475,12 +484,12 @@ public class Cryptology {
         // 区分两种算法的密钥生成
         // RSA
         if (StringUtils.equals(alo, "RSA")){
-            KeyPair keyPair = generateKeyPair("RSA", 2048);
+            KeyPair keyPair = generateKeyPair("RSA", keySize);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withRSA";
         } else { // ECC
-            KeyPair keyPair = generateECCKeyPair(256);
+            KeyPair keyPair = generateECCKeyPair(keySize);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withECDSA";
@@ -503,8 +512,12 @@ public class Cryptology {
             e.printStackTrace();
         }
         // todo 设置扩展字段
-
-        PKCS10CertificationRequest csr = p10Builder.build(signer); // PKCS10的证书请求
+        ExtensionsGenerator extensionsGenerator = new ExtensionsGenerator();
+        // 这里是尝试性地添加了一个密钥用途设置
+        extensionsGenerator.addExtension(Extension.keyUsage, true, new KeyUsage(KeyUsage.nonRepudiation));
+        p10Builder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, extensionsGenerator.generate());
+        // 开始生成PKCS10的证书请求
+        PKCS10CertificationRequest csr = p10Builder.build(signer);
         System.out.println("---------------end generate attach Extensions P10 Csr---------------");
 
         // 输出：1.2.840.113549.1.1.11 表示 SHA256withRSA
@@ -655,8 +668,18 @@ public class Cryptology {
                 System.out.println("NonCriticalExtensionOIDs[" + i + "]: " + nonCriticalExtensionOIDs[i]);
             }
         }
+        // 这个X500Name类没有存EmailAddress属性
         X500Name x500Name = csr.getSubject();
-        System.out.println("Csr subject is: " + x500Name.toString());
+        System.out.println("CSR subject is: " + x500Name.toString());
+        // 通过这个方式，可以获取到x500Name对象中所有的subject信息
+        for (RDN rdn: x500Name.getRDNs()){
+            // 这里特别地查看了一下能否特地获取某个值，结果显示可以
+            if(rdn.getFirst().getType().equals(BCStyle.C)){
+                System.out.println("This is country, value is: " + rdn.getFirst().getValue().toString());
+            }
+            System.out.println("RDN: " + rdn.getFirst().getType().toString() + "(Type OID) : " + rdn.getFirst().getValue().toString() + "(value)");
+        }
+        // todo 还不知道怎么获取csr中subject的EmailAddress属性
         System.out.println("---------------end get csr message---------------");
     }
 
@@ -691,6 +714,9 @@ public class Cryptology {
         // 使用x509来组装证书
         X509v3CertificateBuilder certGen = new X509v3CertificateBuilder(issuer, serial, from, to,
                 csr.getSubject(), csr.getSubjectPublicKeyInfo());
+        // todo 将csr中的扩展项添加到证书中
+        Extensions extensions = csr.getRequestedExtensions();
+        certGen.addExtension(Extension.getInstance(extensions));
         // CA端进行签名, 才有具有法律效力
         X509Certificate cert = null;
         ContentSigner signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey(caPrivateKey.getEncoded()));
@@ -708,7 +734,7 @@ public class Cryptology {
     // todo 颁发证书，同时设置一些扩展字段
 
     /**
-     * 将一个证书对象以PEM格式存入对应路径的文件中(本方法最后会删除生成文件，使用时注意去掉这个操作)
+     * 将一个证书对象以PEM格式存入对应路径的文件中
      * @param x509Certificate 证书对象
      * @param basePath 要存放的路径目录
      * @throws Exception 异常
@@ -726,16 +752,13 @@ public class Cryptology {
         System.out.println("---------------end store certificate object to pem file---------------");
         // 校验生成的文件是否正确
         getPubKeyFromCert(certPath);
-        // 删除生成的文件
-        FileIO.deleteFile(certPath);
     }
 
     /**
      * 从证书中读取出公钥（含加载pem格式证书）
      * @param path 证书文件路径
      * @return 公钥
-     * @throws CertificateException 异常
-     * @throws FileNotFoundException 异常
+     * @throws Exception 异常
      */
     public static PublicKey getPubKeyFromCert(String path) throws Exception {
         System.out.println("---------------begin get public key from CERT---------------");
@@ -886,11 +909,15 @@ public class Cryptology {
         System.out.println("Locality(L): " + x500Name.getLocality());
         System.out.println("Organization(O): " + x500Name.getOrganization());
         System.out.println("Organization Unit(OU): " + x500Name.getOrganizationalUnit());
-        // 由于邮箱地址实际上创建证书请求时是选填的，所以好像没有提供获取EmailAddress(E)的方法
+        // ava[]这里面包含了所有subject信息，也可以通过这里一个一个获取信息。这里只是举例获取emailAddress
+        for (AVA ava: x500Name.allAvas()){
+            if(ava.getObjectIdentifier().toString().equals(BCStyle.EmailAddress.toString())){
+                System.out.println("EmailAddress(E): " + ava.getValueString());
+            }
+        }
         sun.security.x509.X500Name issuerX500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getIssuerX500Principal());
         // 颁发者的subject信息获取方式同自身，所以这里不做重复
         System.out.println("Issuer CN: " + issuerX500Name.getCommonName());
-
         // 检查证书的有效期
         try {
             x509Certificate.checkValidity();
@@ -900,7 +927,6 @@ public class Cryptology {
         } catch (CertificateNotYetValidException e) {
             System.out.println("Certificate is not yet valid.");
         }
-
         // 从SubjectAltName扩展 (OID = 2.5.29.17) 获取不可变的主题备用名称集合
         // x509Certificate.getSubjectAlternativeNames();
         System.out.println("---------------end get certificate message---------------");
@@ -1027,7 +1053,8 @@ public class Cryptology {
      * @return true-正确，false-错误
      * @throws Exception 异常
      */
-    public static boolean validSignature(PublicKey pubKey, String keyAlo, byte[] data, String hashType, byte[] signatureValue) throws Exception {
+    public static boolean validSignature(PublicKey pubKey, String keyAlo, byte[] data, String hashType,
+                                         byte[] signatureValue) throws Exception {
         System.out.println("---------------begin valid signature---------------");
         String signAlo = hashType + "with" + keyAlo;
         // java原生对ECC不支持，使用BC库是为了支持EC，如果不用ECC，那么可以不用设置provider
@@ -1064,6 +1091,8 @@ public class Cryptology {
                                    String p12Pwd, String outputFolderPath) throws Exception {
         System.out.println("---------------begin generate P12---------------");
         System.out.println("keyStore default type is: " + KeyStore.getDefaultType());
+        // 此处设置存储的格式为pkcs12,实际上KeyStore还支持JKS(默认)
+        // 用F4看KeyStore源码可以看到介绍和示例
         KeyStore keyStore = KeyStore.getInstance("PKCS12",  new BouncyCastleProvider());
         keyStore.load(null, null);
         java.security.cert.Certificate[] certificates = new java.security.cert.Certificate[1];
@@ -1072,6 +1101,7 @@ public class Cryptology {
         // 如果给定的密钥类型为 java.security.PrivateKey，它必须附带一个证书链来验证相应的公钥。
         // 如果给定的别名已存在，则与其关联的密钥库信息将被给定的密钥（可能还有证书链）覆盖
         // 此处用来校验的证书的certificates的数组第一个元素（即一个证书对象），会被用别名来保存进p12，所以推荐只放一个私钥对应的证书
+        // 别名是否区分大小写取决于实现。为避免出现问题，建议不要在密钥库中使用仅在大小写上不同的别名
         keyStore.setKeyEntry(prvKeyAndSubCertAlias, subKey, keyPwd.toCharArray(), certificates);
         // 如果准备在p12中放证书链，则可以把ca证书放进去
         if(rootCert != null || StringUtils.isNotBlank(rootCertAlias)){

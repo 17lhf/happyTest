@@ -82,10 +82,35 @@ public class FileIO {
      * @throws Exception 异常
      */
     public static boolean deleteFile(String filePath) throws Exception {
+        System.out.println("开始删除文件， 文件路径为： " + filePath);
         File file = new File(filePath);
         if(file.exists()){
             return file.delete();
         }
         throw new FileNotFoundException();
+    }
+
+    /**
+     * todo 关于回退流
+     * @throws IOException 异常
+     */
+    public void pushBackIOTest() throws IOException {
+        String str = "hello,world!";
+        PushbackInputStream push = null; // 声明回退流对象
+        ByteArrayInputStream bat = null; // 声明字节数组流对象
+        bat = new ByteArrayInputStream(str.getBytes());
+        push = new PushbackInputStream(bat); // 创建回退流对象，将拆解的字节数组流传入。默认的缓冲区大小为1
+        int temp = 0;
+        boolean isOut = false;
+        while ((temp = push.read()) != -1) { // push.read()逐字节读取存放在temp中，如果读取完成返回-1
+            if (temp == ',' && !isOut) { // 判断读取的是否是逗号
+                push.unread('!'); // 可以将temp放入，表示回到temp的位置。也可以输入其他数据，然后等待后续被打印出来。
+                System.out.print("(回退" + (char) temp + ") "); // 输出回退的字符
+                isOut = true;
+            } else {
+                System.out.print((char) temp); // 否则输出字符
+            }
+        }
+        // 结果： hello(回退,) !world
     }
 }

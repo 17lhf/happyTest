@@ -42,16 +42,19 @@ file lib/ct.sym with class stubs.<br/>
 ### (9)fileIO
 <B>关于一些比较怪的文件操作及流的实例</B>
 
+### (10)subProcess
+<B>调用子进程</B>
+
 ### (n) 补充
 <B>1.Linux运行jar包</B><br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
 通过–spring.profiles.active指定不同的环境(如开发dev、测试test、生产prod等，主要看配置文件里怎么定义) <br />
-nohup 表示本jar包是不挂断地运行命令，退出终端不会影响程序的运行。在默认情况下（非重定向时），会输出一个名叫 nohup.out 的文件到当前目
+nohup （可选）表示本jar包是不挂断地运行命令，退出终端不会影响程序的运行。在默认情况下（非重定向时），会输出一个名叫 nohup.out 的文件到当前目
 录下，如果当前目录的 nohup.out 文件不可写，输出重定向到 $HOME/nohup.out 文件中 <br />
-& 是指在后台运行，但当用户推出(挂起)的时候，命令自动也跟着退出 <br />
+& （可选）是指在后台运行，但当用户推出(挂起)的时候，命令自动也跟着退出 <br />
 两者结合就是：在后台不挂断地运行 <br />
-<B>2.获取在后台不断运行中的jar包的进程的信号编号</B><br/>
+<B>2.获取在后台不断运行中的jar包的进程的进程编号</B><br/>
 ps aux|grep java <br />
 <B>3.立即强制停止运行在后台不断运行中的jar包进程</B><br/>
-kill -9 jar包对应的信号编号 <br />
+kill -9 jar包对应的进程编号 <br />
 
