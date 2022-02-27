@@ -1,10 +1,7 @@
 package com.basic.happytest.modules.cryptology;
 
-import com.basic.happytest.modules.fileIO.FileIO;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.DERBitString;
-import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.pkcs.CertificationRequest;
 import org.bouncycastle.asn1.pkcs.CertificationRequestInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
@@ -14,8 +11,11 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v1CertificateBuilder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMParser;
@@ -34,6 +34,7 @@ import org.bouncycastle.util.io.pem.PemWriter;
 import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.x509.AVA;
+import sun.security.x509.KeyIdentifier;
 import sun.security.x509.X509CertImpl;
 
 import javax.crypto.Cipher;
@@ -53,9 +54,7 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.*;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 密码学相关的java操作
@@ -416,27 +415,25 @@ public class Cryptology {
 
     /**
      * 生成密钥对并生成证书请求
-     * @param alo 算法，可选：RSA、EC
-     * @param keySize 密钥长度，RSA时推荐2048，EC时推荐256
+     * @param alo 密钥算法，可选：RSA、EC
+     * @param keyPair 密钥对
      * @param csrInfos 证书请求的subject信息，除了emailAddress以外都必填
      * @return 证书请求对象
      * @throws Exception 异常
      */
-    public static PKCS10CertificationRequest generateP10CertRequest(String alo, int keySize,
+    public static PKCS10CertificationRequest generateP10CertRequest(String alo, KeyPair keyPair,
                                                                     CsrInfos csrInfos) throws Exception {
         System.out.println("---------------begin generateP10CertRequest---------------");
         PublicKey publicKey = null;
         PrivateKey privateKey = null;
         String sigAlo; // 签名算法
-        // 区分两种算法的密钥生成
+        // 区分两种算法
         // RSA
         if (StringUtils.equals(alo, "RSA")){
-            KeyPair keyPair = generateKeyPair("RSA", keySize);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withRSA";
         } else { // ECC
-            KeyPair keyPair = generateECCKeyPair(keySize);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withECDSA";
@@ -445,8 +442,8 @@ public class Cryptology {
         String subjectStr = "C=" + csrInfos.getCountry() + ",ST="+csrInfos.getState()
                 + ",L=" + csrInfos.getLocal() + ",O=" + csrInfos.getOrganization()
                 + ",OU=" + csrInfos.getOrganizationUnit() + ",CN="+csrInfos.getCommonName();
-        if(StringUtils.isBlank(csrInfos.getEmailAddress())){
-            subjectStr += (",E=" + csrInfos.getEmailAddress());
+        if(StringUtils.isNotBlank(csrInfos.getEmailAddress())){
+            subjectStr += (",EmailAddress=" + csrInfos.getEmailAddress());
         }
         // 开始构造CSR
         X500Principal subject = new X500Principal(subjectStr);
@@ -468,28 +465,26 @@ public class Cryptology {
     }
 
     /**
-     * 生成密钥对并生成附带一些扩展字段的证书请求
-     * @param alo 算法，可选：RSA、EC
-     * @param keySize 密钥长度，RSA时推荐2048，EC时推荐256
+     * 生成密钥对并生成附带一些扩展字段的证书请求(扩展字段方面主要是举例说明，实际使用要做修改)
+     * @param alo 密钥算法，可选：RSA、EC
+     * @param keyPair 密钥对
      * @param csrInfos 证书请求的subject信息，除了emailAddress以外都必填
      * @return 证书请求对象
      * @throws Exception 异常
      */
-    public static PKCS10CertificationRequest generateAttachExtensionsP10Csr(String alo, int keySize,
+    public static PKCS10CertificationRequest generateAttachExtensionsP10Csr(String alo, KeyPair keyPair,
                                                                             CsrInfos csrInfos) throws Exception{
         System.out.println("---------------begin generate attach Extensions P10 Csr---------------");
         PublicKey publicKey = null;
         PrivateKey privateKey = null;
         String sigAlo; // 签名算法
-        // 区分两种算法的密钥生成
+        // 区分两种算法
         // RSA
         if (StringUtils.equals(alo, "RSA")){
-            KeyPair keyPair = generateKeyPair("RSA", keySize);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withRSA";
         } else { // ECC
-            KeyPair keyPair = generateECCKeyPair(keySize);
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
             sigAlo = "SHA256withECDSA";
@@ -498,8 +493,8 @@ public class Cryptology {
         String subjectStr = "C=" + csrInfos.getCountry() + ",ST="+csrInfos.getState()
                 + ",L=" + csrInfos.getLocal() + ",O=" + csrInfos.getOrganization()
                 + ",OU=" + csrInfos.getOrganizationUnit() + ",CN="+csrInfos.getCommonName();
-        if(StringUtils.isBlank(csrInfos.getEmailAddress())){
-            subjectStr += (",E=" + csrInfos.getEmailAddress());
+        if(StringUtils.isNotBlank(csrInfos.getEmailAddress())){
+            subjectStr += (",EmailAddress=" + csrInfos.getEmailAddress());
         }
         // 开始构造CSR
         X500Principal subject = new X500Principal(subjectStr);
@@ -511,15 +506,26 @@ public class Cryptology {
         } catch (OperatorCreationException e) {
             e.printStackTrace();
         }
-        // todo 设置扩展字段
+        // 设置扩展字段（一般csr里面不带扩展字段，因为颁证时可以忽略；有带扩展字段的话，一般也就是密钥用途和扩展密钥用途）
         ExtensionsGenerator extensionsGenerator = new ExtensionsGenerator();
-        // 这里是尝试性地添加了一个密钥用途设置
+        // addExtension 第一个字段表示：扩展字段的类型；第二个参数表示：是否要将本字段设置为critical；第三个参数表示：扩展字段的值
+        // 这里是尝试性地添加了一个密钥用途的扩展字段，具体是——不可否认。
+        // KeyUsage里有很多可选用的密钥用途可以用来设置
         extensionsGenerator.addExtension(Extension.keyUsage, true, new KeyUsage(KeyUsage.nonRepudiation));
+        // 这里是尝试性随便添加了几个扩展密钥用途的扩展字段
+        // KeyPurposeId中有很多可以直接拿来使用
+        // 如果要自定义用途，则只能自定义最后一位，我这边用"888"来表示。对应的UID是：2.5.29.37.888,前三位表示的是extendedKeyUsage
+        ASN1EncodableVector purposes = new ASN1EncodableVector();
+        purposes.add(KeyPurposeId.id_kp_serverAuth);
+        purposes.add(KeyPurposeId.id_kp_clientAuth);
+        purposes.add(KeyPurposeId.anyExtendedKeyUsage);
+        purposes.add(Extension.extendedKeyUsage.branch("888"));
+        extensionsGenerator.addExtension(Extension.extendedKeyUsage, true, new DERSequence(purposes));
+        // 在csr构造器中设置扩展属性
         p10Builder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, extensionsGenerator.generate());
         // 开始生成PKCS10的证书请求
         PKCS10CertificationRequest csr = p10Builder.build(signer);
         System.out.println("---------------end generate attach Extensions P10 Csr---------------");
-
         // 输出：1.2.840.113549.1.1.11 表示 SHA256withRSA
         // 输出： 1.2.840.10045.4.3.2 表示 SHA256withECDSA
         System.out.println("Signature Algorithm OID: " + csr.getSignatureAlgorithm().getAlgorithm().toString());
@@ -643,7 +649,7 @@ public class Cryptology {
     }
 
     /**
-     * todo 获取证书请求中包含的一些信息
+     * 获取证书请求中包含的一些信息
      * @param csr 证书请求对象
      */
     public static void getCsrMsg(PKCS10CertificationRequest csr) {
@@ -668,23 +674,55 @@ public class Cryptology {
                 System.out.println("NonCriticalExtensionOIDs[" + i + "]: " + nonCriticalExtensionOIDs[i]);
             }
         }
-        // 这个X500Name类没有存EmailAddress属性
         X500Name x500Name = csr.getSubject();
         System.out.println("CSR subject is: " + x500Name.toString());
         // 通过这个方式，可以获取到x500Name对象中所有的subject信息
         for (RDN rdn: x500Name.getRDNs()){
+            // 依据指定的ASN1定义的OID（也就是BCStyle.E）获取对应属性值
             // 这里特别地查看了一下能否特地获取某个值，结果显示可以
             if(rdn.getFirst().getType().equals(BCStyle.C)){
                 System.out.println("This is country, value is: " + rdn.getFirst().getValue().toString());
             }
             System.out.println("RDN: " + rdn.getFirst().getType().toString() + "(Type OID) : " + rdn.getFirst().getValue().toString() + "(value)");
         }
-        // todo 还不知道怎么获取csr中subject的EmailAddress属性
+        // 依据指定的ASN1定义的OID（也就是BCStyle.E）获取对应属性值
+        // 这里是获取csr中subject的EmailAddress属性,这里其实还可以获取其他的值
+        RDN[] emailAddress = x500Name.getRDNs(BCStyle.E);
+        if (emailAddress != null && emailAddress.length > 0) {
+            System.out.println("EmailAddress: " + emailAddress[0].getFirst().getValue().toString());
+        }
         System.out.println("---------------end get csr message---------------");
     }
 
     /**
-     * 颁发证书
+     * 颁发V1自签名证书
+     * @param csr 证书请求
+     * @param privateKey 私钥
+     * @param validDays 有效时间
+     * @return V1的证书
+     * @throws Exception 异常
+     */
+    public static X509Certificate issueSelfSignV1Cert(PKCS10CertificationRequest csr, PrivateKey privateKey,
+                                                      long validDays) throws Exception {
+        System.out.println("---------------begin issue self sign V1 certificate---------------");
+        X509v1CertificateBuilder certBuilder = new X509v1CertificateBuilder(csr.getSubject(), // 颁发者subject
+                new BigInteger(160, new SecureRandom()),                       // 序列号，最长是20字节
+                new Date(),                                                            // 开始生效时间
+                new Date(System.currentTimeMillis() + validDays * 24 * 60 * 60 * 1000), // 过期时间
+                csr.getSubject(),                                                       // 使用者subject
+                csr.getSubjectPublicKeyInfo());
+        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA");
+        AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
+        ContentSigner contentSigner = new BcRSAContentSignerBuilder(sigAlgId, digAlgId)
+                        .build(PrivateKeyFactory.createKey(privateKey.getEncoded()));
+        X509CertificateHolder holder = certBuilder.build(contentSigner);
+        X509Certificate cert = new JcaX509CertificateConverter().getCertificate(holder);
+        System.out.println("---------------end issue self sign V1 certificate---------------");
+        return cert;
+    }
+
+    /**
+     * 颁发V3无扩展属性证书（仅支持RSA证书颁发）
      * @param csr 证书请求
      * @param issuerCertPath 用来颁发证书的父证书（通常是ca证书）
      * @param issuerPrvKeyPath 用于颁发证书的父证书对应的私钥
@@ -694,29 +732,147 @@ public class Cryptology {
      */
     public static X509Certificate issueCert(PKCS10CertificationRequest csr, String issuerCertPath,
                                             String issuerPrvKeyPath, long validDays) throws Exception {
-        System.out.println("---------------begin issueCert---------------");
+        System.out.println("---------------begin issue cert---------------");
         Key caPrivateKey = null;
         CertificateFactory certFactory;
         X509Certificate caCert = null;
 
         certFactory = CertificateFactory.getInstance("X.509");
-        caCert = (X509Certificate) certFactory.generateCertificate(new FileInputStream(issuerCertPath));  // 读取Ca证书
-        caPrivateKey = loadRSAPKCS1PrivateKey(issuerPrvKeyPath); // 读取私钥文件
-
-        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA"); // ca的签名算法标识符
-        AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId); // 摘要算法标识符
+        // 读取Ca证书
+        caCert = (X509Certificate) certFactory.generateCertificate(new FileInputStream(issuerCertPath));
+        // 读取私钥文件
+        caPrivateKey = loadRSAPKCS1PrivateKey(issuerPrvKeyPath);
+        // ca的签名算法标识符
+        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA");
+        // 摘要算法标识符
+        AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
         assert caCert != null;
-        X500Name issuer = new X500Name(caCert.getSubjectX500Principal().getName()); // 颁发者信息
-        BigInteger serial = new BigInteger(32, new SecureRandom()); // 序列号
-        Date from = new Date(); // 证书起始生效时间
-        Date to = new Date(System.currentTimeMillis() + validDays * 24 * 60 * 60 * 1000); // 证书失效时间
-
+        // 颁发者信息
+        X500Name issuer = new X500Name(caCert.getSubjectX500Principal().getName());
+        // 序列号, 最长是20字节
+        BigInteger serial = new BigInteger(160, new SecureRandom());
+        // 证书起始生效时间
+        Date from = new Date();
+        // 证书失效时间
+        Date to = new Date(System.currentTimeMillis() + validDays * 24 * 60 * 60 * 1000);
         // 使用x509来组装证书
         X509v3CertificateBuilder certGen = new X509v3CertificateBuilder(issuer, serial, from, to,
                 csr.getSubject(), csr.getSubjectPublicKeyInfo());
-        // todo 将csr中的扩展项添加到证书中
-        Extensions extensions = csr.getRequestedExtensions();
-        certGen.addExtension(Extension.getInstance(extensions));
+        // CA端进行签名, 才有具有法律效力
+        X509Certificate cert = null;
+        ContentSigner signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId)
+                .build(PrivateKeyFactory.createKey(caPrivateKey.getEncoded()));
+        // 生成BC结构的证书
+        Security.addProvider(new BouncyCastleProvider());
+        cert = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certGen.build(signer));
+
+        System.out.println("新证书的版本： " + cert.getVersion());
+        System.out.println("新证书的subject: " + cert.getSubjectX500Principal().getName());
+        System.out.println("新证书的颁发者subject: " + cert.getIssuerDN().getName());
+        System.out.println("---------------end issue cert---------------");
+        return cert;
+    }
+
+    /**
+     * 颁发V3证书，同时设置一些扩展字段(扩展字段方面主要是举例说明，实际使用要做修改)（仅支持RSA证书颁发）
+     * @param csr 证书请求
+     * @param issuerCertPath 用来颁发证书的父证书（通常是ca证书）
+     * @param issuerPrvKeyPath 用于颁发证书的父证书对应的私钥
+     * @param validDays 新证书的有效时间（单位：天）
+     * @param isCA true-是CA证书，false-不是
+     * @param pathLenConstraint 当isCA=true时有效，表示CA证书底下的证书链的最大长度; 应该>=0
+     * @param alo 证书请求对应的密钥的算法
+     * @return 新的证书对象
+     * @throws Exception 异常
+     */
+    public static X509Certificate issueAttachExtensionsCert(PKCS10CertificationRequest csr, String issuerCertPath,
+                                            String issuerPrvKeyPath, long validDays, boolean isCA,
+                                            int pathLenConstraint, String alo) throws Exception {
+        CertificateFactory certFactory;
+        certFactory = CertificateFactory.getInstance("X.509");
+        // 读取Ca证书
+        X509Certificate caCert = (X509Certificate) certFactory.generateCertificate(new FileInputStream(issuerCertPath));
+        // 读取私钥文件
+        Key caPrivateKey = loadRSAPKCS1PrivateKey(issuerPrvKeyPath);
+        // 读取csr的公钥
+        PublicKey csrPubKey = Cryptology.getPubKeyFromCsr(csr, alo);
+
+        System.out.println("---------------begin issue attach extensions cert---------------");
+        // ca的签名算法标识符
+        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA");
+        // 摘要算法标识符
+        AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
+        assert caCert != null;
+        // 颁发者信息
+        X500Name issuer = new X500Name(caCert.getSubjectX500Principal().getName());
+        // 序列号, 最长是20字节
+        BigInteger serial = new BigInteger(160, new SecureRandom());
+        // 证书起始生效时间
+        Date from = new Date();
+        // 证书失效时间
+        Date to = new Date(System.currentTimeMillis() + validDays * 24 * 60 * 60 * 1000);
+        // 使用x509来组装证书
+        X509v3CertificateBuilder certGen = new X509v3CertificateBuilder(issuer, serial, from, to,
+                csr.getSubject(), csr.getSubjectPublicKeyInfo());
+        // 获取csr中的扩展项（这里只是举例获取密钥用途和扩展密钥用途，实际还可以获取其他类型的属性）
+        Extensions csrExtensions = csr.getRequestedExtensions();
+        KeyUsage csrKeyUsage = KeyUsage.fromExtensions(csrExtensions);
+        int csrKeyUsageInt = 0;
+        if(csrKeyUsage != null){
+            // keyUsage在ASN1格式中是以”000000000“的置位表示是否开启密钥用途的
+            for(byte keyUsage : csrKeyUsage.getBytes()){
+                csrKeyUsageInt |= keyUsage;
+            }
+        }
+        ExtendedKeyUsage csrExtendedKeyUsage = ExtendedKeyUsage.fromExtensions(csrExtensions);
+        KeyPurposeId[] csrExtendedKeyUsagePurposeIds = csrExtendedKeyUsage.getUsages();
+        // 额外添加一些扩展项
+        // 注意：
+        //     证书中的每个扩展都被指定为关键或非关键。 如果证书使用系统遇到它无法识别的关键扩展或包含无法处理的信息的关键扩展，则必须拒绝证书。
+        //     如果无法识别非关键扩展，则可以忽略该扩展，但如果可以识别，则必须对其进行处理。
+        //     更具体的注意项需要查阅RFC5280标准文档的定义
+        ExtensionsGenerator extensionsGenerator = new ExtensionsGenerator();
+        // addExtension 第一个字段表示：扩展字段的类型；第二个参数表示：是否要将本字段设置为critical；第三个参数表示：扩展字段的值
+        // BasicConstraints(boolean)的true和false 表示是否要将本证书设置成CA证书。此时默认无证书链长度限制
+        // 直接传证书链长度的话，是直接设置成CA证书
+        if(isCA){
+            if(pathLenConstraint < 0){
+                throw new Exception("CA chain length error");
+            }
+            extensionsGenerator.addExtension(Extension.basicConstraints, false, new BasicConstraints(pathLenConstraint));
+        } else {
+            extensionsGenerator.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
+        }
+        certGen.addExtension(extensionsGenerator.getExtension(Extension.basicConstraints));
+        // 这里是尝试性地添加了一个密钥用途的扩展字段，具体是——数字签名。
+        // KeyUsage里有很多可选用的密钥用途可以用来设置
+        extensionsGenerator.addExtension(Extension.keyUsage, false,
+                new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | csrKeyUsageInt));
+        certGen.addExtension(extensionsGenerator.getExtension(Extension.keyUsage));
+        // 添加使用者密钥标识
+        JcaX509ExtensionUtils jcaX509ExtensionUtils = new JcaX509ExtensionUtils();
+        extensionsGenerator.addExtension(Extension.subjectKeyIdentifier, false,
+                jcaX509ExtensionUtils.createSubjectKeyIdentifier(csrPubKey));
+        certGen.addExtension(extensionsGenerator.getExtension(Extension.subjectKeyIdentifier));
+        // 添加颁发者密钥标识
+        extensionsGenerator.addExtension(Extension.authorityKeyIdentifier, false,
+                jcaX509ExtensionUtils.createAuthorityKeyIdentifier(caCert.getPublicKey()));
+        certGen.addExtension(extensionsGenerator.getExtension(Extension.authorityKeyIdentifier));
+        // 这里是尝试性随便添加了几个扩展密钥用途的扩展字段
+        // KeyPurposeId中有很多可以直接拿来使用
+        // 如果要自定义用途，则只能自定义最后一位，我这边用"666"来表示。对应的UID是：2.5.29.37.666,前三位表示的是extendedKeyUsage
+        ASN1EncodableVector purposes = new ASN1EncodableVector();
+        purposes.add(KeyPurposeId.id_kp_emailProtection);
+        purposes.add(Extension.extendedKeyUsage.branch("666"));
+        if (csrExtendedKeyUsagePurposeIds != null) {
+            purposes.addAll(csrExtendedKeyUsagePurposeIds);
+        }
+        extensionsGenerator.addExtension(Extension.extendedKeyUsage, true, new DERSequence(purposes));
+        certGen.addExtension(extensionsGenerator.getExtension(Extension.extendedKeyUsage));
+        // 添加拥有者UID
+        // certGen.setSubjectUniqueID(uids);
+        // 添加颁发者UID
+        // certGen.setIssuerUniqueID(issuerUids);
         // CA端进行签名, 才有具有法律效力
         X509Certificate cert = null;
         ContentSigner signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey(caPrivateKey.getEncoded()));
@@ -727,11 +883,9 @@ public class Cryptology {
         System.out.println("新证书的版本： " + cert.getVersion());
         System.out.println("新证书的subject: " + cert.getSubjectX500Principal().getName());
         System.out.println("新证书的颁发者subject: " + cert.getIssuerDN().getName());
-        System.out.println("---------------end issueCert---------------");
+        System.out.println("---------------end issue attach extensions cert---------------");
         return cert;
     }
-
-    // todo 颁发证书，同时设置一些扩展字段
 
     /**
      * 将一个证书对象以PEM格式存入对应路径的文件中
@@ -891,15 +1045,31 @@ public class Cryptology {
      */
     public static void getCertMsg(X509Certificate x509Certificate) throws Exception{
         System.out.println("---------------begin get certificate message---------------");
-        System.out.println("Cert version is " + x509Certificate.getVersion());
-        System.out.println("Cert serial number: " + x509Certificate.getSerialNumber());
-        System.out.println("Cert sign algorithm is " + x509Certificate.getSigAlgName());
-        System.out.println("Cert hash value is " + Hex.toHexString(x509Certificate.getSignature()));
-
+        // 证书版本，现在一般用的是v1或者v3
+        System.out.println("Cert version is: " + x509Certificate.getVersion());
+        // 证书的序列号，通常是以十六进制的形式展示
+        System.out.println("Cert serial number: " + x509Certificate.getSerialNumber().toString(16));
+        // 签名算法
+        System.out.println("Cert sign algorithm is: " + x509Certificate.getSigAlgName());
+        // 证书摘要
+        System.out.println("Cert hash value is: " + Hex.toHexString(x509Certificate.getSignature()));
+        // 颁发者的subject各个信息获取方式同自身，所以这里不做重复
+        sun.security.x509.X500Name issuerX500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getIssuerX500Principal());
+        System.out.println("Issuer is: " + issuerX500Name.toString());
+        // 证书有效期
         Date notBefore = x509Certificate.getNotBefore();
         Date notAfter = x509Certificate.getNotAfter();
         System.out.println("Cert valid time is from " + notBefore.toString() + " to " + notAfter.toString());
-
+        // 检查证书的有效期
+        try {
+            x509Certificate.checkValidity();
+            System.out.println("Certificate is in valid time range.");
+        } catch (CertificateExpiredException e) {
+            System.out.println("Certificate is expired.");
+        } catch (CertificateNotYetValidException e) {
+            System.out.println("Certificate is not yet valid.");
+        }
+        // 证书拥有者信息
         System.out.println("Subject: " + x509Certificate.getSubjectX500Principal().getName());
         System.out.println("Issuer subject: " + x509Certificate.getIssuerX500Principal().getName());
         sun.security.x509.X500Name x500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getSubjectX500Principal());
@@ -915,18 +1085,93 @@ public class Cryptology {
                 System.out.println("EmailAddress(E): " + ava.getValueString());
             }
         }
-        sun.security.x509.X500Name issuerX500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getIssuerX500Principal());
-        // 颁发者的subject信息获取方式同自身，所以这里不做重复
-        System.out.println("Issuer CN: " + issuerX500Name.getCommonName());
-        // 检查证书的有效期
-        try {
-            x509Certificate.checkValidity();
-            System.out.println("Certificate is in valid time range.");
-        } catch (CertificateExpiredException e) {
-            System.out.println("Certificate is expired.");
-        } catch (CertificateNotYetValidException e) {
-            System.out.println("Certificate is not yet valid.");
+        // 获取基本约束字段（ X509v3 Basic Constraints），主要就是看是不是CA证书
+        // 方法介绍：从关键的 BasicConstraints扩展（OID = 2.5.29.19）获取证书约束路径长度
+        int allowChainLength = x509Certificate.getBasicConstraints();
+        if(allowChainLength == -1){
+            System.out.println("This is not a CA certificate or do not have this extension");
+        } else if(allowChainLength == Integer.MAX_VALUE){
+            System.out.println("This is a CA certificate and do not limit the issue certificate chain length");
+        } else {
+            System.out.println("This is a CA certificate and limit the issue certificate chain length max = " + allowChainLength);
         }
+        // 获取密钥用途（X509v3 Key Usage）
+        boolean[] keyUsage = x509Certificate.getKeyUsage();
+        if(keyUsage == null){
+            System.out.println("This certificate do not have key usage message");
+        } else {
+            System.out.print("The key usage is: ");
+            for (int i = 0; i < keyUsage.length; i++) {
+                if(keyUsage[i]) {
+                    switch (i) {
+                        case 0:
+                            System.out.print("Digital Signature, ");
+                            break;
+                        case 1:
+                            System.out.print("Non Repudiation, ");
+                            break;
+                        case 2:
+                            System.out.print("Key Encipherment, ");
+                            break;
+                        case 3:
+                            System.out.print("Data Encipherment, ");
+                            break;
+                        case 4:
+                            System.out.print("Key Agreement, ");
+                            break;
+                        case 5:
+                            System.out.print("Key CertSign, ");
+                            break;
+                        case 6:
+                            System.out.print("cRLSign, ");
+                            break;
+                        case 7:
+                            System.out.print("EncipherOnly, ");
+                            break;
+                        case 8:
+                            System.out.print("DecipherOnly, ");
+                            break;
+                    }
+                }
+            }
+            System.out.println();
+        }
+        // 注: RFC5280（4.1.2.8节）说明：issuerUniquelID和subjectUniqueID仅当版本为 2 或 3 时，这些字段必须显示。 如果版本为 1，
+        // 则不得显示这些字段。 证书中存在使用者和颁发者唯一标识符，以处理随着时间的推移重用使用者和/或颁发者名称的可能性。 此配置文件建议不要
+        // 对不同的实体重复使用名称，并且 Internet 证书不要使用唯一标识符。 符合此配置文件的 CA 不得生成具有唯一标识符的证书。 符合此配置
+        // 文件的应用程序应该能够分析包含唯一标识符的证书，但没有与唯一标识符关联的处理要求
+        // todo 获取自身UID，未能颁发出含这个属性的证书，无法校验
+        boolean[] subjectUniqueID = x509Certificate.getSubjectUniqueID();
+        if(subjectUniqueID == null){
+            System.out.println("This certificate do not have subject unique id message");
+        } else {
+            System.out.print("The subject unique id is: ");
+            for (boolean b : subjectUniqueID) {
+                System.out.print(b ? 1 : 0);
+            }
+            System.out.println();
+        }
+        // todo 获取颁发者UID，未能颁发出含这个属性的证书，无法校验
+        boolean[] issuerUniqueID = x509Certificate.getIssuerUniqueID();
+        if(issuerUniqueID == null){
+            System.out.println("This certificate do not have issuer unique id message");
+        } else {
+            System.out.print("The issuer unique id is: ");
+            for (boolean b : issuerUniqueID) {
+                System.out.print(b ? 1 : 0);
+            }
+            System.out.println();
+        }
+        // todo 获取自身的认证标识（X509v3 Subject Key Identifier）, 暂时没找到怎么获取
+        // 获取扩展密钥用途（X509v3 Extended Key Usage）
+        List<String> extendedKeyUsage = x509Certificate.getExtendedKeyUsage();
+        if(extendedKeyUsage == null){
+            System.out.println("This certificate do not contain extended key usage");
+        } else {
+            System.out.println("This certificate extended key usage is: " + extendedKeyUsage);
+        }
+        // 获取证书中被签名部分的原文
+        System.out.println("To be signed certificate content is(Hex-String): " + Hex.toHexString(x509Certificate.getTBSCertificate()));
         // 从SubjectAltName扩展 (OID = 2.5.29.17) 获取不可变的主题备用名称集合
         // x509Certificate.getSubjectAlternativeNames();
         System.out.println("---------------end get certificate message---------------");
