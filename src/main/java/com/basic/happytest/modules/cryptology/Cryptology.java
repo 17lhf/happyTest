@@ -34,7 +34,6 @@ import org.bouncycastle.util.io.pem.PemWriter;
 import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.x509.AVA;
-import sun.security.x509.KeyIdentifier;
 import sun.security.x509.X509CertImpl;
 
 import javax.crypto.Cipher;
@@ -161,7 +160,7 @@ public class Cryptology {
      * @throws NoSuchProviderException 异常
      */
     public static KeyPair generateECCKeyPair(int keySize) throws Exception {
-        System.out.println("---------------begin generateECCKeyPair---------------");
+        System.out.println("---------------begin generate ECC key pair---------------");
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
         System.out.println("Provider: " + keyPairGenerator.getProvider());
         keyPairGenerator.initialize(keySize);
@@ -186,7 +185,7 @@ public class Cryptology {
 
         ECPrivateKey ecPrivateKey = (ECPrivateKey)privateKey;
         System.out.println("私钥：k=" + ecPrivateKey.getS());
-        System.out.println("---------------end generateECCKeyPair---------------");
+        System.out.println("---------------end generate ECC key pair---------------");
         return keyPair;
     }
 
@@ -199,7 +198,7 @@ public class Cryptology {
      * @throws IOException 异常
      */
     public static PrivateKey loadRSAPKCS1PrivateKey(String pemFilePath) throws Exception {
-        System.out.println("---------------begin pemFileLoadPrivateKeyPkcs1Encoded---------------");
+        System.out.println("---------------begin pem file load private key PKCS1 encoded---------------");
         // PKCS#1 format
         final String PEM_RSA_PRIVATE_START = "-----BEGIN RSA PRIVATE KEY-----";
         final String PEM_RSA_PRIVATE_END = "-----END RSA PRIVATE KEY-----";
@@ -227,7 +226,7 @@ public class Cryptology {
         KeyFactory factory = KeyFactory.getInstance("RSA");
         PrivateKey privateKey = factory.generatePrivate(keySpec);
         System.out.println("Private key algorithm: " + privateKey.getAlgorithm());
-        System.out.println("---------------end pemFileLoadPrivateKeyPkcs1Encoded---------------");
+        System.out.println("---------------end pem file load private key PKCS1 encoded---------------");
         return privateKey;
     }
 
@@ -239,7 +238,7 @@ public class Cryptology {
      * @throws Exception 异常
      */
     public static PrivateKey loadPKCS8EncryptedPrivateKey(String filePath, String password) throws Exception {
-        System.out.println("---------------begin loadEncryptedPrivateKey---------------");
+        System.out.println("---------------begin load encrypted private key---------------");
         PEMParser pemParser = new PEMParser(new FileReader(filePath));
         Object pem = pemParser.readObject();
         if (pem instanceof PKCS8EncryptedPrivateKeyInfo) {
@@ -250,7 +249,7 @@ public class Cryptology {
                     .build(password.toCharArray());
             PrivateKey privateKey = converter.getPrivateKey(keyInfo.decryptPrivateKeyInfo(pkcs8Prov));
             System.out.println("Private key algorithm: " + privateKey.getAlgorithm());
-            System.out.println("---------------end loadEncryptedPrivateKey---------------");
+            System.out.println("---------------end load encrypted private key---------------");
             return privateKey;
         } else {
             throw new Exception();
@@ -264,7 +263,7 @@ public class Cryptology {
      * @throws Exception 异常
      */
     public static PrivateKey loadPKCS8PrivateKey(String filePath) throws Exception {
-        System.out.println("---------------begin load Private Key---------------");
+        System.out.println("---------------begin load private key---------------");
         try (PEMParser pemParser = new PEMParser(new FileReader(filePath))) {
             Object pem = pemParser.readObject();
             if (pem instanceof PrivateKeyInfo) {
@@ -273,7 +272,7 @@ public class Cryptology {
                 PrivateKeyInfo keyInfo = (PrivateKeyInfo) pem;
                 PrivateKey privateKey = converter.getPrivateKey(keyInfo);
                 System.out.println("Private key algorithm: " + privateKey.getAlgorithm());
-                System.out.println("---------------end load Private Key---------------");
+                System.out.println("---------------end load private key---------------");
                 return privateKey;
             }
             throw new RuntimeException("invalid key file.");
@@ -288,7 +287,7 @@ public class Cryptology {
      */
     public static void encryptP8KeyFromFileAnd2File(String filePath, String pwd,
                                                     String outputBasePath) throws Exception{
-        System.out.println("---------------begin transform P8 Key which from file to protected by password and store in file---------------");
+        System.out.println("---------------begin transform P8 key which from file to protected by password and store in file---------------");
         // PKCS8Generator中有很多用于保护密钥的算法可供选择设置
         // 这里是一个加密器构造器，后续将用这个加密器构造器的设置好的内容创建一个加密器
         JceOpenSSLPKCS8EncryptorBuilder encryptorBuilder = new JceOpenSSLPKCS8EncryptorBuilder(PKCS8Generator.PBE_SHA1_RC2_40);
@@ -309,7 +308,7 @@ public class Cryptology {
         PemWriter pemWriter = new PemWriter(printWriter);
         pemWriter.writeObject(pemObject);
         pemWriter.close();
-        System.out.println("---------------end transform P8 Key which from file to protected by password and store in file---------------");
+        System.out.println("---------------end transform P8 key which from file to protected by password and store in file---------------");
     }
 
     /**
@@ -319,14 +318,14 @@ public class Cryptology {
      * @throws IOException 异常
      */
     public static PublicKey loadPublicKey(String filePath) throws IOException {
-        System.out.println("---------------begin loadPublicKey---------------");
+        System.out.println("---------------begin load public key---------------");
         PEMParser pemParser = new PEMParser(new FileReader(filePath));
         JcaPEMKeyConverter converter = new JcaPEMKeyConverter()
                 .setProvider(BouncyCastleProvider.PROVIDER_NAME);
         SubjectPublicKeyInfo publicKeyInfo = SubjectPublicKeyInfo.getInstance(pemParser.readObject());
         PublicKey publicKey = converter.getPublicKey(publicKeyInfo);
         System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
-        System.out.println("---------------end loadPublicKey---------------");
+        System.out.println("---------------end load public key---------------");
         return publicKey;
     }
 
@@ -338,7 +337,7 @@ public class Cryptology {
      * @throws Exception 异常
      */
     public static PublicKey loadPublicKey2(String filePath, String alo) throws Exception{
-        System.out.println("---------------begin loadPublicKey2---------------");
+        System.out.println("---------------begin load Public Key 2---------------");
         PEMParser pemParser = new PEMParser(new FileReader(filePath));
         PemObject pemObject = pemParser.readPemObject();
         byte[] content = pemObject.getContent();
@@ -346,7 +345,7 @@ public class Cryptology {
         KeyFactory factory = KeyFactory.getInstance(alo, BouncyCastleProvider.PROVIDER_NAME);
         PublicKey publicKey = factory.generatePublic(pubKeySpec);
         System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
-        System.out.println("---------------end loadPublicKey2---------------");
+        System.out.println("---------------end load Public Key 2---------------");
         return publicKey;
     }
 
@@ -414,7 +413,7 @@ public class Cryptology {
     }
 
     /**
-     * 生成密钥对并生成证书请求
+     * 生成证书请求
      * @param alo 密钥算法，可选：RSA、EC
      * @param keyPair 密钥对
      * @param csrInfos 证书请求的subject信息，除了emailAddress以外都必填
@@ -423,7 +422,7 @@ public class Cryptology {
      */
     public static PKCS10CertificationRequest generateP10CertRequest(String alo, KeyPair keyPair,
                                                                     CsrInfos csrInfos) throws Exception {
-        System.out.println("---------------begin generateP10CertRequest---------------");
+        System.out.println("---------------begin generate P10 cert request---------------");
         PublicKey publicKey = null;
         PrivateKey privateKey = null;
         String sigAlo; // 签名算法
@@ -460,12 +459,12 @@ public class Cryptology {
         // 输出： 1.2.840.10045.4.3.2 表示 SHA256withECDSA
         System.out.println("Signature Algorithm OID: " + csr.getSignatureAlgorithm().getAlgorithm().toString());
         System.out.println("Subject of PKCS10 Certification Request: " + csr.getSubject());
-        System.out.println("---------------begin generateP10CertRequest---------------");
+        System.out.println("---------------begin generate P10 cert request---------------");
         return csr;
     }
 
     /**
-     * 生成密钥对并生成附带一些扩展字段的证书请求(扩展字段方面主要是举例说明，实际使用要做修改)
+     * 生成附带一些扩展字段的证书请求(扩展字段方面主要是举例说明，实际使用要做修改)
      * @param alo 密钥算法，可选：RSA、EC
      * @param keyPair 密钥对
      * @param csrInfos 证书请求的subject信息，除了emailAddress以外都必填
@@ -474,7 +473,7 @@ public class Cryptology {
      */
     public static PKCS10CertificationRequest generateAttachExtensionsP10Csr(String alo, KeyPair keyPair,
                                                                             CsrInfos csrInfos) throws Exception{
-        System.out.println("---------------begin generate attach Extensions P10 Csr---------------");
+        System.out.println("---------------begin generate attach extensions P10 Csr---------------");
         PublicKey publicKey = null;
         PrivateKey privateKey = null;
         String sigAlo; // 签名算法
@@ -525,7 +524,7 @@ public class Cryptology {
         p10Builder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, extensionsGenerator.generate());
         // 开始生成PKCS10的证书请求
         PKCS10CertificationRequest csr = p10Builder.build(signer);
-        System.out.println("---------------end generate attach Extensions P10 Csr---------------");
+        System.out.println("---------------end generate attach extensions P10 Csr---------------");
         // 输出：1.2.840.113549.1.1.11 表示 SHA256withRSA
         // 输出： 1.2.840.10045.4.3.2 表示 SHA256withECDSA
         System.out.println("Signature Algorithm OID: " + csr.getSignatureAlgorithm().getAlgorithm().toString());
@@ -732,7 +731,7 @@ public class Cryptology {
      */
     public static X509Certificate issueCert(PKCS10CertificationRequest csr, String issuerCertPath,
                                             String issuerPrvKeyPath, long validDays) throws Exception {
-        System.out.println("---------------begin issue cert---------------");
+        System.out.println("---------------begin issue v3 cert---------------");
         Key caPrivateKey = null;
         CertificateFactory certFactory;
         X509Certificate caCert = null;
@@ -769,7 +768,7 @@ public class Cryptology {
         System.out.println("新证书的版本： " + cert.getVersion());
         System.out.println("新证书的subject: " + cert.getSubjectX500Principal().getName());
         System.out.println("新证书的颁发者subject: " + cert.getIssuerDN().getName());
-        System.out.println("---------------end issue cert---------------");
+        System.out.println("---------------end issue v3 cert---------------");
         return cert;
     }
 
@@ -788,6 +787,7 @@ public class Cryptology {
     public static X509Certificate issueAttachExtensionsCert(PKCS10CertificationRequest csr, String issuerCertPath,
                                             String issuerPrvKeyPath, long validDays, boolean isCA,
                                             int pathLenConstraint, String alo) throws Exception {
+        System.out.println("---------------begin issue attach extensions cert---------------");
         CertificateFactory certFactory;
         certFactory = CertificateFactory.getInstance("X.509");
         // 读取Ca证书
@@ -1051,8 +1051,8 @@ public class Cryptology {
         System.out.println("Cert serial number: " + x509Certificate.getSerialNumber().toString(16));
         // 签名算法
         System.out.println("Cert sign algorithm is: " + x509Certificate.getSigAlgName());
-        // 证书摘要
-        System.out.println("Cert hash value is: " + Hex.toHexString(x509Certificate.getSignature()));
+        // 证书签名值
+        System.out.println("Cert sign value is: " + Hex.toHexString(x509Certificate.getSignature()));
         // 颁发者的subject各个信息获取方式同自身，所以这里不做重复
         sun.security.x509.X500Name issuerX500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getIssuerX500Principal());
         System.out.println("Issuer is: " + issuerX500Name.toString());
