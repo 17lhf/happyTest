@@ -42,4 +42,9 @@ class FileIOTest {
             System.out.println("file is deleted");
         }
     }
+
+    @Test
+    void pushBackIO() throws IOException {
+        FileIO.pushBackIO();
+    }
 }

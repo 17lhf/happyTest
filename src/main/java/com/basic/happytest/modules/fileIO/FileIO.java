@@ -91,10 +91,10 @@ public class FileIO {
     }
 
     /**
-     * todo 关于回退流
+     * 关于回退流
      * @throws IOException 异常
      */
-    public void pushBackIOTest() throws IOException {
+    public static void pushBackIO() throws IOException {
         String str = "hello,world!";
         PushbackInputStream push = null; // 声明回退流对象
         ByteArrayInputStream bat = null; // 声明字节数组流对象
