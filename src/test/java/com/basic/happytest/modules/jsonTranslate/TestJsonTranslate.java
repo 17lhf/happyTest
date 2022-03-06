@@ -11,7 +11,8 @@ import java.util.List;
 public class TestJsonTranslate {
 
     /**
-     * todo
+     * JSONObject继承自JSON,操作起来不同，实际效果其实都一样
+     * 似乎并没有什么值得深究的......
      */
     @Test
     public void testJsonTranslate(){
@@ -38,9 +39,11 @@ public class TestJsonTranslate {
         System.out.println("-------------to object array------------");
         List<ClassA> classAList = new ArrayList<>(1);
         classAList.add(classA);
+        classAList.add(classA4);
         String classAListJSON = JSON.toJSONString(classAList);
         List<ClassA> classAList1 = JSON.parseArray(classAListJSON, ClassA.class);
-        System.out.println("JSON.parseArray object: " + classAList1.get(0).toString());
+        System.out.println("JSON.parseArray object[0]: " + classAList1.get(0).toString());
+        System.out.println("JSON.parseArray object[1]: " + classAList1.get(1).toString());
         System.out.println("JSON.parseArray list length: " + classAList1.size());
     }
 }
