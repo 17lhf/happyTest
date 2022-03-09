@@ -21,6 +21,6 @@ class ExecuteProcessTest {
         cmds.add("123");
         cmds.add("One");
         cmds.add("一二三");
-        ExecuteProcess.execCmd(cmds, "abc", 60);
+        ExecuteProcess.execCmd(cmds, "abc");
     }
 }

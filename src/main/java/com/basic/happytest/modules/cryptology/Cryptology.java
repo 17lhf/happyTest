@@ -747,7 +747,18 @@ public class Cryptology {
         AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
         assert caCert != null;
         // 颁发者信息
-        X500Name issuer = new X500Name(caCert.getSubjectX500Principal().getName());
+        // 不能直接使用X500Name issuer = new X500Name(caCert.getSubjectX500Principal().getName());来获得颁发者subject
+        // X500Principal转字符串的subject的各项数据与正常的相反（从E到C,正常的是C到E）,虽然能被openssl和操作系统识别，但是在进行证书链校验时会失败
+        // 如果subject信息顺序反了，则openssl进行证书链校验时的报错信息：unable to get local issuer certificate
+        X500Name x500Name = new X500Name(caCert.getSubjectX500Principal().getName());
+        String issuerDN = "C=" + x500Name.getRDNs(BCStyle.C)[0].getFirst().getValue().toString()
+                + ",ST=" + x500Name.getRDNs(BCStyle.ST)[0].getFirst().getValue().toString()
+                + ",L=" + x500Name.getRDNs(BCStyle.L)[0].getFirst().getValue().toString()
+                + ",O=" + x500Name.getRDNs(BCStyle.O)[0].getFirst().getValue().toString()
+                + ",OU=" + x500Name.getRDNs(BCStyle.OU)[0].getFirst().getValue().toString()
+                + ",CN=" + x500Name.getRDNs(BCStyle.CN)[0].getFirst().getValue().toString()
+                + ",E="+ x500Name.getRDNs(BCStyle.E)[0].getFirst().getValue().toString();
+        X500Name issuer = new X500Name(issuerDN);
         // 序列号, 最长是20字节
         BigInteger serial = new BigInteger(160, new SecureRandom());
         // 证书起始生效时间
@@ -804,7 +815,18 @@ public class Cryptology {
         AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
         assert caCert != null;
         // 颁发者信息
-        X500Name issuer = new X500Name(caCert.getSubjectX500Principal().getName());
+        // 不能直接使用X500Name issuer = new X500Name(caCert.getSubjectX500Principal().getName());来获得颁发者subject
+        // X500Principal转字符串的subject的各项数据与正常的相反（从E到C,正常的是C到E）,虽然能被openssl和操作系统识别，但是在进行证书链校验时会失败
+        // 如果subject信息顺序反了，则openssl进行证书链校验时的报错信息：unable to get local issuer certificate
+        X500Name x500Name = new X500Name(caCert.getSubjectX500Principal().getName());
+        String issuerDN = "C=" + x500Name.getRDNs(BCStyle.C)[0].getFirst().getValue().toString()
+                + ",ST=" + x500Name.getRDNs(BCStyle.ST)[0].getFirst().getValue().toString()
+                + ",L=" + x500Name.getRDNs(BCStyle.L)[0].getFirst().getValue().toString()
+                + ",O=" + x500Name.getRDNs(BCStyle.O)[0].getFirst().getValue().toString()
+                + ",OU=" + x500Name.getRDNs(BCStyle.OU)[0].getFirst().getValue().toString()
+                + ",CN=" + x500Name.getRDNs(BCStyle.CN)[0].getFirst().getValue().toString()
+                + ",E="+ x500Name.getRDNs(BCStyle.E)[0].getFirst().getValue().toString();
+        X500Name issuer = new X500Name(issuerDN);
         // 序列号, 最长是20字节
         BigInteger serial = new BigInteger(160, new SecureRandom());
         // 证书起始生效时间
@@ -816,16 +838,20 @@ public class Cryptology {
                 csr.getSubject(), csr.getSubjectPublicKeyInfo());
         // 获取csr中的扩展项（这里只是举例获取密钥用途和扩展密钥用途，实际还可以获取其他类型的属性）
         Extensions csrExtensions = csr.getRequestedExtensions();
-        KeyUsage csrKeyUsage = KeyUsage.fromExtensions(csrExtensions);
         int csrKeyUsageInt = 0;
-        if(csrKeyUsage != null){
-            // keyUsage在ASN1格式中是以”000000000“的置位表示是否开启密钥用途的
-            for(byte keyUsage : csrKeyUsage.getBytes()){
-                csrKeyUsageInt |= keyUsage;
+        KeyPurposeId[] csrExtendedKeyUsagePurposeIds = null;
+        // csr可能根本就不包含扩展项
+        if(csrExtensions != null) {
+            KeyUsage csrKeyUsage = KeyUsage.fromExtensions(csrExtensions);
+            if (csrKeyUsage != null) {
+                // keyUsage在ASN1格式中是以”000000000“的置位表示是否开启密钥用途的
+                for (byte keyUsage : csrKeyUsage.getBytes()) {
+                    csrKeyUsageInt |= keyUsage;
+                }
             }
+            ExtendedKeyUsage csrExtendedKeyUsage = ExtendedKeyUsage.fromExtensions(csrExtensions);
+            csrExtendedKeyUsagePurposeIds = csrExtendedKeyUsage.getUsages();
         }
-        ExtendedKeyUsage csrExtendedKeyUsage = ExtendedKeyUsage.fromExtensions(csrExtensions);
-        KeyPurposeId[] csrExtendedKeyUsagePurposeIds = csrExtendedKeyUsage.getUsages();
         // 额外添加一些扩展项
         // 注意：
         //     证书中的每个扩展都被指定为关键或非关键。 如果证书使用系统遇到它无法识别的关键扩展或包含无法处理的信息的关键扩展，则必须拒绝证书。

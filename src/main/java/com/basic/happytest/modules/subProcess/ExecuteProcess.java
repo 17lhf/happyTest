@@ -11,12 +11,11 @@ import java.util.List;
 public class ExecuteProcess {
 
     /**
-     * todo 执行子进程
+     * 普通的执行子进程
      * @param cmd 要被执行的子程序命令
      * @param params 子程序运行过程中，向其传入的参数
-     * @param timeOutSecond 认为子程序运行超时的时间，单位：s
      */
-    public static void execCmd(List<String> cmd, String params, int timeOutSecond) throws IOException {
+    public static void execCmd(List<String> cmd, String params) throws IOException {
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         // 默认是false, 表示错误流和标准输出流是独立的
         // 一般是改成true, 这样的话错误流会输出到标准输出流
@@ -48,5 +47,20 @@ public class ExecuteProcess {
         process.destroy();
         // 查看子进程状态
         System.out.println("SubProcess is alive? " + process.isAlive());
+    }
+
+    /**
+     * 执行可能会超时应答的子进程
+     * @param cmds 要被执行的子程序命令
+     * @param timeLimit 认为子进程不应该超过的应答时长，单位：s
+     * @throws IOException 异常
+     */
+    public static void execTimeoutCmd(List<String> cmds, long timeLimit) throws IOException {
+        ProcessBuilder processBuilder = new ProcessBuilder(cmds);
+        processBuilder.redirectErrorStream(true);
+        Process process = processBuilder.start();
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+
     }
 }

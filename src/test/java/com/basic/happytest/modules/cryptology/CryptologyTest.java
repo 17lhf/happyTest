@@ -408,7 +408,8 @@ class CryptologyTest {
         csrInfos.setCommonName("lhf");
         csrInfos.setEmailAddress("lhf@qq.com");
         KeyPair rsaKeyPair = Cryptology.generateKeyPair("RSA", 2048);
-        PKCS10CertificationRequest csr = Cryptology.generateAttachExtensionsP10Csr(alo,rsaKeyPair, csrInfos);
+        // PKCS10CertificationRequest csr = Cryptology.generateAttachExtensionsP10Csr(alo, rsaKeyPair, csrInfos);
+        PKCS10CertificationRequest csr = Cryptology.generateP10CertRequest(alo, rsaKeyPair, csrInfos);
         String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
         String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
         X509Certificate x509Certificate = Cryptology.issueAttachExtensionsCert(csr, issuerCertPath, issuerKeyPath,
