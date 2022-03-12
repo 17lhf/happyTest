@@ -5,6 +5,7 @@ import java.util.List;
 
 /**
  * 关于创建子进程执行外部程序或命令的方法集合
+ * 参考文章：https://blog.csdn.net/le_17_4_6/article/details/104419513
  * @author lhf
  */
 
@@ -52,15 +53,33 @@ public class ExecuteProcess {
     /**
      * 执行可能会超时应答的子进程
      * @param cmds 要被执行的子程序命令
-     * @param timeLimit 认为子进程不应该超过的应答时长，单位：s
+     * @param timeLimit 认为子进程不应该超过的应答时长，单位：ms
      * @throws IOException 异常
      */
     public static void execTimeoutCmd(List<String> cmds, long timeLimit) throws IOException {
         ProcessBuilder processBuilder = new ProcessBuilder(cmds);
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-
+        // 将子进程放入到线程中运行，然后最多等待一定的时间
+        ProcessMonitor processMonitor = new ProcessMonitor(process);
+        processMonitor.start();
+        try {
+            long begin = System.currentTimeMillis();
+            // join是最多等待n毫秒，sleep是固定等待n毫秒
+            // 因为processMonitor线程存粹就是在与子进程交互，所以其实这个时间也就是最多的交互时间，往往就是最长的等待子进程响应时间
+            processMonitor.join(timeLimit);
+            if (processMonitor.isComplete()){
+                System.out.println("SubProcess has complete gracefully, result is: " + processMonitor.getResult());
+            } else {
+                long end = System.currentTimeMillis();
+                System.out.println("SubProcess execution error or timed out! We have waited " + (end - begin) + " millisecond");
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            // 最后要记得销毁子进程
+            process.destroy();
+            processMonitor.interrupt();
+        }
     }
 }

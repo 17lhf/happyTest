@@ -58,7 +58,7 @@ nohup （可选）表示本jar包是不挂断地运行命令，退出终端不�
 ps aux|grep java <br />
 <B>3.立即强制停止运行在后台不断运行中的jar包进程</B><br/>
 kill -9 jar包对应的进程编号 <br />
-<B>4.使用外置配置文件（yml）</B>
+<B>4.使用外置配置文件（yml）</B><br />
 SpringBoot外部配置配置文件，使用命令:--spring.config.location=<br/>
 =后面如果是一个文件夹，则会自动去找里面的所有yml文件，并忽略对应的jar包内的配置文件(因为有加载的优先级)
 （此时可以结合--spring.profiles.active来配置环境）。 如果是特定文件，则只会去找单个文件。
