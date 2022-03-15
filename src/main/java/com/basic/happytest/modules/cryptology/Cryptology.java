@@ -1042,23 +1042,21 @@ public class Cryptology {
 
     /**
      * 将传进来的pem格式证书字符串转为der格式（Hex-String）
-     * （方法使用了sun.*包，可能会导致打包失败，请看readme.md文件描述）
      * @param crtStr pem格式证书字符串
      * @return der格式（Hex-String）证书
-     * @throws Exception 异常
      */
-    public static String certPem2DerHexStr(String crtStr) throws Exception {
+    public static String certPem2DerHexStr(String crtStr) {
         System.out.println("---------------begin CERT PEM to DER---------------");
-
-        crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", ""); // 为避免不同平台的回车换行问题，所以这里只匹配开头的文件类型描述
-        crtStr = crtStr.replace("-----END CERTIFICATE-----", "");   // 为避免不同平台的回车换行问题，所以这里只匹配结尾的文件类型描述
-        crtStr = crtStr.replaceAll("\n", "");      // 去掉换行
-        crtStr = crtStr.replaceAll("\r", "");      // 去掉某些平台带有的回车
-        // 转为证书对象
-        X509Certificate x509Certificate = new X509CertImpl(Base64.getDecoder().decode(crtStr));
-        byte[] bytes = x509Certificate.getEncoded();
+        // 为避免不同平台的回车换行问题，所以这里只匹配开头的文件类型描述
+        crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", "");
+        // 为避免不同平台的回车换行问题，所以这里只匹配结尾的文件类型描述
+        crtStr = crtStr.replace("-----END CERTIFICATE-----", "");
+        // 去掉换行
+        crtStr = crtStr.replaceAll("\n", "");
+        // 去掉某些平台带有的回车
+        crtStr = crtStr.replaceAll("\r", "");
         // 获得der格式编码
-        String certDER = Hex.toHexString(bytes);
+        String certDER = Hex.toHexString(Base64.getDecoder().decode(crtStr));
         System.out.println("CERT in der(Hex-String): " + certDER);
         System.out.println("---------------end CERT PEM to DER---------------");
         return certDER;

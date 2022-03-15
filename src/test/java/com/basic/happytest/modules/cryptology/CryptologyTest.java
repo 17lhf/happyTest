@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
+import sun.security.x509.X509CertImpl;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -282,7 +283,9 @@ class CryptologyTest {
 
     @Test
     void certPem2DerHexStr() throws Exception {
-        Cryptology.certPem2DerHexStr(FileIO.getFileContent(FileIO.getAbsolutePath(CA_CERT_PEM)));
+        String certInDER = Cryptology.certPem2DerHexStr(FileIO.getFileContent(FileIO.getAbsolutePath(CA_CERT_PEM)));
+        X509Certificate x509Certificate = new X509CertImpl(Hex.decode(certInDER));
+        System.out.println(x509Certificate.getSubjectDN().getName());
     }
 
     @Test
