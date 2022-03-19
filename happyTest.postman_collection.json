@@ -1,0 +1,153 @@
+{
+	"info": {
+		"_postman_id": "15285795-3890-4e37-a4c3-fc56e93d43b2",
+		"name": "happyTest",
+		"description": "happyTest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "localhost:12312/happyTest/judge-exp/select",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:12312/happyTest/judge-exp/select",
+					"host": [
+						"localhost"
+					],
+					"port": "12312",
+					"path": [
+						"happyTest",
+						"judge-exp",
+						"select"
+					],
+					"query": [
+						{
+							"key": "numValue",
+							"value": "0",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:12312/happyTest/lombok-explore/normal",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"aInt\": 0,\r\n  \"oneInt\": 0,\r\n  \"aStr\": \"abc\",\r\n  \"oneStr\": \"abc\"\r\n}"
+				},
+				"url": {
+					"raw": "localhost:12312/happyTest/lombok-explore/normal",
+					"host": [
+						"localhost"
+					],
+					"port": "12312",
+					"path": [
+						"happyTest",
+						"lombok-explore",
+						"normal"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:12312/happyTest/lombok-explore/useLombok",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"aInt\": 0,\r\n  \"oneInt\": 0,\r\n  \"aStr\": \"abc\",\r\n  \"oneStr\": \"abc\"\r\n}"
+				},
+				"url": {
+					"raw": "localhost:12312/happyTest/lombok-explore/useLombok",
+					"host": [
+						"localhost"
+					],
+					"port": "12312",
+					"path": [
+						"happyTest",
+						"lombok-explore",
+						"useLombok"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:12312/happyTest/lombok-explore/useLombokAndProperty",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"aInt\": 0,\r\n  \"oneInt\": 0,\r\n  \"aStr\": \"abc\",\r\n  \"oneStr\": \"abc\"\r\n}"
+				},
+				"url": {
+					"raw": "localhost:12312/happyTest/lombok-explore/useLombokAndProperty",
+					"host": [
+						"localhost"
+					],
+					"port": "12312",
+					"path": [
+						"happyTest",
+						"lombok-explore",
+						"useLombokAndProperty"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

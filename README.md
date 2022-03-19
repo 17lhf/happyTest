@@ -1,6 +1,7 @@
 # happyTest
 一些寻常或奇怪的小测试集合<br />
 建议实现方法结合单元测试的示例来阅读<br />
+有附带postman测试用的json文件，可以导入postman直接使用<br />
 todo 的地方表示还不确定是否正确
 
 ## 已包含内容有： 
@@ -38,7 +39,8 @@ file lib/ct.sym with class stubs.<br/>
 <B>关于优雅地读取配置文件中自定义的配置的实例</B>
 
 ### (8)lombokExplore 
-<B>关于lombok的注解里的坑</B>（推荐最多只用lombok的getter和setter两个注解，其他的自己实现）
+<B>关于lombok的注解里的坑</B>（推荐最多只用lombok的getter和setter两个注解，其他的自己实现）<br />
+可是，即便是使用getter和setter,因为作者在部分细节处逆规范，导致特定条件下会出问题。在本模块中也会对其进行实验
 
 ### (9)fileIO
 <B>关于一些比较怪的文件操作及流的实例</B>

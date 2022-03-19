@@ -2,6 +2,9 @@ package com.basic.happytest.modules.lombokExplore;
 
 import lombok.Data;
 
+/**
+ * 父类
+ */
 
 @Data
 public class ClassA {

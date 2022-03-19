@@ -3,9 +3,12 @@ package com.basic.happytest.modules.jsonTranslate;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.basic.happytest.modules.lombokExplore.ClassA;
+import com.basic.happytest.modules.lombokExplore.model.UseLombokDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class TestJsonTranslate {
@@ -45,5 +48,36 @@ public class TestJsonTranslate {
         System.out.println("JSON.parseArray object[0]: " + classAList1.get(0).toString());
         System.out.println("JSON.parseArray object[1]: " + classAList1.get(1).toString());
         System.out.println("JSON.parseArray list length: " + classAList1.size());
+    }
+
+    /**
+     * 测试fastjson和jackson对对象进行反序列化时的差异
+     */
+    @Test
+    public void testJson(){
+        HashMap<Object, Object> hashMap = new HashMap<>();
+        hashMap.put("aInt","0");
+        hashMap.put("oneInt","0");
+        hashMap.put("aStr","abc");
+        hashMap.put("oneStr","abc");
+
+        UseLombokDto useLombokDto = JSONObject.parseObject(JSONObject.toJSONString(hashMap), UseLombokDto.class);
+        System.out.println("fastjson: ");
+        System.out.println("aInt: " + useLombokDto.getAInt());
+        System.out.println("oneInt: " + useLombokDto.getOneInt());
+        System.out.println("aStr: " + useLombokDto.getAStr());
+        System.out.println("oneStr: " + useLombokDto.getOneStr());
+        System.out.println();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        // 抛异常：java.lang.IllegalArgumentException: Unrecognized field "aInt" (class com.basic.happytest.modules.lombokExplore.model.UseLombokDto),
+        // not marked as ignorable (4 known properties: "astr", "oneInt", "oneStr", "aint"])
+        UseLombokDto useLombokDto1 = objectMapper.convertValue(hashMap, UseLombokDto.class);
+        System.out.println("jackson: ");
+        System.out.println("aInt: " + useLombokDto.getAInt());
+        System.out.println("oneInt: " + useLombokDto.getOneInt());
+        System.out.println("aStr: " + useLombokDto.getAStr());
+        System.out.println("oneStr: " + useLombokDto.getOneStr());
+        System.out.println();
     }
 }

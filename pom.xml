@@ -85,6 +85,12 @@
             <artifactId>fastjson</artifactId><!-- 阿里巴巴出的json处理包 -->
             <version>1.2.79</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId> <!-- jackson的json处理包 -->
+            <version>2.13.2</version>
+        </dependency>
     </dependencies>
 
     <build>
