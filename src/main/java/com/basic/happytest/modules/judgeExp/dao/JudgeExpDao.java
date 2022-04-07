@@ -78,4 +78,11 @@ public interface JudgeExpDao extends BaseMapper<JudgeExp> {
      * @return 满足条件的列表
      */
     List<JudgeExp> listSelectFromExternal(Map<String, Object> params);
+
+    /**
+     * 使用单个数字作为条件进行查询，同时test中对入参判断不等于undefined
+     * @param num 入参数字
+     * @return 满足条件的列表
+     */
+    List<JudgeExp> listByNumValueAndUseTestUndefined(Integer num);
 }

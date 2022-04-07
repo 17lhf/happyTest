@@ -99,4 +99,15 @@
             and num_value = #{numValue}
         </if>
     </select>
+
+    <select id="listByNumValueAndUseTestUndefined"
+            resultType="com.basic.happytest.modules.judgeExp.entity.JudgeExp">
+        select *
+        from t_judge_experiment
+        where 1 = 1
+        <if test="num != '' and num != undefined">
+            and num_value = #{num}
+        </if>
+    </select>
+
 </mapper>

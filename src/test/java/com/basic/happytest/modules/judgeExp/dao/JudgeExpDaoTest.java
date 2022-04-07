@@ -198,4 +198,22 @@ class JudgeExpDaoTest {
         // 于是，看似有问题，实际其实不会出问题
         // 当然，这样并不好。因为本身数字就不会出现空字符串形式的情况，所以数字值的xml位置，还是不要写!=''最好
     }
+
+    @Test
+    void listByNumValueAndUseTestUndefined() {
+        System.out.println("Have undefined test");
+        List<JudgeExp> judgeExpList = judgeExpDao.listByNumValueAndUseTestUndefined(1);
+        for (JudgeExp judgeExp: judgeExpList) {
+            System.out.println("id = " + judgeExp.getId());
+        }
+        System.out.println("Don't have undefined test");
+        List<JudgeExp> judgeExpList2 = judgeExpDao.listByNumValue(1);
+        for (JudgeExp judgeExp: judgeExpList2) {
+            System.out.println("id = " + judgeExp.getId());
+        }
+        // todo 具体原因仍待考究
+        // 在mybatisPlus3.5.1的版本下，test中若写了undefined判断，会使得test条件一直不成立，但是不会报错
+        // 在mybatisPlu2.2.0的版本下，test中若写了undefined判断，则会使得一直报错：
+        // org.apache.ibatis.binding.BindingException: Parameter ‘undefined‘ not found
+    }
 }
