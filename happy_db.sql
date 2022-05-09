@@ -50,6 +50,15 @@ CREATE TABLE `t_multithread_sync` (
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='synchronized和transational并发安全测试表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+DROP TABLE IF EXISTS `mp`;
+CREATE TABLE `mp` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `num_value` INT COMMENT 'int类型的数值',
+  `str_value` VARCHAR(45) COMMENT '数字',
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE)
+COMMENT = 'MybatisPlus Test Table';
+
 --
 -- Dumping data for table `t_multithread_sync`
 --

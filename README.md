@@ -48,6 +48,9 @@ file lib/ct.sym with class stubs.<br/>
 ### (10)subProcess
 <B>调用子进程</B>
 
+### (11)subProcess
+<B>MybatisPlus的使用笔记</B>（包含有：updateById的字段忽略策略）
+
 ### (n) 补充
 <B>1.Linux运行jar包</B><br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
