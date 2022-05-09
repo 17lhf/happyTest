@@ -38,4 +38,12 @@ public class MpService extends ServiceImpl<MpDao, Mp> {
     public Mp getById(Integer id){
         return baseMapper.selectById(id);
     }
+
+    /**
+     * 依据主键id删除项
+     * @param id 指定的主键id
+     */
+    public void delById(Integer id) {
+        baseMapper.deleteById(id);
+    }
 }

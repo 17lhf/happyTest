@@ -60,6 +60,8 @@ class MpServiceTest {
         Mp mpAfterUpdByMp4 = mpService.getById(mp.getId());
         System.out.println("mpAfterUpdByMp4: id=" + mpAfterUpdByMp4.getId() + ", num=" + mpAfterUpdByMp4.getNumValue() +
                 ", str=" + mpAfterUpdByMp4.getStrValue());
+        // 删除测试数据
+        mpService.delById(mpAfterAddId);
         // 结果：
         // mpAfterAdd: id=1, num=1, str=one
         // mpAfterUpdByMp: id=1, num=2, str=one
