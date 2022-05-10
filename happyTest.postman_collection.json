@@ -7,7 +7,7 @@
 	},
 	"item": [
 		{
-			"name": "localhost:12312/happyTest/judge-exp/select",
+			"name": "judge-exp/select",
 			"protocolProfileBehavior": {
 				"disabledSystemHeaders": {
 					"content-type": true
@@ -45,7 +45,100 @@
 			"response": []
 		},
 		{
-			"name": "localhost:12312/happyTest/lombok-explore/normal",
+			"name": "uniformPackagingReturn/num",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:12312/happyTest/uniformPackagingReturn/num",
+					"host": [
+						"localhost"
+					],
+					"port": "12312",
+					"path": [
+						"happyTest",
+						"uniformPackagingReturn",
+						"num"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "uniformPackagingReturn/object",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:12312/happyTest/uniformPackagingReturn/object",
+					"host": [
+						"localhost"
+					],
+					"port": "12312",
+					"path": [
+						"happyTest",
+						"uniformPackagingReturn",
+						"object"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "uniformPackagingReturn/string",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:12312/happyTest/uniformPackagingReturn/string",
+					"host": [
+						"localhost"
+					],
+					"port": "12312",
+					"path": [
+						"happyTest",
+						"uniformPackagingReturn",
+						"string"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "lombok-explore/normal",
 			"protocolProfileBehavior": {
 				"disabledSystemHeaders": {
 					"content-type": true
@@ -80,7 +173,7 @@
 			"response": []
 		},
 		{
-			"name": "localhost:12312/happyTest/lombok-explore/useLombok",
+			"name": "lombok-explore/useLombok",
 			"protocolProfileBehavior": {
 				"disabledSystemHeaders": {
 					"content-type": true
@@ -115,7 +208,7 @@
 			"response": []
 		},
 		{
-			"name": "localhost:12312/happyTest/lombok-explore/useLombokAndProperty",
+			"name": "useLombokAndProperty",
 			"protocolProfileBehavior": {
 				"disabledSystemHeaders": {
 					"content-type": true
