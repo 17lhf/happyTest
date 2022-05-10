@@ -51,6 +51,9 @@ file lib/ct.sym with class stubs.<br/>
 ### (11)mp
 <B>MybatisPlus的使用笔记</B>（包含有：updateById的字段忽略策略）
 
+### (12)uniformPackagingReturn
+<B>统一封装应答对象</B>（包含有：解决返回String基本数据类型时的异常）
+
 ### (n) 补充
 <B>1.Linux运行jar包</B><br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
