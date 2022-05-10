@@ -151,6 +151,13 @@ class JudgeExpDaoTest {
     /**
      * 测试传入基本类型数字（int、long、double之类的数字）时，如果给的值为零，则if的条件判断时是否会被当做是空字符串‘’
      * 解决办法：数字类型的值本身就不会是‘’这样的形式，索性可以去掉这一个判断。保留!=null、!=undefined即可。
+     * 可参考文章： https://blog.csdn.net/qq_36501591/article/details/116499598
+     * 主要原因可以认为是IfSqlNode类，其中的ExpressionEvaluator类解析表达式使用的是OGNL
+     * OGNL的策略是：
+     * 如果对象是布尔值，则提取并返回其值;
+     * 如果对象是数字，则将其双精度浮点值与零进行比较;非零被视为真，零被视为假;
+     * 如果对象是字符，则当且仅当其 char 值为非零时，其布尔值为真;
+     * 否则，当且仅当其为非 null 时，其布尔值为 true。
      */
     @Test
     void listByZeroValue() {

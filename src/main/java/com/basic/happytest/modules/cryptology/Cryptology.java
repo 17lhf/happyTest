@@ -968,6 +968,7 @@ public class Cryptology {
         // 开始依据不同的编码类型来加载证书
         X509Certificate x509Certificate;
         if("PEM".equals(certEncodeType)) { // pem格式
+            // （注：这种方式比较暴力，在数据含有证书内容信息时会出错，最好用PemParser处理）
             String crtStr = new String(bytes, StandardCharsets.UTF_8);
             crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", ""); // 为避免不同平台的回车换行问题，所以这里只匹配开头的文件类型描述
             crtStr = crtStr.replace("-----END CERTIFICATE-----", "");   // 为避免不同平台的回车换行问题，所以这里只匹配结尾的文件类型描述
@@ -1038,10 +1039,60 @@ public class Cryptology {
         System.out.println(type + " in pem: \n" + pem);
         System.out.println("---------------begin (" + type + ") DER to PEM---------------");
         return pem;
-    };
+    }
 
     /**
-     * 将传进来的pem格式证书字符串转为der格式（Hex-String）
+     * 从DER格式（为方便传输，一般der格式内容会转为十六进制字符串来传递）转成对象
+     * @param der 一个Hex-String形式的der格式数据内容
+     * @param type 数据类型，支持“CSR","CERT","PRV_KEY","PUB_KEY"
+     * @param keyAlo 密钥算法，支持“RSA"，若不是密钥时可为null
+     * @throws Exception 异常
+     */
+    public static void der2Object(String der, String type, String keyAlo) throws Exception {
+        System.out.println("---------------begin (" + type + ") DER to Object---------------");
+        switch (type){
+            case "CSR":
+                PKCS10CertificationRequest pkcs10Csr = new PKCS10CertificationRequest(Hex.decode(der));
+                System.out.println("Certificate Request: " + pkcs10Csr.getSubject());
+                break;
+            case "CERT":
+                X509Certificate cert = new X509CertImpl(Hex.decode(der));
+                System.out.println("Certificate: " + cert.getSubjectDN());
+                break;
+            case "PRV_KEY":
+                PKCS8EncodedKeySpec prvKeySpec = new PKCS8EncodedKeySpec(Hex.decode(der));
+                KeyFactory factory = KeyFactory.getInstance(keyAlo, BouncyCastleProvider.PROVIDER_NAME);
+                PrivateKey privateKey = factory.generatePrivate(prvKeySpec);
+                System.out.println("Private Key: " + privateKey.getAlgorithm());
+                break;
+            default:
+                X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Hex.decode(der));
+                KeyFactory factory2 = KeyFactory.getInstance(keyAlo, BouncyCastleProvider.PROVIDER_NAME);
+                PublicKey publicKey = factory2.generatePublic(pubKeySpec);
+                System.out.println("Public Key: " + publicKey.getAlgorithm());
+        }
+        System.out.println("---------------end (" + type + ") DER to Object---------------");
+    }
+
+    /**
+     * 从PEM格式（为方便传输，一般der格式内容会转为十六进制字符串来传递）转成对象
+     * @param pem 一个pem格式的内容
+     * @param type 数据类型，支持“CSR","CERT","PRV_KEY","PUB_KEY"
+     * @param keyAlo 密钥算法，支持“RSA",若不是密钥时可为null
+     * @throws Exception 异常
+     */
+    public static void pem2Object(String pem, String type, String keyAlo) throws Exception {
+        System.out.println("---------------begin (" + type + ") Pem to Object---------------");
+        PEMParser pemParser = new PEMParser(new StringReader(pem));
+        PemObject pemObject = pemParser.readPemObject();
+        byte[] content = pemObject.getContent();
+        String der = Hex.toHexString(content);
+        der2Object(der, type, keyAlo);
+        System.out.println("---------------end (" + type + ") Pem to Object---------------");
+    }
+
+    /**
+     * 将传进来的pem格式证书字符串转为der格式（Hex-String）（注：这种方式比较暴力，在数据含有证书内容信息时会出错，最好用PemParser处理）
      * @param crtStr pem格式证书字符串
      * @return der格式（Hex-String）证书
      */

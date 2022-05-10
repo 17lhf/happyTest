@@ -17,6 +17,7 @@ class MpServiceTest {
 
     /**
      * 当使用updateById时，若依据的实体对象中，有字段值为null,则MybatisPlus的默认策略会自动忽略这个字段的更新
+     * 辅助参考文章： https://blog.csdn.net/weixin_42151235/article/details/121222174
      */
     @Test
     void updByMp() {
