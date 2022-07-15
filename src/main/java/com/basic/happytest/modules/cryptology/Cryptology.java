@@ -127,10 +127,18 @@ public class Cryptology {
         KeyFactory keyFactory = KeyFactory.getInstance(alo);
         if(Objects.equals(alo, "RSA")) {
             RSAPrivateKeySpec keySpec= keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
+            // 由私钥获取模
             BigInteger modulus = keySpec.getModulus();
-            // RSA密钥的长度实际上指的是公钥模的长度（以Bit为单位）
-            int length = modulus.toString(2).length(); // 转换为二进制
+            int length = modulus.toString(2).length();
+            // RSA密钥的长度实际上指的是模的长度（以Bit为单位）, 模是私钥和公钥共有的
             System.out.println("RSA key size: " + length);
+            // 私钥的指数e
+            System.out.println("RSA private key exponent size: " + keySpec.getPrivateExponent().toString(2).length());
+            RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
+            // 公钥的指数e
+            System.out.println("RSA public key exponent: " + pubKeySpec.getPublicExponent().toString(10));
+            // 由公钥获取模
+            System.out.println("RSA key size: " + pubKeySpec.getModulus().toString(2).length());
         } else if (Objects.equals(alo, "DSA")){
             DSAPrivateKeySpec keySpec = keyFactory.getKeySpec(privateKey, DSAPrivateKeySpec.class);
             System.out.println("P(the private key) = " + keySpec.getP());
@@ -346,6 +354,25 @@ public class Cryptology {
         PublicKey publicKey = factory.generatePublic(pubKeySpec);
         System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
         System.out.println("---------------end load Public Key 2---------------");
+        return publicKey;
+    }
+
+    /**
+     * 依据RSA私钥对象获取公钥对象(仅支持RSA2048/1024长度)
+     * @param privateKey 私钥对象
+     * @return 公钥对象
+     */
+    public static PublicKey loadRSAPubKeyByPriKey(PrivateKey privateKey) throws Exception {
+        System.out.println("---------------begin load public key from private key---------------");
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PublicKey publicKey;
+        RSAPrivateKeySpec prvKeySpec = kf.getKeySpec(privateKey, RSAPrivateKeySpec.class);
+        // 参数：公钥模，公钥指数
+        // 实测发现java生成密钥对，则1024和2048长度的公钥的指数都是用的65537（十进制）
+        RSAPublicKeySpec keySpec = new RSAPublicKeySpec(prvKeySpec.getModulus(), BigInteger.valueOf(65537));
+        publicKey = kf.generatePublic(keySpec);
+        System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
+        System.out.println("---------------end load public key from private key---------------");
         return publicKey;
     }
 

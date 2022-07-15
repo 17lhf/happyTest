@@ -14,6 +14,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 
 
 /**
@@ -63,6 +64,7 @@ class CryptologyTest {
     @Test
     void generateKeyPair() throws Exception {
         Cryptology.generateKeyPair("RSA", 2048);
+        // Cryptology.generateKeyPair("RSA", 1024);
         Cryptology.generateKeyPair("DH", 1024);
         Cryptology.generateKeyPair("DSA", 1024);
     }
@@ -437,5 +439,17 @@ class CryptologyTest {
         X509Certificate x509Certificate = Cryptology.issueSelfSignV1Cert(csr, rsaKeyPair.getPrivate(), 3650);
         Cryptology.cert2PemFile(x509Certificate, FileIO.getAbsolutePath(STORE_PATH) + "/");
         Cryptology.getCertMsg(x509Certificate);
+    }
+
+    @Test
+    void loadRSAPubKeyByPriKeyTest() throws Exception {
+        PrivateKey privateKey =
+                Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(CryptologyTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+        PublicKey publicKey = Cryptology.loadRSAPubKeyByPriKey(privateKey);
+        String s = "abc";
+        byte[] encData = Cryptology.encryptData(publicKey, "RSA", s.getBytes(StandardCharsets.UTF_8));
+        byte[] decData = Cryptology.decryptData(privateKey, "RSA", encData);
+        System.out.println("解密结果：" + new String(decData));
+        System.out.println("解密结果是否与原文匹配：" + Arrays.equals(s.getBytes(StandardCharsets.UTF_8), decData));
     }
 }
