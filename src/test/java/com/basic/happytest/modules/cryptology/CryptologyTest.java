@@ -452,4 +452,30 @@ class CryptologyTest {
         System.out.println("解密结果：" + new String(decData));
         System.out.println("解密结果是否与原文匹配：" + Arrays.equals(s.getBytes(StandardCharsets.UTF_8), decData));
     }
+
+    /**
+     * 测试分段加解密
+     * @throws Exception 异常
+     */
+    @Test
+    public void testBlockEncAndDec() throws Exception {
+        // 获得待加密的数据
+        PrivateKey privateKey =
+                Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(CryptologyTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+        byte[] data = privateKey.getEncoded();
+        // 生成密钥对，用于加解密
+        KeyPair keyPair = Cryptology.generateKeyPair("RSA", 1024);
+        // 公钥加密
+        byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA", keyPair.getPublic(), 117);
+        // 私钥解密
+        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA", keyPair.getPrivate(), 128);
+
+        // 私钥加密
+        /*byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA", keyPair.getPrivate(), 117);
+        // 公钥解密
+        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA", keyPair.getPublic(), 128);*/
+
+        // 查看解密后的明文与原文是否匹配
+        System.out.println("解密后的明文与原文是否匹配: " + Arrays.equals(data, decData));
+    }
 }

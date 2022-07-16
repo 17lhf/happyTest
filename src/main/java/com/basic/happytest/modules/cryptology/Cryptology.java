@@ -1280,7 +1280,7 @@ public class Cryptology {
     }
 
     /**
-     * 加密
+     * 加密（对长度有要求，例如2048长度的RSA最大只能加密245长度的数据，1024的RSA最大只能加密117长度的数据）
      * 注意：如果是ECC，则只能用公钥加密，不支持私钥加密数据
      * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认）
      * @param key 用来加密的密钥
@@ -1305,7 +1305,7 @@ public class Cryptology {
     }
 
     /**
-     * 解密
+     * 解密（对长度有要求，例如2048长度的RSA只能解密256长度的数据，1024的RSA只能解密128长度的数据）
      * 注意：如果是ECC，则只能用私钥解密，不支持公钥解密数据
      * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认）
      * @param key 用来解密的密钥
@@ -1329,6 +1329,118 @@ public class Cryptology {
         System.out.println("---------------end decrypt data---------------");
         return res;
     }
+
+    /**
+     * 分段加密（仅支持RSA）
+     * @param key 用于加密的密钥
+     * @param data 待加密的数据
+     * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
+     *      “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“)
+     * @param blockSize 分段的块的大小，如果密钥大小是2048则最大的块是245，如果是1024则最大的块是117。否则会报错。
+     * @return 加密后的密文
+     * @throws Exception 异常
+     * Java 默认的 RSA加密实现不允许明文长度超过密钥长度减去 11(单位是字节，也就是 byte)。
+     * 也就是说，如果我们定义的密钥(如：java.security.KeyPairGenerator.initialize(int keySize) 来定义密钥长度)长度为 1024(单位是位，也就是 bit)
+     * 生成的密钥长度就是 1024位 /（8位/字节） = 128字节，那么我们需要加密的明文长度不能超过 128字节 -11 字节 = 117字节
+     * 也就是说，我们最大能将 117 字节长度的明文进行加密，否则会出问题(抛诸如 javax.crypto.IllegalBlockSizeException: Data must not be longer than 11 bytes 的异常)
+     *
+     *  BC库的话，是密钥长度减去1, 如127（128-1），255（256-1）.超过的话，报错：org.bouncycastle.crypto.DataLengthException: input too large for RSA cipher.
+     *
+     * 另外，每次加密生成密文的长度等于密钥长度，如1024bit的密钥，加密一次出来的密文长度是256字节（byte）
+     * 所以分段加密的最终的密文长度，必然是密钥长度的正整数倍（如：256字节、512字节）
+     */
+    public static byte[] rsaBlockEncrypt(byte[] data, String alo, Key key, int blockSize) throws Exception {
+        System.out.println("---------------begin rsa block encrypt data---------------");
+        System.out.println("Key algorithm is: " + key.getAlgorithm());
+        // 调用Java加密的Cipher对象
+        // Cipher cipher = Cipher.getInstance(alo);
+        // 使用BC库
+        Cipher cipher = Cipher.getInstance(alo, BouncyCastleProvider.PROVIDER_NAME);
+        // 使用加密模式，并传入密钥
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+
+        // 获取Cipher块的大小（以字节为单位），如果基础算法不是块 cipher，则返回 0
+        // 如果用的是java原生的，则是0
+        // 如果用的是BC库，则2048的RSA默认是255, 1024的RSA默认是127
+        System.out.println("Cipher default block size: " + cipher.getBlockSize());
+        // 在给定了输入长度 inputLen（以字节为单位）的情况下，返回用于保存下一个 update 或 doFinal 操作结果所需的输出缓冲区长度的字节数。
+        // 此调用还考虑到来自上一个 update 调用的未处理（已缓存）数据和填充。
+        // 下一个 update 或 doFinal 调用的实际输出长度可能小于此方法返回的长度。
+        // 2048的RSA则对应的是256, 1024的RSA对应的是128
+        System.out.println("Cipher output size: " + cipher.getOutputSize(cipher.getBlockSize()));
+
+        // 分段加密
+        int inputLen = data.length;
+        // 偏移量
+        int offLen = 0;
+        // 暂存结果
+        ByteArrayOutputStream bops = new ByteArrayOutputStream();
+        // 开始循环加密
+        while(inputLen - offLen > 0) {
+            byte [] cache;
+            if(inputLen - offLen > blockSize) {
+                cache = cipher.doFinal(data, offLen, blockSize);
+            } else {
+                cache = cipher.doFinal(data, offLen,inputLen - offLen);
+            }
+            bops.write(cache);
+            offLen += blockSize;
+        }
+        bops.close();
+        // 获得加密结果
+        byte[] encryptedData = bops.toByteArray();
+        System.out.println("Encrypted data in hex format: " + Hex.toHexString(encryptedData));
+        System.out.println("---------------end rsa block encrypt data---------------");
+        return encryptedData;
+    }
+
+    /**
+     * 分段解密（仅支持RSA）
+     * @param encData 待解密的密文
+     * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
+     *       “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“)
+     *       要求必须与加密时使用的一致，否则解密结果会与原文不匹配
+     * @param key 与加密密钥相对应的解密的密钥
+     * @param blockSize 解密分块的大小，如果密钥大小是2048则块大小是256，如果是1024则最大的块是128
+     *                  此处的256和128其实对应的就是加密时每段被加密后的密文的大小
+     *                  如果是用BC库，若输入的size不是解密分块大小（但恰好能被密文整除），则不会报错，但是解密结果与原文对不上
+     *                  如果是用JAVA库，若输入的size不是解密分块大小（但恰好能被密文整除），则doFinal会报错javax.crypto.BadPaddingException: Decryption error
+     * @return 解密后的明文
+     * @throws Exception 异常
+     */
+    public static byte[] rsaBlockDecrypt(byte[] encData, String alo, Key key, int blockSize) throws Exception {
+        System.out.println("---------------begin rsa block decrypt data---------------");
+        System.out.println("Key algorithm is: " + key.getAlgorithm());
+        // 使用JAVA原生
+        // Cipher cipher = Cipher.getInstance(alo);
+        // 使用BC库
+        Cipher cipher = Cipher.getInstance(alo, BouncyCastleProvider.PROVIDER_NAME);
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        int inputLen = encData.length;
+        // 正常被RSA加密后的密文，肯定是单次加密结果的整数倍，也就是解密时要分块的整数倍
+        if(inputLen % blockSize != 0){
+            throw new Exception("Data length is error!");
+        }
+        // 偏移量
+        int offLen = 0;
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        while(inputLen - offLen > 0){
+            byte[] cache;
+            if(inputLen - offLen > blockSize){
+                cache = cipher.doFinal(encData, offLen, blockSize);
+            } else{
+                cache = cipher.doFinal(encData, offLen,inputLen - offLen);
+            }
+            byteArrayOutputStream.write(cache);
+            offLen += blockSize;
+        }
+        byteArrayOutputStream.close();
+        byte[] plainData = byteArrayOutputStream.toByteArray();
+        System.out.println("Plain data in hex format: " + Hex.toHexString(plainData));
+        System.out.println("---------------end rsa block decrypt data---------------");
+        return plainData;
+    }
+
 
     /**
      * 利用密钥对数据进行签名
