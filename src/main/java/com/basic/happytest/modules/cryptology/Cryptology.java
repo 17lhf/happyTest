@@ -1561,6 +1561,7 @@ public class Cryptology {
         // 如果给定的别名已存在，则与其关联的密钥库信息将被给定的密钥（可能还有证书链）覆盖
         // 此处用来校验的证书的certificates的数组第一个元素（即一个证书对象），会被用别名来保存进p12，所以推荐只放一个私钥对应的证书
         // 别名是否区分大小写取决于实现。为避免出现问题，建议不要在密钥库中使用仅在大小写上不同的别名
+        // 这里设置的keyPwd是保护私钥的密码，不是keyStore的
         keyStore.setKeyEntry(prvKeyAndSubCertAlias, subKey, keyPwd.toCharArray(), certificates);
         // 如果准备在p12中放证书链，则可以把ca证书放进去
         if(rootCert != null || StringUtils.isNotBlank(rootCertAlias)){
@@ -1595,7 +1596,10 @@ public class Cryptology {
         }
         InputStream inputStream = new FileInputStream(file);
         KeyStore keyStore = KeyStore.getInstance("PKCS12",  new BouncyCastleProvider());
+        // 要输入keyStore的口令才能读取
         keyStore.load(inputStream, p12Pwd.toCharArray());
+        // 注意这里读取私钥时要提供保护私钥的密码
+        // 如果密码提供错误，则可能会报错：java.security.UnrecoverableKeyException: Cannot recover key
         PrivateKey privateKey = (PrivateKey) keyStore.getKey(prvKeyAlias, keyPwd.toCharArray());
         System.out.println("Private key algorithm is: " + privateKey.getAlgorithm());
         System.out.println("Private key be created to this object date is: " + keyStore.getCreationDate(prvKeyAlias).toString());
