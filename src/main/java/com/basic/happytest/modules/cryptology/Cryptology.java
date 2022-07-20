@@ -1356,8 +1356,10 @@ public class Cryptology {
      * 也就是说，如果我们定义的密钥(如：java.security.KeyPairGenerator.initialize(int keySize) 来定义密钥长度)长度为 1024(单位是位，也就是 bit)
      * 生成的密钥长度就是 1024位 /（8位/字节） = 128字节，那么我们需要加密的明文长度不能超过 128字节 -11 字节 = 117字节
      * 也就是说，我们最大能将 117 字节长度的明文进行加密，否则会出问题(抛诸如 javax.crypto.IllegalBlockSizeException: Data must not be longer than 11 bytes 的异常)
+     * 实测“RSA/ECB/PKCS1Padding”时，2048RSA还是最大245
      *
      *  BC库的话，是密钥长度减去1, 如127（128-1），255（256-1）.超过的话，报错：org.bouncycastle.crypto.DataLengthException: input too large for RSA cipher.
+     *  但是，上面BC库时所说的，都是NoPadding的情况，如果有Padding，则blockSize大小就不一样了
      *
      * 另外，每次加密生成密文的长度等于密钥长度，如1024bit的密钥，加密一次出来的密文长度是256字节（byte）
      * 所以分段加密的最终的密文长度，必然是密钥长度的正整数倍（如：256字节、512字节）
@@ -1374,7 +1376,8 @@ public class Cryptology {
 
         // 获取Cipher块的大小（以字节为单位），如果基础算法不是块 cipher，则返回 0
         // 如果用的是java原生的，则是0
-        // 如果用的是BC库，则2048的RSA默认是255, 1024的RSA默认是127
+        // 如果用的是BC库，则2048的RSA默认是255, 1024的RSA默认是127。所以这时候其实也可以就直接使用这个默认值。如：int blockSize = cipher.getBlockSize()
+        // BC库，使用“RSA/ECB/PKCS1Padding”，则2048RSA默认是245
         System.out.println("Cipher default block size: " + cipher.getBlockSize());
         // 在给定了输入长度 inputLen（以字节为单位）的情况下，返回用于保存下一个 update 或 doFinal 操作结果所需的输出缓冲区长度的字节数。
         // 此调用还考虑到来自上一个 update 调用的未处理（已缓存）数据和填充。

@@ -467,17 +467,33 @@ class CryptologyTest {
         PrivateKey privateKey =
                 Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(CryptologyTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         byte[] data = privateKey.getEncoded();
-        // 生成密钥对，用于加解密
+        /*// 生成密钥对，用于加解密
         KeyPair keyPair = Cryptology.generateKeyPair("RSA", 1024);
         // 公钥加密
         byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA", keyPair.getPublic(), 117);
         // 私钥解密
-        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA", keyPair.getPrivate(), 128);
+        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA", keyPair.getPrivate(), 128);*/
 
         // 私钥加密
         /*byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA", keyPair.getPrivate(), 117);
         // 公钥解密
         byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA", keyPair.getPublic(), 128);*/
+
+        // 查看解密后的明文与原文是否匹配
+        // System.out.println("解密后的明文与原文是否匹配: " + Arrays.equals(data, decData));
+
+        // 对特殊的密钥对来尝试分段加解密
+        PrivateKey specPrvKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(PEM_KEY_PAIR_PRV_KEY));
+        PublicKey specPubKey = Cryptology.loadPublicKey(FileIO.getAbsolutePath(PEM_KEY_PAIR_PUB_KEY));
+        /*// 公钥加密
+        byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA", specPubKey, 255);
+        // 私钥解密
+        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA", specPrvKey, 256);*/
+
+        // 私钥加密
+        byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA/ECB/PKCS1Padding", specPrvKey, 245);
+        // 公钥解密
+        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA/ECB/PKCS1Padding", specPubKey, 256);
 
         // 查看解密后的明文与原文是否匹配
         System.out.println("解密后的明文与原文是否匹配: " + Arrays.equals(data, decData));
