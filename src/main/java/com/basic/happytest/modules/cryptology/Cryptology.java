@@ -18,6 +18,7 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.PKCS8Generator;
 import org.bouncycastle.openssl.jcajce.*;
@@ -265,7 +266,7 @@ public class Cryptology {
     }
 
     /**
-     * 从文件加载私钥（无口令保护）(pkcs8标准格式，参考测试用的文件)
+     * 从文件加载私钥（无口令保护）(pkcs8标准格式，参考测试用的文件)(也支持比较特殊的一种私钥文件内容，其加载后是PEMKeyPair)
      * @param filePath 私钥文件路径(支持ECC、RSA)
      * @return 私钥
      * @throws Exception 异常
@@ -274,12 +275,24 @@ public class Cryptology {
         System.out.println("---------------begin load private key---------------");
         try (PEMParser pemParser = new PEMParser(new FileReader(filePath))) {
             Object pem = pemParser.readObject();
+            System.out.println("pem object class is: " + pem.getClass());
             if (pem instanceof PrivateKeyInfo) {
                 JcaPEMKeyConverter converter = new JcaPEMKeyConverter()
                         .setProvider(BouncyCastleProvider.PROVIDER_NAME);
                 PrivateKeyInfo keyInfo = (PrivateKeyInfo) pem;
                 PrivateKey privateKey = converter.getPrivateKey(keyInfo);
                 System.out.println("Private key algorithm: " + privateKey.getAlgorithm());
+                System.out.println("---------------end load private key---------------");
+                return privateKey;
+            } else if (pem instanceof PEMKeyPair){
+                JcaPEMKeyConverter converter = new JcaPEMKeyConverter()
+                        .setProvider(BouncyCastleProvider.PROVIDER_NAME);
+                PEMKeyPair pemKeyPair = (PEMKeyPair) pem;
+                PrivateKeyInfo keyInfo = pemKeyPair.getPrivateKeyInfo();
+                PrivateKey privateKey = converter.getPrivateKey(keyInfo);
+                System.out.println("Private key algorithm: " + privateKey.getAlgorithm());
+                SubjectPublicKeyInfo publicKeyInfo = pemKeyPair.getPublicKeyInfo();
+                System.out.println("Public key algorithm: " + publicKeyInfo.getAlgorithm());
                 System.out.println("---------------end load private key---------------");
                 return privateKey;
             }
