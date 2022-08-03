@@ -1,6 +1,7 @@
 package com.basic.happytest.modules.cryptology;
 
 import com.basic.happytest.modules.fileIO.FileIO;
+import com.sun.crypto.provider.SunJCE;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -291,18 +292,19 @@ class CryptologyTest {
 
     @Test
     void encryptAndDecryptData2() throws Exception {
-        int length = 257;
+        int length = 256;
         byte[] bytes = new byte[length];
         for (int i = 0; i < length; i++) {
             bytes[i] = 1;
         }
         String alo = "RSA";
         Integer size = 2048;
+        String sunJCEName = new SunJCE().getName();
         KeyPair keyPair = Cryptology.generateKeyPair(alo, size);
-        /*byte[] encData = Cryptology.encryptData(keyPair.getPublic(), "RSA/ECB/PKCS1Padding", bytes, null);
-        byte[] decData = Cryptology.decryptData(keyPair.getPrivate(), "RSA/ECB/PKCS1Padding", encData, null);*/
-        byte[] encData = Cryptology.encryptData(keyPair.getPublic(), "RSA/ECB/NoPadding", bytes, null);
-        byte[] decData = Cryptology.decryptData(keyPair.getPrivate(), "RSA/ECB/NoPadding", encData, null);
+        /*byte[] encData = Cryptology.encryptData(keyPair.getPublic(), "RSA/ECB/PKCS1Padding", bytes, sunJCEName);
+        byte[] decData = Cryptology.decryptData(keyPair.getPrivate(), "RSA/ECB/PKCS1Padding", encData, sunJCEName);*/
+        byte[] encData = Cryptology.encryptData(keyPair.getPublic(), "RSA/ECB/NoPadding", bytes, sunJCEName);
+        byte[] decData = Cryptology.decryptData(keyPair.getPrivate(), "RSA/ECB/NoPadding", encData, sunJCEName);
         System.out.println(Arrays.equals(bytes, decData));
     }
 
@@ -342,13 +344,14 @@ class CryptologyTest {
         System.out.println(Hex.toHexString(res1).equals(Hex.toHexString(res2)));
         PublicKey publicKey = Cryptology.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY));
         System.out.println();
-        /*Cryptology.decryptData(publicKey, "RSA", res1, "SunJCE");
+        String sunJCEName = new SunJCE().getName();
+        /*Cryptology.decryptData(publicKey, "RSA", res1, sunJCEName);
         System.out.println();
-        Cryptology.decryptData(publicKey, "RSA", res2, "SunJCE");
+        Cryptology.decryptData(publicKey, "RSA", res2, sunJCEName);
         System.out.println();*/
-        Cryptology.decryptData(publicKey, "RSA/ECB/PKCS1Padding", res1, "SunJCE");
+        Cryptology.decryptData(publicKey, "RSA/ECB/PKCS1Padding", res1, sunJCEName);
         System.out.println();
-        Cryptology.decryptData(publicKey, "RSA/ECB/PKCS1Padding", res2, "SunJCE");
+        Cryptology.decryptData(publicKey, "RSA/ECB/PKCS1Padding", res2, sunJCEName);
 
         // ECC
         PrivateKey ecPrvKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
@@ -475,8 +478,9 @@ class CryptologyTest {
                 Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(CryptologyTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         PublicKey publicKey = Cryptology.loadRSAPubKeyByPriKey(privateKey);
         String s = "abc";
-        byte[] encData = Cryptology.encryptData(publicKey, "RSA", s.getBytes(StandardCharsets.UTF_8), "SunJCE");
-        byte[] decData = Cryptology.decryptData(privateKey, "RSA", encData, "SunJCE");
+        String sunJCEName = new SunJCE().getName();
+        byte[] encData = Cryptology.encryptData(publicKey, "RSA", s.getBytes(StandardCharsets.UTF_8), sunJCEName);
+        byte[] decData = Cryptology.decryptData(privateKey, "RSA", encData, sunJCEName);
         System.out.println("解密结果：" + new String(decData));
         System.out.println("解密结果是否与原文匹配：" + Arrays.equals(s.getBytes(StandardCharsets.UTF_8), decData));
     }
@@ -493,12 +497,13 @@ class CryptologyTest {
         byte[] data = privateKey.getEncoded();
         // 生成密钥对，用于加解密
         KeyPair keyPair = Cryptology.generateKeyPair("RSA", 2048);
+        String sunJCEName = new SunJCE().getName();
         // 公钥加密
         byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA/ECB/PKCS1Padding", keyPair.getPublic(), 245,
-                "SunJCE");
+                sunJCEName);
         // 私钥解密
         byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA/ECB/PKCS1Padding", keyPair.getPrivate(), 256,
-                "SunJCE");
+                sunJCEName);
 
         // 查看解密后的明文与原文是否匹配
         System.out.println("解密后的明文与原文是否匹配: " + Arrays.equals(data, decData));
@@ -507,14 +512,14 @@ class CryptologyTest {
        /* PrivateKey specPrvKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(PEM_KEY_PAIR_PRV_KEY));
         PublicKey specPubKey = Cryptology.loadPublicKey(FileIO.getAbsolutePath(PEM_KEY_PAIR_PUB_KEY));
         // 公钥加密
-        byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA", specPubKey, 255, "SunJCE");
+        byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA", specPubKey, 255, sunJCEName);
         // 私钥解密
-        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA", specPrvKey, 256, "SunJCE");
+        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA", specPrvKey, 256, sunJCEName);
 
         // 私钥加密
-        byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA/None/PKCS1Padding", specPrvKey, 245, "SunJCE");
+        byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA/None/PKCS1Padding", specPrvKey, 245, sunJCEName);
         // 公钥解密
-        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA/None/PKCS1Padding", specPubKey, 256, "SunJCE");*/
+        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA/None/PKCS1Padding", specPubKey, 256, sunJCEName);*/
 
         // 查看解密后的明文与原文是否匹配
         // System.out.println("解密后的明文与原文是否匹配: " + Arrays.equals(data, decData));
