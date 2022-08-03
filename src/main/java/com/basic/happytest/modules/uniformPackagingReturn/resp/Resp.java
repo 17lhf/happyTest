@@ -10,16 +10,13 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 /**
- * 应答统一封装处理类
+ * 应答统一封装处理类 <br/>
+ * @ ControllerAdvice是一个非常有用的注解，它的作用是增强Controller的扩展功能类<br/>
+ * 1.对Controller全局数据统一处理，例如，这里就是对response统一封装<br/>
+ * 2.对Controller全局异常统一处理<br/>
+ * basePackages不加的话会对某些特殊功能产生冲突，例如 不加的话，在使用swagger时会出现空白页异常<br/>
+ * 这里是注明要扫描的包<br/>
  * @author lhf
- */
-
-/*
- @ControllerAdvice是一个非常有用的注解，它的作用是增强Controller的扩展功能类
- 1.对Controller全局数据统一处理，例如，这里就是对response统一封装
- 2.对Controller全局异常统一处理
- basePackages不加的话会对某些特殊功能产生冲突，例如 不加的话，在使用swagger时会出现空白页异常
- 这里是注明要扫描的包
 */
 @ControllerAdvice(basePackages = "com.basic.happytest.modules.uniformPackagingReturn.controller")
 public class Resp implements ResponseBodyAdvice<Object> {

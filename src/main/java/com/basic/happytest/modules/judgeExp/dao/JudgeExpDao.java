@@ -72,7 +72,7 @@ public interface JudgeExpDao extends BaseMapper<JudgeExp> {
     List<JudgeExp> listByTwoCondClass(CondNum condNum, CondStr condStr);
 
     /**
-     * 从外部来的查询条件进行查询（主要是研究外部传来的0在xml里应该怎么避免if判断时被认为是空字符串）
+     * 从外部来的查询条件进行查询（主要是研究外部传来的0在xml里应该怎么避免if判断时被认为是空字符串）<br/>
      * 注意：Map<String, Object> params值必须是写成Object才行
      * @param params 参数(只使用num_value查询条件)
      * @return 满足条件的列表

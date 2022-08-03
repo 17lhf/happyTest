@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 public class UseLombokAndPropertyDto {
     /**
-     * 首字母小写，第二个字母大写的变量
+     * 首字母小写，第二个字母大写的变量 <br/>
      * 使用JsonProperty注解把该属性的名称序列化为aInt
      */
     @JsonProperty("aInt")
@@ -21,7 +21,7 @@ public class UseLombokAndPropertyDto {
     private Integer oneInt;
 
     /**
-     * 首字母小写，第二个字母大写的变量
+     * 首字母小写，第二个字母大写的变量 <br/>
      * 使用JsonProperty注解把该属性的名称序列化为aStr
      */
     @JsonProperty("aStr")

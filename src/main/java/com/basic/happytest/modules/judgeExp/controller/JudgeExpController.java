@@ -24,13 +24,13 @@ public class JudgeExpController {
 
     /**
      * 实验从外部传参过来时，把map中的“0”值拿去xml中的if语句判断，看看会怎样
+     * <br/>
+     * 示例params: <br/>
+     * numValue: 0 <br/>
+     * 注意路径是：localhost:12312/happyTest/judge-exp/select <br/>
+     * 注意：Content-Type：application/json;charset=UTF-8 <br/>
      * @param params 查询参数
      * @return 符合条件的列表
-     *
-     * 示例params:
-     * numValue: 0
-     * 注意路径是：localhost:12312/happyTest/judge-exp/select
-     * 注意：Content-Type：application/json;charset=UTF-8
      */
     @GetMapping("select")
     public List<JudgeExp> select(@RequestParam Map<String, Object> params){

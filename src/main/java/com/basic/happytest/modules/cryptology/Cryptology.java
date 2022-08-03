@@ -78,13 +78,31 @@ public class Cryptology {
     }
 
     /**
-     * 获取BC库支持的密钥算法
+     * 获取BC库支持的算法
      */
     public static void keyAloSupportedInBCLibrary() {
         Provider provider = new org.bouncycastle.jce.provider.BouncyCastleProvider();
         for (Provider.Service service : provider.getServices()) {
             System.out.println(service.getType() + ": " + service.getAlgorithm());
         }
+    }
+
+    /**
+     * 展示当前所有的算法提供者和信息
+     */
+    public static void showProviders() {
+        System.out.println("-------当前有这些算法提供者-------");
+        for (Provider provider : Security.getProviders()) {
+            System.out.println("算法提供者名：" + provider.getName());
+            System.out.println("算法提供者的版本：" + provider.getVersion());
+            System.out.println("算法提供者的信息：" + provider.getInfo());
+            if(Objects.equals(provider.getName(), "SunJCE")){
+                for (Provider.Service service : provider.getServices()) {
+                    System.out.println(service.getType() + ": " + service.getAlgorithm());
+                }
+            }
+        }
+        System.out.println("------------展示完毕------------");
     }
 
     /**
@@ -133,6 +151,8 @@ public class Cryptology {
             int length = modulus.toString(2).length();
             // RSA密钥的长度实际上指的是模的长度（以Bit为单位）, 模是私钥和公钥共有的
             System.out.println("RSA key size: " + length);
+            // RSA byte长度
+            System.out.println("RSA key byte length(by sun.security.rsa.RSACore): " + (length + 7 >> 3));
             // 私钥的指数e
             System.out.println("RSA private key exponent size: " + keySpec.getPrivateExponent().toString(2).length());
             RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
@@ -199,7 +219,7 @@ public class Cryptology {
     }
 
     /**
-     * 读取RSA私钥文件(pkcs1标准格式的私钥, 且无口令保护, 参考测试用的文件)
+     * 读取RSA私钥文件(pkcs1标准格式的私钥, 且无口令保护, 参考测试用的文件)<br/>
      * （方法使用了sun.*包，可能会导致打包失败，请看readme.md文件描述）
      * @param pemFilePath 文件路径
      * @return RSA私钥
@@ -991,7 +1011,7 @@ public class Cryptology {
     }
 
     /**
-     * 读取证书文件并加载成一个证书对象（复杂式写法）
+     * 读取证书文件并加载成一个证书对象（复杂式写法）<br/>
      * （方法使用了sun.*包，可能会导致打包失败，请看readme.md文件描述）
      * @param path 证书存储路径
      * @param certEncodeType 证书编码类型，支持“PEM"和”DER“
@@ -1293,22 +1313,59 @@ public class Cryptology {
     }
 
     /**
-     * 加密（对长度有要求，例如2048长度的RSA最大只能加密245长度的数据，1024的RSA最大只能加密117长度的数据）
-     * 注意：如果是ECC，则只能用公钥加密，不支持私钥加密数据
-     * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认）
+     * 加密（对长度有要求）<br/>
+     * RSA算法原理上，其实要求的明文和密文都是： 0<明文或密文大小<密钥的模大小，其实也对应了我们常说的“0<明文或密文的长度<密钥的模的长度”(长度相等时要额外多一步比较大小)，
+     * 实际上一些加密工具之类的会对明文长度为0的时候进行特殊处理，
+     * 另外，虽然最大可被加密的明文长度是密钥的长度，但是具体的实现工具或规范(如PKCS规范)都有进行限制（特别是当有填充时）。
+     * 所以具体情况要看你用的工具/库的限制是怎样的。
+     * 密文长度也要看工具/库，通常情况下都是模的长度，
+     * <br/>
+     * Java 默认的 RSA加密实现不允许明文长度超过密钥长度(单位是字节，也就是 byte)。
+     * 也就是说，如果我们定义的密钥(如：java.security.KeyPairGenerator.initialize(int keySize) 来定义密钥长度)长度为 1024(单位是位，也就是 bit)。
+     * 生成的密钥长度就是 1024位 /（8位/字节） = 128字节，那么我们需要加密的明文长度不能超过 128字节。
+     * 也就是说，我们最大能将 128 字节长度的明文进行加密，否则会抛异常<br/>
+     * 实测“RSA/ECB/PKCS1Padding”时，2048RSA是最大245，其实PKCS1Padding这种填充方式本来就是要占用11的长度，也就是明文只能是256-11=245了。
+     * <br/>
+     * BC库的话，也是密钥长度， 如128，256.超过的话，报错：org.bouncycastle.crypto.DataLengthException: input too large for RSA cipher。
+     * 但是，上面BC库时所说的，都是NoPadding的情况，如果有Padding，则blockSize大小就不一样。
+     * 具体限制可见org.bouncycastle.crypto.AsymmetricBlockCipher的各个实现类的getInputBlockSize方法
+     * <br/>
+     * 正常情况下，NoPadding占用大小是0，也就是你提供的明文可以是当前密钥最大的支持长度。PKCS1Padding占用的位数大小是11，也就是明文长度只能
+     * 是当前密钥最大支持长度-11
+     * <p>
+     * 关于填充：<br/>
+     * OAEP is less vulnerable to padding oracle attacks than PKCS#1 v1.5 padding. GCM is also protected against padding oracle attacks。<br/>
+     * 其实ECB是对称密码的一种分组模式，对非对称密钥没啥用，其实用None就行，例如RSA/None/PKCS1Padding，像RSA加密是不对数据进行分组的。<br/>
+     * 但是，实测发现，sun库要求得带ECB，None的话，得用BC库才支持<br/>
+     * </p>
+     * 注意：如果是ECC，则只能用公钥加密，不支持私钥加密数据 <br/>
+     * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认） <br/>
      * @param key 用来加密的密钥
      * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
      *            “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“、
-     *            “ECIES"(ECIES表示ECC)
+     *            “ECIES"(ECIES表示ECC)。
      * @param data 等待被加密的数据，数据不能太长
+     * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
      * @return 密文数据
      * @throws Exception 异常
      */
-    public static byte[] encryptData(Key key, String alo, byte[] data) throws Exception{
+    public static byte[] encryptData(Key key, String alo, byte[] data, String provider) throws Exception{
         System.out.println("---------------begin encrypt data---------------");
         System.out.println("alo is: " + alo);
         System.out.println("data length is: " + data.length);
-        Cipher cipher = Cipher.getInstance(alo, BouncyCastleProvider.PROVIDER_NAME);
+        Cipher cipher;
+        if(provider == null){
+            // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
+            cipher = Cipher.getInstance(alo);
+        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals("SunJCE")){
+            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用Sun库
+            cipher = Cipher.getInstance(alo, provider);
+        } else {
+            System.out.println("-----------No such provider: " + provider + "!!!-----------------");
+            throw new Exception();
+        }
+        System.out.println("Provider: " + cipher.getProvider());
+        // 使用默认的随机数生成器（未指定第三个参数）
         cipher.init(Cipher.ENCRYPT_MODE, key);
         byte[] res = cipher.doFinal(data);
         System.out.println("Hex String type encrypted result data is: " + Hex.toHexString(res));
@@ -1318,24 +1375,39 @@ public class Cryptology {
     }
 
     /**
-     * 解密（对长度有要求，例如2048长度的RSA只能解密256长度的数据，1024的RSA只能解密128长度的数据）
-     * 注意：如果是ECC，则只能用私钥解密，不支持公钥解密数据
-     * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认）
+     * 解密（对长度有要求，例如2048长度的RSA只能解密256长度的数据，1024的RSA只能解密128长度的数据）<br/>
+     * <p>
+     *     BC库的输出大小具体可见org.bouncycastle.crypto.AsymmetricBlockCipher的各个实现类的getOutputBlockSize方法
+     * </p>
+     * 注意：如果是ECC，则只能用私钥解密，不支持公钥解密数据<br/>
+     * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认）<br/>
      * @param key 用来解密的密钥
      * @param alo 密钥对应的算法/模式/填充模式，要和加密时使用的配置一致，
      *            支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
      *            “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“、
      *            “ECIES"(ECIES表示ECC)
      * @param encData 等待被解密的密文数据
+     * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
      * @return 明文数据
      * @throws Exception 异常
      */
-    public static byte[] decryptData(Key key, String alo, byte[] encData) throws Exception{
+    public static byte[] decryptData(Key key, String alo, byte[] encData, String provider) throws Exception{
         System.out.println("---------------begin decrypt data---------------");
         System.out.println("alo is: " + alo);
         System.out.println("encrypted data length is: " + encData.length);
-        Cipher cipher = Cipher.getInstance(alo, BouncyCastleProvider.PROVIDER_NAME);
+        Cipher cipher;
+        if(provider == null){
+            // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
+            cipher = Cipher.getInstance(alo);
+        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals("SunJCE")){
+            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用Sun库
+            cipher = Cipher.getInstance(alo, provider);
+        } else {
+            System.out.println("-----------No such provider: " + provider + "!!!-----------------");
+            throw new Exception();
+        }
         cipher.init(Cipher.DECRYPT_MODE, key);
+        System.out.println("Provider: " + cipher.getProvider());
         byte[] res = cipher.doFinal(encData);
         System.out.println("Hex String type decrypt result data is: " + Hex.toHexString(res));
         System.out.println("Base64 String type decrypt result data is: " + Base64.getEncoder().encodeToString(res));
@@ -1344,36 +1416,37 @@ public class Cryptology {
     }
 
     /**
-     * 分段加密（仅支持RSA）
+     * 分段加密（仅支持RSA）<br/>
+     * 更多内容，详见encryptData方法的说明<br/>
+     * <br/>
+     * 另外，每次加密生成密文的长度等于密钥长度，如1024bit的密钥，加密一次出来的密文长度是128字节（byte），
+     * 所以分段加密的最终的密文长度，必然是密钥长度的正整数倍（如：256字节、512字节）<br/>
      * @param key 用于加密的密钥
      * @param data 待加密的数据
      * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
      *      “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“)
      * @param blockSize 分段的块的大小，如果密钥大小是2048则最大的块是245，如果是1024则最大的块是117。否则会报错。
+     * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
      * @return 加密后的密文
      * @throws Exception 异常
-     * Java 默认的 RSA加密实现不允许明文长度超过密钥长度减去 11(单位是字节，也就是 byte)。
-     * 也就是说，如果我们定义的密钥(如：java.security.KeyPairGenerator.initialize(int keySize) 来定义密钥长度)长度为 1024(单位是位，也就是 bit)
-     * 生成的密钥长度就是 1024位 /（8位/字节） = 128字节，那么我们需要加密的明文长度不能超过 128字节 -11 字节 = 117字节
-     * 也就是说，我们最大能将 117 字节长度的明文进行加密，否则会出问题(抛诸如 javax.crypto.IllegalBlockSizeException: Data must not be longer than 11 bytes 的异常)
-     * 实测“RSA/ECB/PKCS1Padding”时，2048RSA还是最大245
-     *
-     *  BC库的话，是密钥长度减去1, 如127（128-1），255（256-1）.超过的话，报错：org.bouncycastle.crypto.DataLengthException: input too large for RSA cipher.
-     *  但是，上面BC库时所说的，都是NoPadding的情况，如果有Padding，则blockSize大小就不一样了
-     *
-     * 另外，每次加密生成密文的长度等于密钥长度，如1024bit的密钥，加密一次出来的密文长度是256字节（byte）
-     * 所以分段加密的最终的密文长度，必然是密钥长度的正整数倍（如：256字节、512字节）
      */
-    public static byte[] rsaBlockEncrypt(byte[] data, String alo, Key key, int blockSize) throws Exception {
+    public static byte[] rsaBlockEncrypt(byte[] data, String alo, Key key, int blockSize, String provider) throws Exception {
         System.out.println("---------------begin rsa block encrypt data---------------");
         System.out.println("Key algorithm is: " + key.getAlgorithm());
-        // 调用Java加密的Cipher对象
-        // Cipher cipher = Cipher.getInstance(alo);
-        // 使用BC库
-        Cipher cipher = Cipher.getInstance(alo, BouncyCastleProvider.PROVIDER_NAME);
+        Cipher cipher;
+        if(provider == null){
+            // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
+            cipher = Cipher.getInstance(alo);
+        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals("SunJCE")){
+            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用Sun库
+            cipher = Cipher.getInstance(alo, provider);
+        } else {
+            System.out.println("-----------No such provider: " + provider + "!!!-----------------");
+            throw new Exception();
+        }
         // 使用加密模式，并传入密钥
         cipher.init(Cipher.ENCRYPT_MODE, key);
-
+        System.out.println("Provider: " + cipher.getProvider());
         // 获取Cipher块的大小（以字节为单位），如果基础算法不是块 cipher，则返回 0
         // 如果用的是java原生的，则是0
         // 如果用的是BC库，则2048的RSA默认是255, 1024的RSA默认是127。所以这时候其实也可以就直接使用这个默认值。如：int blockSize = cipher.getBlockSize()
@@ -1411,27 +1484,37 @@ public class Cryptology {
     }
 
     /**
-     * 分段解密（仅支持RSA）
+     * 分段解密（仅支持RSA）<br/>
+     * 更多内容，详见encryptData方法的说明<br/>
      * @param encData 待解密的密文
      * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
      *       “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“)
      *       要求必须与加密时使用的一致，否则解密结果会与原文不匹配
      * @param key 与加密密钥相对应的解密的密钥
-     * @param blockSize 解密分块的大小，如果密钥大小是2048则块大小是256，如果是1024则最大的块是128
-     *                  此处的256和128其实对应的就是加密时每段被加密后的密文的大小
-     *                  如果是用BC库，若输入的size不是解密分块大小（但恰好能被密文整除），则不会报错，但是解密结果与原文对不上
-     *                  如果是用JAVA库，若输入的size不是解密分块大小（但恰好能被密文整除），则doFinal会报错javax.crypto.BadPaddingException: Decryption error
+     * @param blockSize 解密分块的大小，如果密钥大小是2048则块大小是256，如果是1024则最大的块是128。
+     *                  此处的256和128其实对应的就是加密时每段被加密后的密文的大小。
+     *                  如果是用BC库，若输入的size不是解密分块大小（但恰好能被密文整除），则不会报错，但是解密结果与原文对不上。
+     *                  如果是用JAVA库，若输入的size不是解密分块大小（但恰好能被密文整除），则doFinal会报错javax.crypto.BadPaddingException: Decryption error。
+     * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
      * @return 解密后的明文
      * @throws Exception 异常
      */
-    public static byte[] rsaBlockDecrypt(byte[] encData, String alo, Key key, int blockSize) throws Exception {
+    public static byte[] rsaBlockDecrypt(byte[] encData, String alo, Key key, int blockSize, String provider) throws Exception {
         System.out.println("---------------begin rsa block decrypt data---------------");
         System.out.println("Key algorithm is: " + key.getAlgorithm());
-        // 使用JAVA原生
-        // Cipher cipher = Cipher.getInstance(alo);
-        // 使用BC库
-        Cipher cipher = Cipher.getInstance(alo, BouncyCastleProvider.PROVIDER_NAME);
+        Cipher cipher;
+        if(provider == null){
+            // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
+            cipher = Cipher.getInstance(alo);
+        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals("SunJCE")){
+            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用Sun库
+            cipher = Cipher.getInstance(alo, provider);
+        } else {
+            System.out.println("-----------No such provider: " + provider + "!!!-----------------");
+            throw new Exception();
+        }
         cipher.init(Cipher.DECRYPT_MODE, key);
+        System.out.println("Provider: " + cipher.getProvider());
         int inputLen = encData.length;
         // 正常被RSA加密后的密文，肯定是单次加密结果的整数倍，也就是解密时要分块的整数倍
         if(inputLen % blockSize != 0){
@@ -1507,7 +1590,8 @@ public class Cryptology {
         byte[] signatureValue;
         if("RSA".equals(keyAlo)) {
             // 对于RSA密钥，一般签名内部使用的是 RSA/ECB/PKCS1Padding（signature内部就是这么设置，单元测试中可见）
-            signatureValue = encryptData(prvKey, keyAlo + "/ECB/PKCS1Padding", Hex.decode(waitForEncryptData));
+            signatureValue = encryptData(prvKey, keyAlo + "/ECB/PKCS1Padding", Hex.decode(waitForEncryptData),
+                    BouncyCastleProvider.PROVIDER_NAME);
         } else{
             throw new NoSuchAlgorithmException();
         }
@@ -1546,10 +1630,10 @@ public class Cryptology {
     // 验证一个私钥与一本证书是否匹配，其实就是先从证书中提取公钥，然后就是和上一个一样的流程（目前没有找到更便捷的流程）
 
     /**
-     * 生成p12文件到指定文件夹中
-     * 这种方式生成的p12文件等同于在openssl1.1.1版本中生成的p12文件
-     * 在openssl3.0处进行解析验证时，会出现无法正常显示证书的问题
-     * 因为使用的加密方式是比较旧的RC2-40-CBC，该加密方式已被认为是不安全的，于是openssl在3.0中进行了剔除，3.0之前版本的openssl可以照常解析
+     * 生成p12文件到指定文件夹中<br/>
+     * 这种方式生成的p12文件等同于在openssl1.1.1版本中生成的p12文件<br/>
+     * 在openssl3.0处进行解析验证时，会出现无法正常显示证书的问题<br/>
+     * 因为使用的加密方式是比较旧的RC2-40-CBC，该加密方式已被认为是不安全的，于是openssl在3.0中进行了剔除，3.0之前版本的openssl可以照常解析<br/>
      * @param rootCert 根证书(可为null)
      * @param rootCertAlias 根证书别名(可为null)
      * @param subCert 子证书
