@@ -64,6 +64,7 @@ import java.util.*;
  * (注意，很多地方异常的处理没有做，请自行解决)
  * (注意，有些类在java安全库中有，在BC库中也有，要注意实际用的是哪一个)
  * (注意，部分方法用到了sun.*的包，可能会导致打包时报找不到的错误(原因请看README.md)（虽然本项目不知为何不会报错）)
+ * 加解密的深层细节，可阅读我写的文章：https://www.bilibili.com/read/cv17971973
  * @author lhf
  */
 
@@ -149,18 +150,18 @@ public class Cryptology {
             RSAPrivateKeySpec keySpec= keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
             // 由私钥获取模
             BigInteger modulus = keySpec.getModulus();
-            int length = modulus.toString(2).length();
+            int length = modulus.bitLength();
             // RSA密钥的长度实际上指的是模的长度（以Bit为单位）, 模是私钥和公钥共有的
             System.out.println("RSA key size: " + length);
             // RSA byte长度
             System.out.println("RSA key byte length(by sun.security.rsa.RSACore): " + (length + 7 >> 3));
             // 私钥的指数e
-            System.out.println("RSA private key exponent size: " + keySpec.getPrivateExponent().toString(2).length());
+            System.out.println("RSA private key exponent size: " + keySpec.getPrivateExponent().bitLength());
             RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
             // 公钥的指数e
             System.out.println("RSA public key exponent: " + pubKeySpec.getPublicExponent().toString(10));
             // 由公钥获取模
-            System.out.println("RSA key size: " + pubKeySpec.getModulus().toString(2).length());
+            System.out.println("RSA key size: " + pubKeySpec.getModulus().bitLength());
         } else if (Objects.equals(alo, "DSA")){
             DSAPrivateKeySpec keySpec = keyFactory.getKeySpec(privateKey, DSAPrivateKeySpec.class);
             System.out.println("P(the private key) = " + keySpec.getP());
@@ -356,7 +357,7 @@ public class Cryptology {
     /**
      * 从文件加载公钥
      * @param filePath 公钥文件路径(支持ECC、RSA)
-     * @return 私钥
+     * @return 公钥对象
      * @throws IOException 异常
      */
     public static PublicKey loadPublicKey(String filePath) throws IOException {
@@ -440,7 +441,7 @@ public class Cryptology {
     }
 
     /**
-     * 输入pem格式的密钥到指定文件中
+     * 输出pem格式的密钥到指定文件中
      * @param alo 生成密钥对使用的算法，可选算法：DiffieHellman(等同于：DH)、DSA、RSA
      * @param keySize RSA时推荐长度为：2048/1024/3096 DH时推荐为：1024 DSA时推荐长度为：1024
      * @param basePath 输出密钥文件到的文件夹目录路径
@@ -1325,7 +1326,7 @@ public class Cryptology {
      * 也就是说，如果我们定义的密钥(如：java.security.KeyPairGenerator.initialize(int keySize) 来定义密钥长度)长度为 1024(单位是位，也就是 bit)。
      * 生成的密钥长度就是 1024位 /（8位/字节） = 128字节，那么我们需要加密的明文长度不能超过 128字节。
      * 也就是说，我们最大能将 128 字节长度的明文进行加密，否则会抛异常<br/>
-     * 实测“RSA/ECB/PKCS1Padding”时，2048RSA是最大245，其实PKCS1Padding这种填充方式本来就是要占用11的长度，也就是明文只能是256-11=245了。
+     * 实测“RSA/ECB/PKCS1Padding”时，2048RSA是最大245，其实PKCS1Padding这种填充方式本来就是要占用至少11的长度，也就是明文只能是256-11=245了。
      * <br/>
      * BC库的话，也是密钥长度， 如128，256.超过的话，报错：org.bouncycastle.crypto.DataLengthException: input too large for RSA cipher。
      * 但是，上面BC库时所说的，都是NoPadding的情况，如果有Padding，则blockSize大小就不一样。
@@ -1359,7 +1360,7 @@ public class Cryptology {
             // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
             cipher = Cipher.getInstance(alo);
         } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals("SunJCE")){
-            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用Sun库
+            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE
             cipher = Cipher.getInstance(alo, provider);
         } else {
             System.out.println("-----------No such provider: " + provider + "!!!-----------------");
@@ -1401,7 +1402,7 @@ public class Cryptology {
             // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
             cipher = Cipher.getInstance(alo);
         } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(new SunJCE().getName())){
-            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用Sun库
+            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE
             cipher = Cipher.getInstance(alo, provider);
         } else {
             System.out.println("-----------No such provider: " + provider + "!!!-----------------");
@@ -1426,7 +1427,7 @@ public class Cryptology {
      * @param data 待加密的数据
      * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
      *      “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“)
-     * @param blockSize 分段的块的大小，如果密钥大小是2048则最大的块是245，如果是1024则最大的块是117。否则会报错。
+     * @param blockSize 分段的块的大小，如果密钥大小是2048，NoPadding时最大的块是256，如果是1024则最大的块是128。否则会报错。
      * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
      * @return 加密后的密文
      * @throws Exception 异常
@@ -1439,7 +1440,7 @@ public class Cryptology {
             // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
             cipher = Cipher.getInstance(alo);
         } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(new SunJCE().getName())){
-            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用Sun库
+            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE
             cipher = Cipher.getInstance(alo, provider);
         } else {
             System.out.println("-----------No such provider: " + provider + "!!!-----------------");
@@ -1458,7 +1459,10 @@ public class Cryptology {
         // 下一个 update 或 doFinal 调用的实际输出长度可能小于此方法返回的长度。
         // 2048的RSA则对应的是256, 1024的RSA对应的是128
         System.out.println("Cipher output size: " + cipher.getOutputSize(cipher.getBlockSize()));
-
+        // 避免等下陷入死循环等问题
+        if(blockSize < 1){
+            throw new Exception("Block size can't be less than 1!");
+        }
         // 分段加密
         int inputLen = data.length;
         // 偏移量
@@ -1494,8 +1498,8 @@ public class Cryptology {
      * @param key 与加密密钥相对应的解密的密钥
      * @param blockSize 解密分块的大小，如果密钥大小是2048则块大小是256，如果是1024则最大的块是128。
      *                  此处的256和128其实对应的就是加密时每段被加密后的密文的大小。
-     *                  如果是用BC库，若输入的size不是解密分块大小（但恰好能被密文整除），则不会报错，但是解密结果与原文对不上。
-     *                  如果是用JAVA库，若输入的size不是解密分块大小（但恰好能被密文整除），则doFinal会报错javax.crypto.BadPaddingException: Decryption error。
+     *                  如果是用BC库，若输入的size不是解密分块大小，则不会报错，但是解密结果与原文对不上。
+     *                  如果是用JAVA库，若输入的size不是解密分块大小，则doFinal会报错javax.crypto.BadPaddingException: Decryption error。
      * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
      * @return 解密后的明文
      * @throws Exception 异常
@@ -1508,7 +1512,7 @@ public class Cryptology {
             // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
             cipher = Cipher.getInstance(alo);
         } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(new SunJCE().getName())){
-            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用Sun库
+            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE库
             cipher = Cipher.getInstance(alo, provider);
         } else {
             System.out.println("-----------No such provider: " + provider + "!!!-----------------");
@@ -1517,8 +1521,10 @@ public class Cryptology {
         cipher.init(Cipher.DECRYPT_MODE, key);
         System.out.println("Provider: " + cipher.getProvider());
         int inputLen = encData.length;
-        // 正常被RSA加密后的密文，肯定是单次加密结果的整数倍，也就是解密时要分块的整数倍
-        if(inputLen % blockSize != 0){
+        // 避免等下陷入死循环等问题
+        if(blockSize < 1){
+            throw new Exception("Block size can't be less than 1!");
+        } else if(inputLen % blockSize != 0){ // 正常被RSA加密后的密文，肯定是单次加密结果的整数倍，也就是解密时要分块的整数倍
             throw new Exception("Data length is error!");
         }
         // 偏移量

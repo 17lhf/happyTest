@@ -11,11 +11,9 @@ import sun.security.x509.X509CertImpl;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.cert.X509Certificate;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -295,16 +293,19 @@ class CryptologyTest {
         int length = 256;
         byte[] bytes = new byte[length];
         for (int i = 0; i < length; i++) {
-            bytes[i] = 1;
+            bytes[i] = '1';
         }
         String alo = "RSA";
         Integer size = 2048;
         String sunJCEName = new SunJCE().getName();
         KeyPair keyPair = Cryptology.generateKeyPair(alo, size);
+        /*KeyFactory keyFactory = KeyFactory.getInstance(alo);
+        RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(keyPair.getPublic(), RSAPublicKeySpec.class);
+        byte[] bytes = pubKeySpec.getModulus().toByteArray(); // 此时待加密数据就是密钥的模*/
         /*byte[] encData = Cryptology.encryptData(keyPair.getPublic(), "RSA/ECB/PKCS1Padding", bytes, sunJCEName);
         byte[] decData = Cryptology.decryptData(keyPair.getPrivate(), "RSA/ECB/PKCS1Padding", encData, sunJCEName);*/
-        byte[] encData = Cryptology.encryptData(keyPair.getPublic(), "RSA/ECB/NoPadding", bytes, sunJCEName);
-        byte[] decData = Cryptology.decryptData(keyPair.getPrivate(), "RSA/ECB/NoPadding", encData, sunJCEName);
+        byte[] encData = Cryptology.encryptData(keyPair.getPublic(), "RSA", bytes, "BC");
+        byte[] decData = Cryptology.decryptData(keyPair.getPrivate(), "RSA", encData, "BC");
         System.out.println(Arrays.equals(bytes, decData));
     }
 
@@ -492,18 +493,22 @@ class CryptologyTest {
     @Test
     public void testBlockEncAndDec() throws Exception {
         // 获得待加密的数据
-        PrivateKey privateKey =
+        /*PrivateKey privateKey =
                 Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(CryptologyTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
-        byte[] data = privateKey.getEncoded();
+        byte[] data = privateKey.getEncoded();*/
+        byte[] data = new byte[500];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = '1';
+        }
         // 生成密钥对，用于加解密
         KeyPair keyPair = Cryptology.generateKeyPair("RSA", 2048);
         String sunJCEName = new SunJCE().getName();
         // 公钥加密
-        byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA/ECB/PKCS1Padding", keyPair.getPublic(), 245,
-                sunJCEName);
+        byte[] encData = Cryptology.rsaBlockEncrypt(data, "RSA/ECB/NoPadding", keyPair.getPublic(), 256,
+                "BC");
         // 私钥解密
-        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA/ECB/PKCS1Padding", keyPair.getPrivate(), 256,
-                sunJCEName);
+        byte[] decData = Cryptology.rsaBlockDecrypt(encData, "RSA/ECB/NoPadding", keyPair.getPrivate(), 256,
+                "BC");
 
         // 查看解密后的明文与原文是否匹配
         System.out.println("解密后的明文与原文是否匹配: " + Arrays.equals(data, decData));
