@@ -155,6 +155,7 @@ public class Cryptology {
             System.out.println("RSA key size: " + length);
             // RSA byte长度
             System.out.println("RSA key byte length(by sun.security.rsa.RSACore): " + (length + 7 >> 3));
+            System.out.println("The length of RSA key module in decimal: " + modulus.toString(10).length());
             // 私钥的指数e
             System.out.println("RSA private key exponent size: " + keySpec.getPrivateExponent().bitLength());
             RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
@@ -572,7 +573,8 @@ public class Cryptology {
         // addExtension 第一个字段表示：扩展字段的类型；第二个参数表示：是否要将本字段设置为critical；第三个参数表示：扩展字段的值
         // 这里是尝试性地添加了一个密钥用途的扩展字段，具体是——不可否认。
         // KeyUsage里有很多可选用的密钥用途可以用来设置
-        extensionsGenerator.addExtension(Extension.keyUsage, true, new KeyUsage(KeyUsage.nonRepudiation));
+        extensionsGenerator.addExtension(Extension.keyUsage, true,
+                new KeyUsage(KeyUsage.nonRepudiation | KeyUsage.keyAgreement));
         // 这里是尝试性随便添加了几个扩展密钥用途的扩展字段
         // KeyPurposeId中有很多可以直接拿来使用
         // 如果要自定义用途，则只能自定义最后一位，我这边用"888"来表示。对应的UID是：2.5.29.37.888,前三位表示的是extendedKeyUsage
