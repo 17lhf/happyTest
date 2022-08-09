@@ -156,8 +156,9 @@ public class Cryptology {
             // RSA byte长度
             System.out.println("RSA key byte length(by sun.security.rsa.RSACore): " + (length + 7 >> 3));
             System.out.println("The length of RSA key module in decimal: " + modulus.toString(10).length());
-            // 私钥的指数e
+            // 私钥的指数d
             System.out.println("RSA private key exponent size: " + keySpec.getPrivateExponent().bitLength());
+            // todo 由私钥获取p,q
             RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
             // 公钥的指数e
             System.out.println("RSA public key exponent: " + pubKeySpec.getPublicExponent().toString(10));
@@ -1636,6 +1637,7 @@ public class Cryptology {
     }
 
     // 验证一个公钥和一个私钥是否匹配，其实就是加密一个数据，然后解密，看看解密后的结果与原始数据是否一致（目前没有找到更便捷的流程）
+    // todo 利用算法原理，去验证公私钥里面的ed是否和N对应？
     // 验证一个私钥与一本证书是否匹配，其实就是先从证书中提取公钥，然后就是和上一个一样的流程（目前没有找到更便捷的流程）
 
     /**
