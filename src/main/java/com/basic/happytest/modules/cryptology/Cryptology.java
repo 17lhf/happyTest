@@ -64,7 +64,6 @@ import java.util.*;
  * (注意，很多地方异常的处理没有做，请自行解决)
  * (注意，有些类在java安全库中有，在BC库中也有，要注意实际用的是哪一个)
  * (注意，部分方法用到了sun.*的包，可能会导致打包时报找不到的错误(原因请看README.md)（虽然本项目不知为何不会报错）)
- * 加解密的深层细节，可阅读我写的文章：https://www.bilibili.com/read/cv17971973
  * @author lhf
  */
 
@@ -121,7 +120,8 @@ public class Cryptology {
         digest.update(data);
         // 完成哈希计算，得到摘要
         byte[] digestValue = digest.digest();
-        System.out.println("Original message(Hex): " + Hex.toHexString(data) + ", Digest Value(HEX): " + Hex.toHexString(digestValue));
+        System.out.println("Original message(Hex): " + Hex.toHexString(data) + ", Digest Value(HEX): "
+                + Hex.toHexString(digestValue));
         System.out.println("---------------end digest data---------------");
         return digestValue;
     }
@@ -148,7 +148,7 @@ public class Cryptology {
         KeyFactory keyFactory = KeyFactory.getInstance(alo);
         if(Objects.equals(alo, "RSA")) {
             RSAPrivateKeySpec keySpec= keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
-            // 由私钥获取模
+            // 由私钥获取模 N
             BigInteger modulus = keySpec.getModulus();
             int length = modulus.bitLength();
             // RSA密钥的长度实际上指的是模的长度（以Bit为单位）, 模是私钥和公钥共有的
@@ -158,11 +158,11 @@ public class Cryptology {
             System.out.println("The length of RSA key module in decimal: " + modulus.toString(10).length());
             // 私钥的指数d
             System.out.println("RSA private key exponent size: " + keySpec.getPrivateExponent().bitLength());
-            // todo 由私钥获取p,q
+            // todo 由私钥获取p,q 似乎需要Java11的特性？1.8情况下是否有思路？
             RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
             // 公钥的指数e
             System.out.println("RSA public key exponent: " + pubKeySpec.getPublicExponent().toString(10));
-            // 由公钥获取模
+            // 由公钥获取模 N
             System.out.println("RSA key size: " + pubKeySpec.getModulus().bitLength());
         } else if (Objects.equals(alo, "DSA")){
             DSAPrivateKeySpec keySpec = keyFactory.getKeySpec(privateKey, DSAPrivateKeySpec.class);
@@ -225,7 +225,7 @@ public class Cryptology {
     /**
      * 读取RSA私钥文件(pkcs1标准格式的私钥, 且无口令保护, 参考测试用的文件)<br/>
      * （方法使用了sun.*包，可能会导致打包失败，请看readme.md文件描述）
-     * @param pemFilePath 文件路径
+     * @param pemFilePath pem格式私钥文件绝对路径
      * @return RSA私钥
      * @throws GeneralSecurityException 异常
      * @throws IOException 异常
@@ -255,7 +255,8 @@ public class Cryptology {
         BigInteger exp1 = seq[6].getBigInteger();
         BigInteger exp2 = seq[7].getBigInteger();
         BigInteger crtCoef = seq[8].getBigInteger();
-        RSAPrivateCrtKeySpec keySpec = new RSAPrivateCrtKeySpec(modulus, publicExp, privateExp, prime1, prime2, exp1, exp2, crtCoef);
+        RSAPrivateCrtKeySpec keySpec = new RSAPrivateCrtKeySpec(modulus, publicExp, privateExp, prime1,
+                prime2, exp1, exp2, crtCoef);
         KeyFactory factory = KeyFactory.getInstance("RSA");
         PrivateKey privateKey = factory.generatePrivate(keySpec);
         System.out.println("Private key algorithm: " + privateKey.getAlgorithm());
@@ -634,8 +635,8 @@ public class Cryptology {
         AlgorithmIdentifier algorithmIdentifier = new AlgorithmIdentifier(PKCSObjectIdentifiers.sha256WithRSAEncryption);
         CertificationRequestInfo certificationRequestInfo = CertificationRequestInfo.getInstance(csrInfoBytes);
         //<editor-fold desc="组装成最终的CSR">
-        PKCS10CertificationRequest pkcs10CertificationRequest = new PKCS10CertificationRequest(new CertificationRequest(certificationRequestInfo, algorithmIdentifier,
-                new DERBitString(sign)));
+        PKCS10CertificationRequest pkcs10CertificationRequest = new PKCS10CertificationRequest(
+                new CertificationRequest(certificationRequestInfo, algorithmIdentifier, new DERBitString(sign)));
         //</editor-fold>
         System.out.println("---------------end construct P10 CSR---------------");
         return pkcs10CertificationRequest;
@@ -747,7 +748,8 @@ public class Cryptology {
             if(rdn.getFirst().getType().equals(BCStyle.C)){
                 System.out.println("This is country, value is: " + rdn.getFirst().getValue().toString());
             }
-            System.out.println("RDN: " + rdn.getFirst().getType().toString() + "(Type OID) : " + rdn.getFirst().getValue().toString() + "(value)");
+            System.out.println("RDN: " + rdn.getFirst().getType().toString() + "(Type OID) : "
+                    + rdn.getFirst().getValue().toString() + "(value)");
         }
         // 依据指定的ASN1定义的OID（也就是BCStyle.E）获取对应属性值
         // 这里是获取csr中subject的EmailAddress属性,这里其实还可以获取其他的值
@@ -851,8 +853,8 @@ public class Cryptology {
     /**
      * 颁发V3证书，同时设置一些扩展字段(扩展字段方面主要是举例说明，实际使用要做修改)（仅支持RSA证书颁发）
      * @param csr 证书请求
-     * @param issuerCertPath 用来颁发证书的父证书（通常是ca证书）
-     * @param issuerPrvKeyPath 用于颁发证书的父证书对应的私钥
+     * @param issuerCertPath 用来颁发证书的父证书（通常是ca证书）文件存放绝对路径, 注意，文件内容必须是pem格式
+     * @param issuerPrvKeyPath 用于颁发证书的父证书对应的私钥的文件存放绝对路径, 注意，文件内容必须是pem格式
      * @param validDays 新证书的有效时间（单位：天）
      * @param isCA true-是CA证书，false-不是
      * @param pathLenConstraint 当isCA=true时有效，表示CA证书底下的证书链的最大长度; 应该>=0
@@ -864,8 +866,7 @@ public class Cryptology {
                                             String issuerPrvKeyPath, long validDays, boolean isCA,
                                             int pathLenConstraint, String alo) throws Exception {
         System.out.println("---------------begin issue attach extensions cert---------------");
-        CertificateFactory certFactory;
-        certFactory = CertificateFactory.getInstance("X.509");
+        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
         // 读取Ca证书
         X509Certificate caCert = (X509Certificate) certFactory.generateCertificate(new FileInputStream(issuerCertPath));
         // 读取私钥文件
@@ -873,7 +874,6 @@ public class Cryptology {
         // 读取csr的公钥
         PublicKey csrPubKey = Cryptology.getPubKeyFromCsr(csr, alo);
 
-        System.out.println("---------------begin issue attach extensions cert---------------");
         // ca的签名算法标识符
         AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA");
         // 摘要算法标识符
@@ -892,7 +892,7 @@ public class Cryptology {
                 + ",CN=" + x500Name.getRDNs(BCStyle.CN)[0].getFirst().getValue().toString()
                 + ",E="+ x500Name.getRDNs(BCStyle.E)[0].getFirst().getValue().toString();
         X500Name issuer = new X500Name(issuerDN);
-        // 序列号, 最长是20字节
+        // 序列号, 最长是20字节=160bit
         BigInteger serial = new BigInteger(160, new SecureRandom());
         // 证书起始生效时间
         Date from = new Date();
@@ -966,7 +966,8 @@ public class Cryptology {
         // certGen.setIssuerUniqueID(issuerUids);
         // CA端进行签名, 才有具有法律效力
         X509Certificate cert = null;
-        ContentSigner signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey(caPrivateKey.getEncoded()));
+        ContentSigner signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId)
+                .build(PrivateKeyFactory.createKey(caPrivateKey.getEncoded()));
         // 生成BC结构的证书
         Security.addProvider(new BouncyCastleProvider());
         cert = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certGen.build(signer));
@@ -1035,10 +1036,14 @@ public class Cryptology {
         if("PEM".equals(certEncodeType)) { // pem格式
             // （注：这种方式比较暴力，在数据含有证书内容信息时会出错，最好用PemParser处理）
             String crtStr = new String(bytes, StandardCharsets.UTF_8);
-            crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", ""); // 为避免不同平台的回车换行问题，所以这里只匹配开头的文件类型描述
-            crtStr = crtStr.replace("-----END CERTIFICATE-----", "");   // 为避免不同平台的回车换行问题，所以这里只匹配结尾的文件类型描述
-            crtStr = crtStr.replaceAll("\n", "");      // 去掉换行
-            crtStr = crtStr.replaceAll("\r", "");      // 去掉某些平台带有的回车
+            // 为避免不同平台的回车换行问题，所以这里只匹配开头的文件类型描述
+            crtStr = crtStr.replace("-----BEGIN CERTIFICATE-----", "");
+            // 为避免不同平台的回车换行问题，所以这里只匹配结尾的文件类型描述
+            crtStr = crtStr.replace("-----END CERTIFICATE-----", "");
+            // 去掉换行
+            crtStr = crtStr.replaceAll("\n", "");
+            // 去掉某些平台带有的回车
+            crtStr = crtStr.replaceAll("\r", "");
             x509Certificate = new X509CertImpl(Base64.getDecoder().decode(crtStr));
         } else { // der格式
             x509Certificate = new X509CertImpl(bytes);
@@ -1587,7 +1592,7 @@ public class Cryptology {
     public static byte[] signData2(PrivateKey prvKey, String keyAlo, byte[] data, String hashType) throws Exception {
         System.out.println("---------------begin sign data(way two)---------------");
         byte[] hashData = Cryptology.digestData(data, hashType);
-        // 这个头很神奇，其实本质是一个ASN1编码的数据，而且值会因为摘要算法变，这里是一个经验值（不是特别确定）
+        // 这个头很神奇，其实本质是一个ASN1编码的数据，而且值会因为摘要算法变，这里是一个经验值（ todo 不是特别确定）
         String header;
         if("SHA-1".equals(hashType) || "SHA1".equals(hashType)){
             header = "3021300906052b0e03021a05000414";
