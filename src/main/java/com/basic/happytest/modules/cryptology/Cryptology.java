@@ -790,7 +790,7 @@ public class Cryptology {
     /**
      * 颁发V3无扩展属性证书（仅支持RSA证书颁发）
      * @param csr 证书请求
-     * @param issuerCertPath 用来颁发证书的父证书（通常是ca证书）
+     * @param issuerCertPath 用来颁发证书的父证书（通常是ca证书, 文件可以是der也可以是pem格式）
      * @param issuerPrvKeyPath 用于颁发证书的父证书对应的私钥
      * @param validDays 新证书的有效时间（单位：天）
      * @return 新的证书对象
@@ -853,7 +853,7 @@ public class Cryptology {
     /**
      * 颁发V3证书，同时设置一些扩展字段(扩展字段方面主要是举例说明，实际使用要做修改)（仅支持RSA证书颁发）
      * @param csr 证书请求
-     * @param issuerCertPath 用来颁发证书的父证书（通常是ca证书）文件存放绝对路径, 注意，文件内容必须是pem格式
+     * @param issuerCertPath 用来颁发证书的父证书（通常是ca证书）文件存放绝对路径, 注意，文件内容可以是der也可以是pem格式
      * @param issuerPrvKeyPath 用于颁发证书的父证书对应的私钥的文件存放绝对路径, 注意，文件内容必须是pem格式
      * @param validDays 新证书的有效时间（单位：天）
      * @param isCA true-是CA证书，false-不是
@@ -1001,7 +1001,7 @@ public class Cryptology {
     }
 
     /**
-     * 从证书中读取出公钥（含加载pem格式证书）
+     * 从证书中读取出公钥（含加载证书, 可以是der也可以是pem格式的证书）
      * @param path 证书文件路径
      * @return 公钥
      * @throws Exception 异常
@@ -1017,7 +1017,7 @@ public class Cryptology {
     }
 
     /**
-     * 读取证书文件并加载成一个证书对象（复杂式写法）<br/>
+     * 读取证书文件并加载成一个证书对象（复杂式写法, 简单写法看方法getPubKeyFromCert）<br/>
      * （方法使用了sun.*包，可能会导致打包失败，请看readme.md文件描述）
      * @param path 证书存储路径
      * @param certEncodeType 证书编码类型，支持“PEM"和”DER“

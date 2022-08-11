@@ -75,7 +75,8 @@ class CryptologyTest {
 
     @Test
     void getPubKeyFromCert() throws Exception {
-       Cryptology.getPubKeyFromCert(FileIO.getAbsolutePath(CA_CERT_PEM));
+        Cryptology.getPubKeyFromCert(FileIO.getAbsolutePath(CA_CERT_PEM));
+        Cryptology.getPubKeyFromCert(FileIO.getAbsolutePath(CA_CERT_DER));
     }
 
     @Test
