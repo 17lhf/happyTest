@@ -880,7 +880,13 @@ public class Cryptology {
         Key caPrivateKey = loadRSAPKCS1PrivateKey(issuerPrvKeyPath);
         // 读取csr的公钥
         PublicKey csrPubKey = Cryptology.getPubKeyFromCsr(csr, alo);
-
+        // csr验签
+        if(csr.isSignatureValid(new JcaContentVerifierProviderBuilder().build(csr.getSubjectPublicKeyInfo()))){
+            System.out.println("CSR is valid!");
+        } else {
+            System.out.println("CSR is not valid!");
+            throw new Exception();
+        }
         // ca的签名算法标识符
         AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA");
         // 摘要算法标识符
