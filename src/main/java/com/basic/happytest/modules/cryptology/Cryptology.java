@@ -26,6 +26,7 @@ import org.bouncycastle.openssl.jcajce.*;
 import org.bouncycastle.operator.*;
 import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
@@ -524,7 +525,7 @@ public class Cryptology {
         // 输出： 1.2.840.10045.4.3.2 表示 SHA256withECDSA
         System.out.println("Signature Algorithm OID: " + csr.getSignatureAlgorithm().getAlgorithm().toString());
         System.out.println("Subject of PKCS10 Certification Request: " + csr.getSubject());
-        System.out.println("---------------begin generate P10 cert request---------------");
+        System.out.println("---------------end generate P10 cert request---------------");
         return csr;
     }
 
@@ -719,7 +720,7 @@ public class Cryptology {
      */
     public static void getCsrMsg(PKCS10CertificationRequest csr) {
         System.out.println("---------------begin get csr message---------------");
-        SubjectPublicKeyInfo subjectPublicKeyInfo= csr.getSubjectPublicKeyInfo();
+        SubjectPublicKeyInfo subjectPublicKeyInfo = csr.getSubjectPublicKeyInfo();
         AlgorithmIdentifier algorithmIdentifier = subjectPublicKeyInfo.getAlgorithm();
         System.out.println("Public key algorithm identifier is : " + algorithmIdentifier.getAlgorithm().toString());
         System.out.println("Csr signature is : " + Hex.toHexString(csr.getSignature()));
@@ -802,7 +803,13 @@ public class Cryptology {
         Key caPrivateKey = null;
         CertificateFactory certFactory;
         X509Certificate caCert = null;
-
+        // csr验签
+        if(csr.isSignatureValid(new JcaContentVerifierProviderBuilder().build(csr.getSubjectPublicKeyInfo()))){
+            System.out.println("CSR is valid!");
+        } else {
+            System.out.println("CSR is not valid!");
+            throw new Exception();
+        }
         certFactory = CertificateFactory.getInstance("X.509");
         // 读取Ca证书
         caCert = (X509Certificate) certFactory.generateCertificate(new FileInputStream(issuerCertPath));
