@@ -7,6 +7,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * 以优雅的方式读取yml配置文件中的配置值
+ * @author lhf
+ */
+
 @Getter
 @Setter
 @Configuration

@@ -1605,7 +1605,8 @@ public class Cryptology {
     public static byte[] signData2(PrivateKey prvKey, String keyAlo, byte[] data, String hashType) throws Exception {
         System.out.println("---------------begin sign data(way two)---------------");
         byte[] hashData = Cryptology.digestData(data, hashType);
-        // 这个头很神奇，其实本质是一个ASN1编码的数据，而且值会因为摘要算法变，这里是一个经验值（ todo 不是特别确定）
+        // 这个头很神奇，其实本质是一个ASN1编码的数据，而且值会因为摘要算法变，这里是一个经验值（ todo 不是特别确定，或许可以通过相关的标准文档来确认）
+        // todo 在JCE的实现底层RSACipher里，似乎有一个专门用于签名的Cipher模式，不知道是否可以利用起来以可以自动填充这个未知具体含义的字段
         String header;
         if("SHA-1".equals(hashType) || "SHA1".equals(hashType)){
             header = "3021300906052b0e03021a05000414";
