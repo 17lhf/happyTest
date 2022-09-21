@@ -236,6 +236,7 @@ public class Cryptology {
         // PKCS#1 format
         final String PEM_RSA_PRIVATE_START = "-----BEGIN RSA PRIVATE KEY-----";
         final String PEM_RSA_PRIVATE_END = "-----END RSA PRIVATE KEY-----";
+        // todo 统一文件内容加载
         Path path = Paths.get(pemFilePath);
         String privateKeyPem = new String(Files.readAllBytes(path));
         // java库解析时，只要中间的内容，头尾不要，换行也不要
