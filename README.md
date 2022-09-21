@@ -43,7 +43,8 @@ file lib/ct.sym with class stubs.<br/>
 可是，即便是使用getter和setter,因为作者在部分细节处逆规范，导致特定条件下会出问题。在本模块中也会对其进行实验
 
 ### (9)fileIO
-<B>关于一些比较怪的文件操作及流的实例</B>
+<B>关于一些比较怪的文件操作及流的实例</B><br />
+<B>ZIP的压缩和解压</B>
 
 ### (10)subProcess
 <B>调用子进程</B>

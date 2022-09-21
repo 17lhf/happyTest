@@ -3,6 +3,10 @@ package com.basic.happytest.modules.time;
 import org.junit.jupiter.api.Test;
 
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 class TimeUtilsTest {
@@ -61,6 +65,12 @@ class TimeUtilsTest {
         System.out.println();
         Date yesterdayLastTime = TimeUtils.getYesterdayLastTime(date);
         TimeUtils.printTime(yesterdayLastTime, TimeUtils.DATE_TIME_PATTERN);
+        System.out.println();
+        Date theMonth1stZeroTime = TimeUtils.getTheMonth1stZeroTime(date);
+        TimeUtils.printTime(theMonth1stZeroTime, TimeUtils.DATE_TIME_PATTERN);
+        System.out.println();
+        Date theMonthLastTime = TimeUtils.getTheMonthLastTime(date);
+        TimeUtils.printTime(theMonthLastTime, TimeUtils.DATE_TIME_PATTERN);
     }
 
     @Test
@@ -69,6 +79,7 @@ class TimeUtilsTest {
         Date end = new Date(1000L * 60 * 60 * 24 * 30 * 25 - 1000L * 60 * 60 * 24 * 21);
         System.out.println(TimeUtils.getDayInterval(end, begin));
         System.out.println(TimeUtils.getDayInterval(begin, end));
+        TimeUtils.printInterval(begin, end);
     }
 
     @Test
@@ -88,5 +99,22 @@ class TimeUtilsTest {
         System.out.println();
         TimeUtils.printTime(TimeUtils.addYears(date, 1), TimeUtils.DATE_PATTERN);
         TimeUtils.printTime(TimeUtils.addYears(date, -1), TimeUtils.DATE_PATTERN);
+    }
+
+    /**
+     * Java8 新特性展示，dateTimeFormatter是线程安全的类
+     */
+    @Test
+    public void testJdk8Time() {
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:SSS");
+        LocalDateTime localDateTime = LocalDateTime.now();
+        LocalDateTime localDateTime1 = LocalDateTime.now(ZoneId.of("America/New_York"));
+        System.out.println(dateTimeFormatter.format(localDateTime));
+        System.out.println(dateTimeFormatter.format(localDateTime1));
+
+        ZonedDateTime zonedDateTime = ZonedDateTime.now();
+        System.out.println(dateTimeFormatter.format(zonedDateTime));
+        ZonedDateTime zonedDateTime1 = zonedDateTime.withZoneSameInstant(ZoneId.of("America/New_York"));
+        System.out.println(dateTimeFormatter.format(zonedDateTime1));
     }
 }

@@ -2,7 +2,9 @@ package com.basic.happytest.modules.time;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
@@ -16,8 +18,25 @@ import java.util.Date;
 public class TimeUtils {
 
     /**
+     * 通过源码可以知道SimpleDateFormat的format方法实际操作的就是Calendar。
+     * 因为我们声明SimpleDateFormat为static变量，那么它的Calendar变量也就是一个共享变量，可以被多个线程访问。
+     * 假设线程A执行完calendar.setTime(date)，把时间设置成2019-01-02，这时候被挂起，线程B获得CPU执行权。
+     * 线程B也执行到了calendar.setTime(date)，把时间设置为2019-01-03。线程挂起，线程A继续走，calendar还会被继续使用(subFormat方法)，
+     * 而这时calendar用的是线程B设置的值了，而这就是引发问题的根源，出现时间不对，线程挂死等等。
+     * 实际不是pos导致的线程不安全，是 DateFormat 的全局变量 calender 被共享且无线程并发安全处理。
+     *
+     * Java8线程安全日期类: https://blog.csdn.net/qq_43409401/article/details/115696152
+     */
+
+    /**
+     * 时区转换的时候，由于夏令时的存在，不同的日期转换的结果很可能是不同的
+     * 涉及到时区时，千万不要自己计算时差，否则难以正确处理夏令时
+     */
+
+    /**
      * 纪元 年-月-日  时-分-秒-毫秒 周几 一年中第几天 一年中第几周 一个月中第几周 A.M/P.M标记 一天中的小时 A.M/P.M下的小时 时区
      * 公元 2021-12-01 10:57:11:590 星期三 335 49 1 上午 10 10 CST
+     * 注意，默认的西方的一周计算方式里，周日是一周的第一天（simpleDateFormat）
      */
     public static final String DATE_DETAIL_PATTERN = "G yyyy-MM-dd hh:mm:ss:SSS E D w W a k K z";
 
@@ -187,6 +206,42 @@ public class TimeUtils {
     }
 
     /**
+     * 获取日期归属的当月的起始时间
+     * @param date 指定日期
+     * @return 日期归属的当月的起始时间
+     */
+    public static Date getTheMonth1stZeroTime(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMinimum(Calendar.DAY_OF_MONTH));
+        calendar.set(Calendar.HOUR_OF_DAY, calendar.getActualMinimum(Calendar.HOUR_OF_DAY));
+        calendar.set(Calendar.MINUTE, calendar.getActualMinimum(Calendar.MINUTE));
+        calendar.set(Calendar.SECOND, calendar.getActualMinimum(Calendar.SECOND));
+        calendar.set(Calendar.MILLISECOND, calendar.getActualMinimum(Calendar.MILLISECOND));
+        Date theMonth1stZeroTime = calendar.getTime();
+        printTime(theMonth1stZeroTime, DATE_TIME_PATTERN);
+        return theMonth1stZeroTime;
+    }
+
+    /**
+     * 获取日期归属的当月的最后一刻时间
+     * @param date 指定日期
+     * @return 日期归属的当月的最后一刻时间
+     */
+    public static Date getTheMonthLastTime(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+        calendar.set(Calendar.HOUR_OF_DAY, calendar.getActualMaximum(Calendar.HOUR_OF_DAY));
+        calendar.set(Calendar.MINUTE, calendar.getActualMaximum(Calendar.MINUTE));
+        calendar.set(Calendar.SECOND, calendar.getActualMaximum(Calendar.SECOND));
+        calendar.set(Calendar.MILLISECOND, calendar.getActualMaximum(Calendar.MILLISECOND));
+        Date theMonthLastTime = calendar.getTime();
+        printTime(theMonthLastTime, DATE_TIME_PATTERN);
+        return theMonthLastTime;
+    }
+
+    /**
      * 获取按天计算的时间间隔（忽略时间先后顺序）
      * @param date1 日期1
      * @param date2 日期2
@@ -207,6 +262,39 @@ public class TimeUtils {
         // beginTime.until(endTime, ChronoUnit.YEARS);
         // beginTime.until(endTime, ChronoUnit.MONTHS);
         return beginTime.until(endTime, ChronoUnit.DAYS);
+    }
+
+    /**
+     * 输出两个日期之间相隔的时间情况（忽略先后顺序）（java8）
+     * @param date1 日期1
+     * @param date2 日期2
+     */
+    public static void printInterval(Date date1, Date date2) {
+        LocalDate localDate1 = date1.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate localDate2 = date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        Period period = Period.between(localDate1, localDate2);
+        // 相差的年份
+        System.out.print("相差 " + period.getYears() + " 年 零 ");
+        // 放在同一年是时，相差的月份
+        System.out.print(period.getMonths() + " 月 零 ");
+        // 放在同一年，同一个月时相差的天数
+        System.out.println(period.getDays() + " 天");
+    }
+
+    /**
+     * 判断两个日期是否是同一周（采用周一是一周开始的计时方式,默认周日是一周的开始）
+     * @param date1 日期1
+     * @param date2 日期2
+     * @return true-归属于同一周，false-不是同一周
+     */
+    public static Boolean isSameWeek(Date date1, Date date2) {
+        Calendar calendar1 = Calendar.getInstance();
+        calendar1.setFirstDayOfWeek(Calendar.MONDAY);
+        calendar1.setTime(date1);
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.setFirstDayOfWeek(Calendar.MONDAY);
+        calendar2.setTime(date2);
+        return calendar1.get(Calendar.WEEK_OF_YEAR) == calendar2.get(Calendar.WEEK_OF_YEAR);
     }
 
     /**

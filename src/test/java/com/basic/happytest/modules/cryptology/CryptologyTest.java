@@ -3,6 +3,7 @@ package com.basic.happytest.modules.cryptology;
 import com.basic.happytest.modules.fileIO.FileIO;
 import com.sun.crypto.provider.SunJCE;
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.util.encoders.Hex;
@@ -534,5 +535,16 @@ class CryptologyTest {
     @Test
     void showProviders() {
         Cryptology.showProviders();
+    }
+
+    @Test
+    void prvKey2BCRSAPrvKey() throws Exception {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        KeyPair keyPair = keyPairGenerator.genKeyPair();
+        PrivateKey privateKey = keyPair.getPrivate();
+        System.out.println(privateKey.getAlgorithm());
+        RSAPrivateKey rsaPrivateKey = RSAPrivateKey.getInstance(privateKey.getEncoded());
+        System.out.println(rsaPrivateKey.getVersion());
     }
 }

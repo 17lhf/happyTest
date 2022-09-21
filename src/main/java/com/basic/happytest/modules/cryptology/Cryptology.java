@@ -3,10 +3,7 @@ package com.basic.happytest.modules.cryptology;
 import com.sun.crypto.provider.SunJCE;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.*;
-import org.bouncycastle.asn1.pkcs.CertificationRequest;
-import org.bouncycastle.asn1.pkcs.CertificationRequestInfo;
-import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.pkcs.*;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -357,6 +354,17 @@ public class Cryptology {
         pemWriter.writeObject(pemObject);
         pemWriter.close();
         System.out.println("---------------end transform P8 key which from file to protected by password and store in file---------------");
+    }
+
+    /**
+     * todo 将java.security.PrivateKey转换成org.bouncycastle.asn1.pkcs.RSAPrivateKey对象
+     * @param privateKey java.security.PrivateKey对象
+     * @return org.bouncycastle.asn1.pkcs.RSAPrivateKey对象
+     */
+    public static RSAPrivateKey prvKey2BCRSAPrvKey(PrivateKey privateKey) {
+        RSAPrivateKey rsaPrivateKey = RSAPrivateKey.getInstance(privateKey.getEncoded());
+        System.out.println(rsaPrivateKey.getVersion());
+        return rsaPrivateKey;
     }
 
     /**
