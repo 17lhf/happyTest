@@ -382,6 +382,7 @@ public class Cryptology {
      */
     public static RSAPrivateKey prvKey2BCRSAPrvKey(PrivateKey privateKey) throws Exception {
         // 这里getInstance只接受PKCS1的私钥转换成的byte数组，否则会报错
+        // 报错信息：org.bouncycastle.asn1.DLSequence cannot be cast to org.bouncycastle.asn1.ASN1Integer
         // 所以需要先转换成PKCS1的私钥信息，才能输入进来
         // 这里输入asn1Primitive也可以
         RSAPrivateKey rsaPrivateKey = RSAPrivateKey.getInstance(p8PrvKey2P1PrvKeyBytes(privateKey));
