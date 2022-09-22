@@ -4,7 +4,6 @@ import com.basic.happytest.modules.fileIO.FileIO;
 import com.sun.crypto.provider.SunJCE;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
@@ -14,8 +13,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.X509Certificate;
-import java.security.spec.RSAPublicKeySpec;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -138,9 +135,10 @@ class CryptologyTest {
 
     @Test
     void loadPrivateKey() throws Exception {
-         Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
-         Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
-         Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(PEM_KEY_PAIR_PRV_KEY));
+         Cryptology.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+         Cryptology.loadPrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
+         Cryptology.loadPrivateKey(FileIO.getAbsolutePath(PEM_KEY_PAIR_PRV_KEY));
+         Cryptology.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
     }
 
     @Test
@@ -220,7 +218,7 @@ class CryptologyTest {
     void der2pem() throws Exception {
         /*String pem = Cryptology.der2pem(Hex.toHexString(Cryptology.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY)).getEncoded()), "PUB_KEY");
         System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath(RSA_PUB_KEY))));*/
-        String pem = Cryptology.der2pem(Hex.toHexString(Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT)).getEncoded()), "PRV_KEY");
+        String pem = Cryptology.der2pem(Hex.toHexString(Cryptology.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT)).getEncoded()), "PRV_KEY");
         System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT))));
         /*String pem = Cryptology.der2pem(Hex.toHexString(Cryptology.loadCsrFromFile(FileIO.getAbsolutePath(RSA_CSR_PEM), "PEM").getEncoded()), "CSR");
         System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath(RSA_CSR_PEM))));*/
@@ -327,7 +325,7 @@ class CryptologyTest {
     void generateP12() throws Exception {
         X509Certificate rootCert = Cryptology.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), "PEM");
         X509Certificate subCert = Cryptology.loadCertFromFile(FileIO.getAbsolutePath(RSA_CERT_PEM), "PEM");
-        PrivateKey privateKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+        PrivateKey privateKey = Cryptology.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         Cryptology.generateP12(rootCert, "rootCert",
                 subCert, "sub",
                 privateKey, "654321", "123456", FileIO.getAbsolutePath(STORE_PATH) + "/");
@@ -357,7 +355,7 @@ class CryptologyTest {
         Cryptology.decryptData(publicKey, "RSA/ECB/PKCS1Padding", res2, sunJCEName);
 
         // ECC
-        PrivateKey ecPrvKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
+        PrivateKey ecPrvKey = Cryptology.loadPrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
         System.out.println();
         Cryptology.signData(ecPrvKey, "ECDSA", dataBytes, "SHA256");
     }
@@ -374,7 +372,7 @@ class CryptologyTest {
         System.out.println();
         Cryptology.validSignature(publicKey, "RSA", dataBytes, "SHA256", res1);
         // ECC
-        PrivateKey ecPrvKey = Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
+        PrivateKey ecPrvKey = Cryptology.loadPrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
         System.out.println();
         byte[] res11 = Cryptology.signData(ecPrvKey, "ECDSA", dataBytes, "SHA256");
         PublicKey ecPubKey = Cryptology.loadPublicKey(FileIO.getAbsolutePath(ECC_PUB_KEY));
@@ -478,7 +476,7 @@ class CryptologyTest {
     @Test
     void loadRSAPubKeyByPriKeyTest() throws Exception {
         PrivateKey privateKey =
-                Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(CryptologyTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+                Cryptology.loadPrivateKey(FileIO.getAbsolutePath(CryptologyTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         PublicKey publicKey = Cryptology.loadRSAPubKeyByPriKey(privateKey);
         String s = "abc";
         String sunJCEName = new SunJCE().getName();
@@ -539,12 +537,16 @@ class CryptologyTest {
 
     @Test
     void prvKey2BCRSAPrvKey() throws Exception {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
-        KeyPair keyPair = keyPairGenerator.genKeyPair();
-        PrivateKey privateKey = keyPair.getPrivate();
-        System.out.println(privateKey.getAlgorithm());
-        RSAPrivateKey rsaPrivateKey = RSAPrivateKey.getInstance(privateKey.getEncoded());
-        System.out.println(rsaPrivateKey.getVersion());
+        KeyPair keyPair = Cryptology.generateKeyPair("RSA", 2048);
+        RSAPrivateKey rsaPrivateKey = Cryptology.prvKey2BCRSAPrvKey(keyPair.getPrivate());
+        System.out.println(rsaPrivateKey.getModulus().toString(16));
+    }
+
+    @Test
+    void validRSAKeyPairMatch() throws Exception {
+        KeyPair keyPair = Cryptology.generateKeyPair("RSA", 2048);
+        System.out.println("KeyPair is match? " + Cryptology.validRSAKeyPairMatch(keyPair.getPublic(), keyPair.getPrivate()));
+        PrivateKey privateKey = Cryptology.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+        System.out.println("KeyPair is match? " + Cryptology.validRSAKeyPairMatch(keyPair.getPublic(), privateKey));
     }
 }

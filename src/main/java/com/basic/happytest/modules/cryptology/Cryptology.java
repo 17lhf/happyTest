@@ -155,11 +155,17 @@ public class Cryptology {
             System.out.println("RSA key byte length(by sun.security.rsa.RSACore): " + (length + 7 >> 3));
             System.out.println("The length of RSA key module in decimal: " + modulus.toString(10).length());
             // 私钥的指数d
-            System.out.println("RSA private key exponent size: " + keySpec.getPrivateExponent().bitLength());
-            // todo 由私钥获取p,q 似乎需要Java11的特性？1.8情况下是否有思路？
+            System.out.println("RSA private key exponent(d) size: " + keySpec.getPrivateExponent().bitLength());
+            // 借助RSAPrivateKey可以获取私钥的所有信息
+            RSAPrivateKey rsaPrivateKey = prvKey2BCRSAPrvKey(privateKey);
+            System.out.println("RSA private key prime1 length(p): " + rsaPrivateKey.getPrime1().bitLength());
+            System.out.println("RSA private key prime2 length(q): " + rsaPrivateKey.getPrime2().bitLength());
+            System.out.println("p*q = module: " + (rsaPrivateKey.getPrime1().multiply(rsaPrivateKey.getPrime2()))
+                    .equals(rsaPrivateKey.getModulus()));
+            // 以下是公钥信息
             RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
             // 公钥的指数e
-            System.out.println("RSA public key exponent: " + pubKeySpec.getPublicExponent().toString(10));
+            System.out.println("RSA public key exponent(e): " + pubKeySpec.getPublicExponent().toString(10));
             // 由公钥获取模 N
             System.out.println("RSA key size: " + pubKeySpec.getModulus().bitLength());
         } else if (Objects.equals(alo, "DSA")){
@@ -221,12 +227,11 @@ public class Cryptology {
     }
 
     /**
-     * 读取RSA私钥文件(pkcs1标准格式的私钥, 且无口令保护, 参考测试用的文件)<br/>
+     * 暴力读取RSA私钥文件(pkcs1标准格式的私钥, 且无口令保护, 参考测试用的文件)<br/>
      * （方法使用了sun.*包，可能会导致打包失败，请看readme.md文件描述）
      * @param pemFilePath pem格式私钥文件绝对路径
-     * @return RSA私钥
-     * @throws GeneralSecurityException 异常
-     * @throws IOException 异常
+     * @return PKCS8标准的RSA私钥
+     * @throws Exception 异常
      */
     public static PrivateKey loadRSAPKCS1PrivateKey(String pemFilePath) throws Exception {
         System.out.println("---------------begin pem file load private key PKCS1 encoded---------------");
@@ -254,6 +259,7 @@ public class Cryptology {
         BigInteger exp1 = seq[6].getBigInteger();
         BigInteger exp2 = seq[7].getBigInteger();
         BigInteger crtCoef = seq[8].getBigInteger();
+        // 这里的keySpec是以PCKS1标准定义的
         RSAPrivateCrtKeySpec keySpec = new RSAPrivateCrtKeySpec(modulus, publicExp, privateExp, prime1,
                 prime2, exp1, exp2, crtCoef);
         KeyFactory factory = KeyFactory.getInstance("RSA");
@@ -290,17 +296,17 @@ public class Cryptology {
     }
 
     /**
-     * 从文件加载私钥（无口令保护）(pkcs8标准格式，参考测试用的文件)(也支持比较特殊的一种私钥文件内容，其加载后是PEMKeyPair)
+     * 从文件加载私钥（无口令保护）(参考测试用的文件)
      * @param filePath 私钥文件路径(支持ECC、RSA)
-     * @return 私钥
+     * @return PKCS8标准的私钥
      * @throws Exception 异常
      */
-    public static PrivateKey loadPKCS8PrivateKey(String filePath) throws Exception {
+    public static PrivateKey loadPrivateKey(String filePath) throws Exception {
         System.out.println("---------------begin load private key---------------");
         try (PEMParser pemParser = new PEMParser(new FileReader(filePath))) {
             Object pem = pemParser.readObject();
             System.out.println("pem object class is: " + pem.getClass());
-            if (pem instanceof PrivateKeyInfo) {
+            if (pem instanceof PrivateKeyInfo) { // PKCS8标准的私钥加载后会是这个对象
                 JcaPEMKeyConverter converter = new JcaPEMKeyConverter()
                         .setProvider(BouncyCastleProvider.PROVIDER_NAME);
                 PrivateKeyInfo keyInfo = (PrivateKeyInfo) pem;
@@ -308,7 +314,7 @@ public class Cryptology {
                 System.out.println("Private key algorithm: " + privateKey.getAlgorithm());
                 System.out.println("---------------end load private key---------------");
                 return privateKey;
-            } else if (pem instanceof PEMKeyPair){
+            } else if (pem instanceof PEMKeyPair){ // PKCS1标准的私钥加载后会是这个对象
                 JcaPEMKeyConverter converter = new JcaPEMKeyConverter()
                         .setProvider(BouncyCastleProvider.PROVIDER_NAME);
                 PEMKeyPair pemKeyPair = (PEMKeyPair) pem;
@@ -343,7 +349,7 @@ public class Cryptology {
         // OutputEncryptor 操作器的常规接口，能够生成将输出加密数据的输出流
         OutputEncryptor encryptor = encryptorBuilder.build();
         // 读取无加密保护的私钥
-        PrivateKey privateKey = Cryptology.loadPKCS8PrivateKey(filePath);
+        PrivateKey privateKey = Cryptology.loadPrivateKey(filePath);
         // PKCS8生成器
         JcaPKCS8Generator gen2 = new JcaPKCS8Generator(privateKey, encryptor);
         PemObject pemObject = gen2.generate();
@@ -357,13 +363,29 @@ public class Cryptology {
     }
 
     /**
-     * todo 将java.security.PrivateKey转换成org.bouncycastle.asn1.pkcs.RSAPrivateKey对象
+     * PKCS8标准的私钥转PCKS1标准的私钥字节数组（或者可以说是从中提取出最原始的密钥算法的那一部分内容）
+     * @param privateKey java默认的PKCS8标准的私钥对象
+     * @return PCKS1标准的私钥字节数组
+     * @throws Exception 异常
+     */
+    public static byte[] p8PrvKey2P1PrvKeyBytes(PrivateKey privateKey) throws Exception {
+        PrivateKeyInfo privateKeyInfo = PrivateKeyInfo.getInstance(privateKey.getEncoded());
+        ASN1Encodable privateKeyPKCS1ASN1Encodable = privateKeyInfo.parsePrivateKey();
+        ASN1Primitive asn1Primitive = privateKeyPKCS1ASN1Encodable.toASN1Primitive();
+        return asn1Primitive.getEncoded();
+    }
+
+    /**
+     * 将java.security.PrivateKey转换成org.bouncycastle.asn1.pkcs.RSAPrivateKey对象
      * @param privateKey java.security.PrivateKey对象
      * @return org.bouncycastle.asn1.pkcs.RSAPrivateKey对象
      */
-    public static RSAPrivateKey prvKey2BCRSAPrvKey(PrivateKey privateKey) {
-        RSAPrivateKey rsaPrivateKey = RSAPrivateKey.getInstance(privateKey.getEncoded());
-        System.out.println(rsaPrivateKey.getVersion());
+    public static RSAPrivateKey prvKey2BCRSAPrvKey(PrivateKey privateKey) throws Exception {
+        // 这里getInstance只接受PKCS1的私钥转换成的byte数组，否则会报错
+        // 所以需要先转换成PKCS1的私钥信息，才能输入进来
+        // 这里输入asn1Primitive也可以
+        RSAPrivateKey rsaPrivateKey = RSAPrivateKey.getInstance(p8PrvKey2P1PrvKeyBytes(privateKey));
+        System.out.println("RSA key version is: " + rsaPrivateKey.getVersion());
         return rsaPrivateKey;
     }
 
@@ -484,7 +506,7 @@ public class Cryptology {
         pemWriter2.close();
         System.out.println("---------------end out put pem format key to file---------------");
         loadPublicKey(pubKeyPath);
-        loadPKCS8PrivateKey(prvKeyPath);
+        loadPrivateKey(prvKeyPath);
     }
 
     /**
@@ -1577,7 +1599,6 @@ public class Cryptology {
         return plainData;
     }
 
-
     /**
      * 利用密钥对数据进行签名
      * @param prvKey 私钥（签名用的都是私钥）
@@ -1664,8 +1685,25 @@ public class Cryptology {
         return isOK;
     }
 
-    // 验证一个公钥和一个私钥是否匹配，其实就是加密一个数据，然后解密，看看解密后的结果与原始数据是否一致（目前没有找到更便捷的流程）
-    // todo 利用算法原理，去验证公私钥里面的ed是否和N对应？
+    /**
+     * 验证一个公钥和一个私钥是否匹配，一般就是加密一个数据，然后解密，看看解密后的结果与原始数据是否一致。 <br/>
+     * 否则就像这样利用算法原理，去验证RSA公私钥是否匹配
+     * @param publicKey 公钥
+     * @param privateKey 私钥
+     * @return true-匹配，false-不匹配
+     * @throws Exception 异常
+     */
+    public static boolean validRSAKeyPairMatch(PublicKey publicKey, PrivateKey privateKey) throws Exception {
+        RSAPrivateKey rsaPrivateKey = prvKey2BCRSAPrvKey(privateKey);
+        BigInteger prvE = rsaPrivateKey.getPublicExponent();
+        BigInteger prvM = rsaPrivateKey.getModulus();
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
+        BigInteger pubE = pubKeySpec.getPublicExponent();
+        BigInteger pubM = pubKeySpec.getModulus();
+        return prvE != null && prvM != null && prvE.equals(pubE) && prvM.equals(pubM);
+    }
+
     // 验证一个私钥与一本证书是否匹配，其实就是先从证书中提取公钥，然后就是和上一个一样的流程（目前没有找到更便捷的流程）
 
     /**
