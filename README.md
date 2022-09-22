@@ -58,6 +58,10 @@ file lib/ct.sym with class stubs.<br/>
 ### (13)time
 <B>关于时间的一些操作</B>
 
+### (14)barcodImage
+这个文件夹底下都是一些条形码图像处理的工具类(注意，需要引入新的包)<br />
+<B>二维码图像处理工具类</B>
+
 ### (n) 补充
 <B>1.Linux运行jar包</B><br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>

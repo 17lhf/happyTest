@@ -91,6 +91,20 @@
             <artifactId>jackson-core</artifactId> <!-- jackson的json处理包 -->
             <version>2.13.2</version>
         </dependency>
+
+        <!-- 一个开源的多格式1D/2D条形码图像处理库，用Java实现，并具有其他语言的端口 -->
+        <!-- 工具源码地址：https://github.com/zxing/zxing -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>
