@@ -1695,13 +1695,20 @@ public class Cryptology {
      * @throws Exception 异常
      */
     public static boolean validRSAKeyPairMatch(PublicKey publicKey, PrivateKey privateKey) throws Exception {
+        // 必须把私钥转成BC库里的RSA私钥对象，才是PKCS1标准的私钥形式，此时才能依据私钥获取一些理论算法中提及的各种密钥参数
         RSAPrivateKey rsaPrivateKey = prvKey2BCRSAPrvKey(privateKey);
+        // 从私钥中获取公钥的指数
         BigInteger prvE = rsaPrivateKey.getPublicExponent();
+        // 从私钥中获取密钥对共用的模数
         BigInteger prvM = rsaPrivateKey.getModulus();
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        // 把公钥加载成RSA公钥spec对象，以此获取公钥的指数
         RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
+        // 依据公钥获取公钥的指数
         BigInteger pubE = pubKeySpec.getPublicExponent();
+        // 依据公钥获取密钥对共用的模数
         BigInteger pubM = pubKeySpec.getModulus();
+        // 如果 利用私钥推算出的公钥的参数 和 公钥自身的参数 二者是一致的，说明这个公钥和这个私钥是匹配的，是一对的
         return prvE != null && prvM != null && prvE.equals(pubE) && prvM.equals(pubM);
     }
 
