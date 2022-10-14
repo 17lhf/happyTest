@@ -117,4 +117,11 @@ class TimeUtilsTest {
         ZonedDateTime zonedDateTime1 = zonedDateTime.withZoneSameInstant(ZoneId.of("America/New_York"));
         System.out.println(dateTimeFormatter.format(zonedDateTime1));
     }
+
+    @Test
+    void printTimeIntervalJava8() {
+        Date date = new Date();
+        Date date1 = TimeUtils.addDays(date, 365);
+        TimeUtils.printTimeIntervalJava8(date, date1);
+    }
 }

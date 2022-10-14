@@ -72,4 +72,7 @@ class MpServiceTest {
         // 可以看到，str和num的字段并没有变成null，依旧是原来的值，更新的信息被忽略了
         // 但是str的字段被置为空字符串倒是没有问题，num被置零也没问题
     }
+
+    // mybatis 中 if-test 判断，不执行if判断中的sql，运行程序不报错，
+    // 没有任何提示：https://blog.csdn.net/qq_36501591/article/details/116499598
 }

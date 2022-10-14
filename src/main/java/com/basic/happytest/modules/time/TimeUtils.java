@@ -2,17 +2,17 @@ package com.basic.happytest.modules.time;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Period;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.util.Calendar;
 import java.util.Date;
 
 /**
  * 时间相关工具类
  * @author lhf
+ *
+ * 可参考：java时间框架接口Temporal及其常用实现类Instant、LocalDateTime：https://blog.csdn.net/qq_41717518/article/details/124260653
  */
 
 public class TimeUtils {
@@ -31,6 +31,12 @@ public class TimeUtils {
     /**
      * 时区转换的时候，由于夏令时的存在，不同的日期转换的结果很可能是不同的
      * 涉及到时区时，千万不要自己计算时差，否则难以正确处理夏令时
+     */
+
+    /**
+     * LocalDateTime 既有具体时间有日期时间
+     * LocalDate 只有年月日之类的日期时间，没有时分秒等具体时间
+     * LocalTime 只有时分秒的具体时间，没有日期时间
      */
 
     /**
@@ -265,7 +271,7 @@ public class TimeUtils {
     }
 
     /**
-     * 输出两个日期之间相隔的时间情况（忽略先后顺序）（java8）
+     * 输出两个日期之间相隔的时间情况（按n年零n月n天的方式）（忽略先后顺序）（java8）
      * @param date1 日期1
      * @param date2 日期2
      */
@@ -279,6 +285,29 @@ public class TimeUtils {
         System.out.print(period.getMonths() + " 月 零 ");
         // 放在同一年，同一个月时相差的天数
         System.out.println(period.getDays() + " 天");
+    }
+
+    /**
+     * 打印java8情况下最简单使用的获取时间间隔（忽略时间先后顺序）
+     * @param date1 日期1
+     * @param date2 日期2
+     */
+    public static void printTimeIntervalJava8(Date date1, Date date2) {
+        LocalDateTime localDateTime1 = date1.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime localDateTime2 = date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        // 时间排序
+        if(localDateTime1.isAfter(localDateTime2)) {
+            LocalDateTime temp = localDateTime1;
+            localDateTime1 = localDateTime2;
+            localDateTime2 = temp;
+        }
+        // 底层其实是调用各个具体子类的util方法实现，所以此时限制也取决于传入的时间对象
+        // 例如传入的如果是Instant, 则获取时间间隔最大只能到Day
+        System.out.println("时间相隔年数：" + ChronoUnit.YEARS.between(localDateTime1, localDateTime2));
+        System.out.println("时间相隔月数：" + ChronoUnit.MONTHS.between(localDateTime1, localDateTime2));
+        System.out.println("时间相隔天数：" + ChronoUnit.DAYS.between(localDateTime1, localDateTime2));
+        System.out.println("时间相隔小时数：" + ChronoUnit.HOURS.between(localDateTime1, localDateTime2));
+        // ......
     }
 
     /**
