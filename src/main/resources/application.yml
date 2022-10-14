@@ -7,6 +7,8 @@ spring:
     url: jdbc:mysql://localhost:3306/happy_db?serverTimezone=GMT%2B8
     username: happytest
     password: happytest
+    # profiles:
+      # active: dev,dev-security # 同时加载多个环境配置文件的写法
 mybatis-plus:
   mapperLocations: classpath:/mapper/*/*.xml
   typeAliasesPackage: com.basic.happytest.mudules.*.entity
