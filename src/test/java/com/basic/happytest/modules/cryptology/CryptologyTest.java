@@ -493,7 +493,7 @@ class CryptologyTest {
     @Test
     public void testBlockEncAndDec() throws Exception {
         // 获得待加密的数据
-        /*PrivateKey privateKey =
+        /* PrivateKey privateKey =
                 Cryptology.loadPKCS8PrivateKey(FileIO.getAbsolutePath(CryptologyTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         byte[] data = privateKey.getEncoded();*/
         byte[] data = new byte[500];
