@@ -40,6 +40,9 @@ public class GenChineseName {
             "百里","东郭","微生","梁丘","左丘","东门","西门","南宫","第五","公仪","公乘","太史","仲长","叔孙","屈突","尔朱",
             "东乡","相里","胡母","司城","张廖","雍门","毋丘","贺兰","綦毋","屋庐","独孤","南郭","北宫","王孙"};
 
+    /**
+     * 名
+     */
     private static final String[] NAME = {"一","乙","二","十","丁","厂","七","卜","人","入","八","九","几","儿","了",
             "力","乃","刀","又",
             "三","于","干","亏","士","工","土","才","寸","下","大","丈","与","万","上","小","口","巾","山",
@@ -180,12 +183,16 @@ public class GenChineseName {
      */
     public static String getChineseName(){
         Random random = new Random();
+        // 随机获取一个姓氏
         String surname = SURNAME[random.nextInt(SURNAME.length)];
+        // 名字的长度区间为 [1,2]
         int nameLength = random.nextInt(2) + 1;
         StringBuilder name = new StringBuilder();
+        // 以及上面获取的名字的长度来随机生成名字
         for (int i = 0; i < nameLength; i++) {
             name.append(NAME[random.nextInt(NAME.length)]);
         }
+        // 姓氏+名 组成最终的中文姓名
         return surname + name;
     }
 }

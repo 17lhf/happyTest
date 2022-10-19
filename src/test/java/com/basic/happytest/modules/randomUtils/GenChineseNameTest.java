@@ -2,8 +2,6 @@ package com.basic.happytest.modules.randomUtils;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * 随机生成中文名称测试
  */
