@@ -62,6 +62,9 @@ file lib/ct.sym with class stubs.<br/>
 这个文件夹底下都是一些条形码图像处理的工具类(注意，需要引入新的包)<br />
 <B>二维码图像处理工具类</B>
 
+### (15)randomUtils
+这个文件夹底下是一些随机生成的工具类（应该都会比较粗糙，毕竟都是拿来作为假数据的）
+
 ### (n) 补充
 <B>1.Linux运行jar包</B><br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
