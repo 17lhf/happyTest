@@ -23,7 +23,7 @@ import java.util.Map;
 class JudgeExpDaoTest {
 
     @Autowired
-    JudgeExpDao judgeExpDao;
+    private JudgeExpDao judgeExpDao;
 
     @Test
     void addSomeData(){
