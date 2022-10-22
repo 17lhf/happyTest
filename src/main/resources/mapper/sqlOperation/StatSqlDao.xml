@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.basic.happytest.modules.sqlOperation.dao.StatSqlDao">
+
+    <select id="getStudentCondDto" resultType="com.basic.happytest.modules.sqlOperation.entity.StudentCondDto">
+        select count(*) as totalCnt,
+            count(case when t_stat_student.status = #{enrollmentStatus} then id end) as enrollmentCnt,
+            count(case when t_stat_student.status = #{retentionStatus} then id end) as retentionCnt,
+            count(case when t_stat_student.status = #{leftStatus} then id end) as leftCnt
+        from t_stat_student
+    </select>
+
+    <select id="listClassCondDto" resultType="com.basic.happytest.modules.sqlOperation.entity.ClassCondDto">
+        select tss.name, count(case when tsst.status = #{enrollmentStatus} then tsst.id end) as enrolledStuCnt,
+            count(case when tsst.status = #{retentionStatus} then tsst.id end) as retentionStuCnt,
+            count(case when tsst.status = #{leftStatus} then tsst.id end) as leftStuCnt
+        from t_stat_class tss
+        left join t_stat_student tsst on tss.id = tsst.class_id
+        group by tss.id
+    </select>
+
+    <resultMap id="DictClassTopScoreCondResult" type="com.basic.happytest.modules.sqlOperation.entity.ClassTopScoreCondDto">
+        <result column="className" property="name" />
+        <collection resultMap="DictStuScoreMap" property="scoreCondList" />
+    </resultMap>
+    <resultMap id="DictStuScoreMap" type="com.basic.happytest.modules.sqlOperation.entity.StuScoreCondDto">
+        <result column="stuName" property="name" />
+        <result column="sumScore" property="sumScore" />
+        <result column="chineseScore" property="chineseScore" />
+        <result column="mathScore" property="mathScore" />
+        <result column="englishScore" property="englishScore" />
+    </resultMap>
+    <select id="listClassTopScoreCondDto" resultMap="DictClassTopScoreCondResult">
+        select * from
+        (
+            select *,
+                row_number() over (partition by className order by sumScore desc) as orderNum
+            from
+            (
+                select tss.name as className, tsst.name as stuName,
+                        sum(tsss.score) as sumScore,
+                        sum(if (tsss.subject_type = #{chineseSubject}, tsss.score, null)) as chineseScore,
+                        sum(if (tsss.subject_type = #{mathSubject}, tsss.score, null)) as mathScore,
+                        sum(if (tsss.subject_type = #{englishSubject}, tsss.score, null)) as englishScore
+                from t_stat_class tss
+                left join t_stat_student tsst on tss.id = tsst.class_id
+                left join t_stat_subject_score tsss on tsst.id = tsss.stu_id
+                <where>
+                    tsst.status = #{enrollmentStatus}
+                </where>
+                group by tsst.id
+            ) as t
+        ) as t1
+        where t1.orderNum &lt;= #{topNum}
+    </select>
+</mapper>

@@ -65,6 +65,9 @@ file lib/ct.sym with class stubs.<br/>
 ### (15)randomUtils
 这个文件夹底下是一些随机生成的工具类（应该都会比较粗糙，毕竟都是拿来作为假数据的）
 
+### (16)sqlOperation
+这个文件夹是涉及一些复杂的sql操作，特别是一些统计时使用的搜索归类
+
 ### (n) 补充
 <B>1.Linux运行jar包</B><br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
