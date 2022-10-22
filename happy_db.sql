@@ -60,6 +60,60 @@ CREATE TABLE `mp` (
 COMMENT = 'MybatisPlus Test Table';
 
 --
+-- Table structure for table `t_stat_class`
+--
+
+DROP TABLE IF EXISTS `t_stat_class`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_stat_class` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) NOT NULL COMMENT '班级名称',
+  `cre_time` datetime NOT NULL COMMENT '创建时间',
+  `upd_time` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='统计测试用的班级表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_stat_student`
+--
+
+DROP TABLE IF EXISTS `t_stat_student`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_stat_student` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) NOT NULL COMMENT '学生姓名，可能重复',
+  `status` tinyint NOT NULL COMMENT '学生的状态',
+  `class_id` int unsigned NOT NULL COMMENT '班级id',
+  `cre_time` datetime NOT NULL COMMENT '创建时间',
+  `upd_time` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=201 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='统计测试用学生表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_stat_subject_score`
+--
+
+DROP TABLE IF EXISTS `t_stat_subject_score`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_stat_subject_score` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `score` double NOT NULL COMMENT '分数',
+  `stu_id` int unsigned NOT NULL COMMENT '学生ID',
+  `subject_type` tinyint unsigned NOT NULL COMMENT '学科类型',
+  `cre_time` datetime NOT NULL COMMENT '创建时间',
+  `upd_time` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=601 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='统计测试用的学科成绩表';
+
+--
 -- Dumping data for table `t_multithread_sync`
 --
 
