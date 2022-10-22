@@ -31,18 +31,21 @@ public class GenNumber {
                     num = ThreadLocalRandom.current().nextDouble(min, max + 0.001);
                 } while(num > max); // 排除掉取值大于max的情况，剩下的就是符合要求的值了
             } else { // [min, max)
-                // num = min + Math.random() * (max - min);
-                num = ThreadLocalRandom.current().nextDouble(min, max);
+                // num = min + Math.random() * (max - min); // 方式一
+                num = ThreadLocalRandom.current().nextDouble(min, max); // 方式二
             }
         } else {
             // (min, max]
             if(maxReach) {
                 num = max - Math.random() * (max - min);
             } else { // (min, max)
-                // (max - 1 - Math.random() * (max - min - 1)) ∈ (min, max - 1]
-                // Math.random() ∈ [0, 1)
-                // 两者相加，可知最终结果取值范围就是 (min, max)
-                // 注意，不要尝试使用乘法结合律
+                /**
+                 * 解释：
+                 * (max - 1 - Math.random() * (max - min - 1)) ∈ (min, max - 1]
+                 * Math.random() ∈ [0, 1)
+                 * 两者相加，可知最终结果取值范围就是 (min, max)
+                 * 注意，不要尝试使用乘法结合律
+                 */
                 num = Math.random() + (max - 1 - Math.random() * (max - min - 1));
             }
         }
@@ -63,11 +66,11 @@ public class GenNumber {
         if (minReach) {
             // [min, max]
             if (maxReach) {
-                // num = min + rand.nextInt(max - min + 1);
-                num = ThreadLocalRandom.current().nextInt(min, max + 1);
+                // num = min + rand.nextInt(max - min + 1); // 方式一
+                num = ThreadLocalRandom.current().nextInt(min, max + 1); // 方式二
             } else { // [min, max)
-                // num = min + rand.nextInt(max - min);
-                num = ThreadLocalRandom.current().nextInt(min, max);
+                // num = min + rand.nextInt(max - min);  // 方式一
+                num = ThreadLocalRandom.current().nextInt(min, max); // 方式二
             }
         } else {
             // (min, max]
