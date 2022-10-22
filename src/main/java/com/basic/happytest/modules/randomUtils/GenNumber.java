@@ -4,7 +4,8 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * 生成指定范围内的随机数 todo 此类只进行过理论上的推敲验证，未有实质性验证
+ * 生成指定范围内的随机数 <br/>
+ * 此类只进行理论上的推敲验证，无法实质性验证
  * @author lhf
  */
 
@@ -38,9 +39,11 @@ public class GenNumber {
             if(maxReach) {
                 num = max - Math.random() * (max - min);
             } else { // (min, max)
-                do { // 排除掉num = max的情况就行
-                    num = max - Math.random() * (max - min);
-                } while (num >= max);
+                // (max - 1 - Math.random() * (max - min - 1)) ∈ (min, max - 1]
+                // Math.random() ∈ [0, 1)
+                // 两者相加，可知最终结果取值范围就是 (min, max)
+                // 注意，不要尝试使用乘法结合律
+                num = Math.random() + (max - 1 - Math.random() * (max - min - 1));
             }
         }
         return num;
@@ -70,10 +73,8 @@ public class GenNumber {
             // (min, max]
             if (maxReach) {
                 num = max - rand.nextInt(max - min);
-            } else { // (min, max)
-                do{
-                    num = max - rand.nextInt(max - min);
-                } while (num >= max);
+            } else { // (min, max) = [min + 1, max)
+                num = min + 1 + rand.nextInt(max - min - 1);
             }
         }
         return num;
