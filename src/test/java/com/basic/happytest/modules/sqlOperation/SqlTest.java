@@ -6,10 +6,7 @@ import com.basic.happytest.modules.sqlOperation.dao.StatClassDao;
 import com.basic.happytest.modules.sqlOperation.dao.StatSqlDao;
 import com.basic.happytest.modules.sqlOperation.dao.StatStudentDao;
 import com.basic.happytest.modules.sqlOperation.dao.StatSubjectScoreDao;
-import com.basic.happytest.modules.sqlOperation.entity.ClassCondDto;
-import com.basic.happytest.modules.sqlOperation.entity.ClassTopScoreCondDto;
-import com.basic.happytest.modules.sqlOperation.entity.StuScoreCondDto;
-import com.basic.happytest.modules.sqlOperation.entity.StudentCondDto;
+import com.basic.happytest.modules.sqlOperation.entity.*;
 import com.basic.happytest.modules.sqlOperation.enums.StatStudentStatusEnums;
 import com.basic.happytest.modules.sqlOperation.enums.StatSubjectTypeEnums;
 import com.basic.happytest.modules.sqlOperation.model.StatClass;
@@ -126,6 +123,18 @@ public class SqlTest{
                             + " 数学：" + scoreCondDto.getMathScore() + " 英语：" + scoreCondDto.getEnglishScore());
                 }
             }
+        }
+    }
+
+    @Test
+    public void listClassTotalScoreGradientStatTest() {
+        List<ClassTotalScoreGradientStatDto> dtoList = statSqlDao.listClassTotalScoreGradientStat(StatStudentStatusEnums.ENROLLMENT.getStatus());
+        for (ClassTotalScoreGradientStatDto dto : dtoList) {
+            System.out.println("班级名：" + dto.getName());
+            System.out.println("A: " + dto.getA());
+            System.out.println("B: " + dto.getB());
+            System.out.println("C: " + dto.getC());
+            System.out.println("D: " + dto.getD());
         }
     }
 }

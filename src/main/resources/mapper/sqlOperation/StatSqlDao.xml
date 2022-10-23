@@ -54,4 +54,36 @@
         ) as t1
         where t1.orderNum &lt;= #{topNum}
     </select>
+
+    <select id="listClassTotalScoreGradientStat"
+            resultType="com.basic.happytest.modules.sqlOperation.entity.ClassTotalScoreGradientStatDto">
+        select *
+        from
+        (
+            select className as name, classId,
+                sum(if (gradient = 1, stnNum, 0)) as a,
+                sum(if (gradient = 2, stnNum, 0)) as b,
+                sum(if (gradient = 3, stnNum, 0)) as c,
+                sum(if (gradient = 4, stnNum, 0)) as d
+            from
+            (
+                select className, classId, count(1) as stnNum,
+                    case when sumScore &gt;= 240 then 1
+                        when sumScore &gt;= 210 and sumScore &lt;240 then 2
+                        when sumScore &gt;= 180 and sumScore &lt;210 then 3
+                        else 4 end as gradient
+                from
+                (
+                    select tss.name as className, tss.id as classId, sum(tsss.score) as sumScore
+                    from t_stat_class tss
+                            left join t_stat_student tsst on tss.id = tsst.class_id
+                            left join t_stat_subject_score tsss on tsst.id = tsss.stu_id
+                    <where>
+                        tsst.status = #{enrollmentStatus}
+                    </where>
+                    group by tsst.id
+                ) as t group by classId, gradient
+            ) as t1 group by classId
+        ) as t2 order by classId asc
+    </select>
 </mapper>
