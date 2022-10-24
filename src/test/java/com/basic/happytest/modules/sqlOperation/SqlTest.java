@@ -69,16 +69,19 @@ public class SqlTest{
         }
         for (int i = 0; i < StatSubjectTypeEnums.values().length; i++) {
             Integer subjectType = StatSubjectTypeEnums.values()[i].getType();
+            List<StatSubjectScore> subjectScoreList = new ArrayList<>();
             for (int j = 0; j < studentNum; j++) {
                 StatSubjectScore statSubjectScore = new StatSubjectScore();
-                double score = GenNumber.genDoubleNumber(0.0, true, 100.0, true);
+                // 成绩为百分制，均为0.5的倍数
+                double score = GenNumber.getIntegerNumber(0, true, 200, true) * 0.5;
                 BigDecimal bigDecimal = new BigDecimal(score);
                 statSubjectScore.setScore(bigDecimal.setScale(2, RoundingMode.HALF_UP).doubleValue());
                 statSubjectScore.setStuId(j + 1);
                 statSubjectScore.setSubjectType(subjectType);
                 statSubjectScore.setCreTime(new Date());
-                statSubjectScoreDao.insert(statSubjectScore);
+                subjectScoreList.add(statSubjectScore);
             }
+            statSubjectScoreDao.insertBatch(subjectScoreList);
         }
     }
 
