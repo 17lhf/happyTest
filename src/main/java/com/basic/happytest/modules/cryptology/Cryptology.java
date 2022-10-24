@@ -1,5 +1,6 @@
 package com.basic.happytest.modules.cryptology;
 
+import com.basic.happytest.modules.fileIO.FileIO;
 import com.sun.crypto.provider.SunJCE;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.*;
@@ -42,9 +43,6 @@ import javax.security.auth.x500.X500Principal;
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
@@ -238,9 +236,8 @@ public class Cryptology {
         // PKCS#1 format
         final String PEM_RSA_PRIVATE_START = "-----BEGIN RSA PRIVATE KEY-----";
         final String PEM_RSA_PRIVATE_END = "-----END RSA PRIVATE KEY-----";
-        // todo 统一文件内容加载
-        Path path = Paths.get(pemFilePath);
-        String privateKeyPem = new String(Files.readAllBytes(path));
+        // 文件内容加载
+        String privateKeyPem = FileIO.getFileContent(pemFilePath);
         // java库解析时，只要中间的内容，头尾不要，换行也不要
         privateKeyPem = privateKeyPem.replace(PEM_RSA_PRIVATE_START, "").replace(PEM_RSA_PRIVATE_END, "");
         privateKeyPem = privateKeyPem.replaceAll("\\s", "");

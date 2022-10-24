@@ -65,10 +65,8 @@ public class FileIO {
             throw new OutOfMemoryError();
         }
         byte[] filecontent = new byte[(int) fileLen];
-        try {
-            FileInputStream in = new FileInputStream(file);
+        try (FileInputStream in = new FileInputStream(file)){
             in.read(filecontent);
-            in.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
