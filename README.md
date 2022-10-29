@@ -2,6 +2,7 @@
 一些寻常或奇怪的小测试集合<br />
 建议实现方法结合单元测试的示例来阅读<br />
 有附带postman测试用的json文件，可以导入postman直接使用<br />
+部分内容需要结合前端项目来实现完整流程，[点击前往前端项目](https://github.com/17lhf/vue-happy-test)<br/>
 todo 的地方表示还不确定是否正确
 
 ## 已包含内容有： 
@@ -44,6 +45,8 @@ file lib/ct.sym with class stubs.<br/>
 
 ### (9)fileIO
 <B>关于一些比较怪的文件操作及流的实例</B><br />
+<B>关于单文件/多文件通过接口上传实例</B><br />
+<B>关于CSV文件操作实例</B><br />
 <B>ZIP的压缩和解压</B>
 
 ### (10)subProcess

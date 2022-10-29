@@ -1,6 +1,7 @@
 package com.basic.happytest.modules.fileIO;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.*;
@@ -71,6 +72,26 @@ public class FileIO {
             e.printStackTrace();
         }
         return new String(filecontent, encoding);
+    }
+
+    /**
+     * 依据提供的路径，生成文件夹
+     * @param folderPath 要生成的文件夹的绝对路径
+     * @return true-创建成功，false-创建失败
+     */
+    public static boolean createFolder(String folderPath) {
+        boolean success = true;
+        if(StringUtils.isBlank(folderPath)) {
+            System.out.println("文件夹路径为空，无法创建新文件夹");
+            success = false;
+        } else {
+            File folder = new File(folderPath);
+            if(!folder.mkdirs()) {
+                System.out.println("文件夹创建失败，可能文件夹已存在");
+                success = false;
+            }
+        }
+        return success;
     }
 
     /**
