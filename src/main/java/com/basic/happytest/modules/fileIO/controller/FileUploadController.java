@@ -18,7 +18,7 @@ import java.io.IOException;
 @CrossOrigin
 public class FileUploadController {
 
-    private static final String FILE_STORE_FOLDER = "static/fileIO/emptyFolder/";
+    private static final String FILE_STORE_FOLDER = "static/fileIO/uploadTmp/";
 
     // todo 单文件上传
 
