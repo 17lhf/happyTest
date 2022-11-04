@@ -71,6 +71,9 @@ file lib/ct.sym with class stubs.<br/>
 ### (16)sqlOperation
 这个文件夹是涉及一些复杂的sql操作，特别是一些统计时使用的搜索归类
 
+### (17)feignClient
+关于模拟客户端向其他服务发送请求的示例（使用openfeign）
+
 ### (n) 补充
 <B>1.Linux运行jar包</B><br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
