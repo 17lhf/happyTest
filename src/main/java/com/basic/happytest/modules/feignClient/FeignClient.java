@@ -61,7 +61,7 @@ public class FeignClient {
     }
 
     /**
-     * 自定义SSL校验方式
+     * 自定义SSL校验方式，Https请求时会用上，不影响HTTP的请求
      * @return 自定义SSL校验方式的Client
      */
     public Client ssLClient() {
