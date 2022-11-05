@@ -7,13 +7,13 @@ todo 的地方表示还不确定是否正确
 
 ## 已包含内容有： 
 ### (1)multithreadSync 
-<B>synchronized 和 @Trasational同时使用时，产生的多线程并发问题</B>
+**synchronized 和 @Trasational同时使用时，产生的多线程并发问题**
 
 ### (2)threadVariable 
-<B>多线程的变量在执行中的变动影响与更新</B>
+**多线程的变量在执行中的变动影响与更新**
 
 ### (3)cryptology 
-<B>密码学相关的库、方法使用实例</B><br/>
+**密码学相关的库、方法使用实例**<br/>
 由于其中部分地方使用到了sun.*包，所以需要注意，这类包已经是“Deprecated and restricted API”，不推荐使用<br/>
 需要谨慎考虑用到这个包的几个方法，最好是用平替的方法<br/>
 【官方解释】：javac uses a special symbol table that does not include all Sun-proprietary classes.
@@ -27,66 +27,67 @@ file lib/ct.sym with class stubs.<br/>
 上，这样的程序并不能工作在今后的Java平台上。
 
 ### (4)unboundedWildcardsAndGenerics 
-<B>用List&lt;?&gt;和List&lt;T&gt;来学习类型参数“&lt;T&gt;”和无界通配符“&lt;?&gt;”的区别</B>
+**用List&lt;?&gt;和List&lt;T&gt;来学习类型参数“&lt;T&gt;”和无界通配符“&lt;?&gt;”的区别**
 
 ### (5)exploreJVM 
-<B>探索jvm中classLoader及双亲委托的内容</B>
+**探索jvm中classLoader及双亲委托的内容**
 
 ### (6)judgeExp 
-<B>关于mybatis的dao层传递参数时，xml里的if条件判断使用内置类型_parameter的探索</B><br/>
-<B>以及传入的数字值为0时，mybatis里的if条件判断会将其认为是‘’空字符串的问题</B>(有解决策略，也有规避方式)
+**关于mybatis的dao层传递参数时，xml里的if条件判断使用内置类型_parameter的探索**<br/>
+**以及传入的数字值为0时，mybatis里的if条件判断会将其认为是‘’空字符串的问题**(有解决策略，也有规避方式)
 
 ### (7)ymlConfig 
-<B>关于优雅地读取配置文件中自定义的配置的实例</B>
+**关于优雅地读取配置文件中自定义的配置的实例**
 
 ### (8)lombokExplore 
-<B>关于lombok的注解里的坑</B>（推荐最多只用lombok的getter和setter两个注解，其他的自己实现）<br />
+**关于lombok的注解里的坑**（推荐最多只用lombok的getter和setter两个注解，其他的自己实现）<br />
 可是，即便是使用getter和setter,因为作者在部分细节处逆规范，导致特定条件下会出问题。在本模块中也会对其进行实验
 
 ### (9)fileIO
-<B>关于一些比较怪的文件操作及流的实例</B><br />
-<B>关于单文件/多文件通过接口上传实例</B><br />
-<B>关于CSV文件操作实例</B><br />
-<B>ZIP的压缩和解压</B>
+**关于一些比较怪的文件操作及流的实例**<br />
+**关于单文件/多文件通过接口上传实例**<br />
+**关于CSV文件操作实例**<br />
+**ZIP的压缩和解压**
 
 ### (10)subProcess
-<B>调用子进程</B>
+**调用子进程**
 
 ### (11)mp
-<B>MybatisPlus的使用笔记</B>（包含有：updateById的字段忽略策略）
+**MybatisPlus的使用笔记**（包含有：updateById的字段忽略策略）
 
 ### (12)uniformPackagingReturn
-<B>统一封装应答对象</B>（包含有：解决返回String基本数据类型时的异常）
+**统一封装应答对象**（包含有：解决返回String基本数据类型时的异常）
 
 ### (13)time
-<B>关于时间的一些操作</B>
+**关于时间的一些操作**
 
 ### (14)barcodImage
-这个文件夹底下都是一些条形码图像处理的工具类(注意，需要引入新的包)<br />
-<B>二维码图像处理工具类</B>
+一些条形码图像处理的工具类(注意，需要引入新的包)<br />
+**二维码图像处理工具类**
 
 ### (15)randomUtils
-这个文件夹底下是一些随机生成的工具类（应该都会比较粗糙，毕竟都是拿来作为假数据的）
+**一些随机生成的工具类**（应该都会比较粗糙，毕竟都是拿来作为假数据的）
 
 ### (16)sqlOperation
-这个文件夹是涉及一些复杂的sql操作，特别是一些统计时使用的搜索归类
+**一些复杂的sql操作，特别是一些统计时使用的搜索归类** <br />
+MySQL的DATE类型，在比较时会自动设置为零点零分零秒
 
 ### (17)feignClient
-关于模拟客户端向其他服务发送请求的示例（使用openfeign）
+**关于模拟客户端向其他服务发送请求的示例**（使用openfeign）
 
 ### (n) 补充
-<B>1.Linux运行jar包</B><br/>
+**1.Linux运行jar包**<br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
 通过–spring.profiles.active指定不同的环境(如开发dev、测试test、生产prod等，主要看配置文件里怎么定义) <br />
 nohup （可选）表示本jar包是不挂断地运行命令，退出终端不会影响程序的运行。在默认情况下（非重定向时），会输出一个名叫 nohup.out 的文件到当前目
 录下，如果当前目录的 nohup.out 文件不可写，输出重定向到 $HOME/nohup.out 文件中 <br />
 & （可选）是指在后台运行，但当用户推出(挂起)的时候，命令自动也跟着退出 <br />
 两者结合就是：在后台不挂断地运行 <br />
-<B>2.获取在后台不断运行中的jar包的进程的进程编号</B><br/>
+**2.获取在后台不断运行中的jar包的进程的进程编号**<br/>
 ps aux|grep java <br />
-<B>3.立即强制停止运行在后台不断运行中的jar包进程</B><br/>
+**3.立即强制停止运行在后台不断运行中的jar包进程**<br/>
 kill -9 jar包对应的进程编号 <br />
-<B>4.使用外置配置文件（yml）</B><br />
+**4.使用外置配置文件（yml）**<br />
 SpringBoot外部配置配置文件，使用命令:--spring.config.location=<br/>
 =后面如果是一个文件夹，则会自动去找里面的所有yml文件，并忽略对应的jar包内的配置文件(因为有加载的优先级)
 （此时可以结合--spring.profiles.active来配置环境）。 如果是特定文件，则只会去找单个文件。
