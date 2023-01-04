@@ -3,6 +3,7 @@ package com.basic.happytest.modules.feignClient;
 import feign.*;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
@@ -10,6 +11,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -55,6 +57,7 @@ public class FeignClient {
                 .logLevel(Logger.Level.HEADERS)
                 .logger(new FeignLog(FeignClient.class))
                 .client(ssLClient())
+                .requestInterceptor(new BeforeRequest("nothingStr"))
                 .options(new Request.Options(CONNECT_TIMEOUT, TimeUnit.SECONDS,
                         READ_TIMEOUT, TimeUnit.SECONDS, true))
                 .target(tClass, rootUri);
@@ -62,6 +65,7 @@ public class FeignClient {
 
     /**
      * 自定义SSL校验方式，Https请求时会用上，不影响HTTP的请求
+     * todo 如果是双向校验，则此处要如何提供证书给服务端校验？
      * @return 自定义SSL校验方式的Client
      */
     public Client ssLClient() {
@@ -70,10 +74,35 @@ public class FeignClient {
             X509TrustManager tm = new X509TrustManager() {
                 @Override
                 public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                    System.out.println("(checkClientTrusted)AuthType: " + authType);
+                    if (chain == null || chain.length == 0) {
+                        System.out.println("未提供证书");
+                    } else {
+                        for (X509Certificate x509Certificate : chain) {
+                            System.out.println("(checkClientTrusted)SubjectDN: " + x509Certificate.getSubjectDN());
+                            System.out.println("(checkClientTrusted)IssuerDN: " + x509Certificate.getIssuerDN());
+                        }
+                    }
                 }
 
+                /**
+                 * 校验服务端（如果服务端本身是http协议，则不会进入此方法）
+                 * @param chain 服务端提供的证书
+                 * @param authType 支持的类型
+                 * @throws CertificateException 证书校验异常
+                 */
                 @Override
-                public void checkServerTrusted(X509Certificate[] chain,String authType) throws CertificateException {
+                public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                    System.out.println("(checkServerTrusted)AuthType: " + authType);
+                    if (chain == null || chain.length == 0) {
+                        System.out.println("服务端未提供认证用的证书");
+                    } else {
+                        for (X509Certificate x509Certificate : chain) {
+                            System.out.println("(checkServerTrusted)SubjectDN: " + x509Certificate.getSubjectDN());
+                            System.out.println("(checkServerTrusted)IssuerDN: " + x509Certificate.getIssuerDN());
+                        }
+                        // 这里实际上就可以通过加载上级证书进行对服务端的认证环节
+                    }
                 }
 
                 @Override
@@ -103,6 +132,38 @@ public class FeignClient {
         @Override
         protected void log(String configKey, String format, Object... args) {
             logger.info(String.format(methodTag(configKey) + format, args));
+        }
+    }
+
+    /**
+     * 发送请求前的预处理，例如可以增加请求头之类
+     */
+    static final class BeforeRequest implements RequestInterceptor {
+
+        private final String str;
+
+        /**
+         * 构造函数，可以用来从外界传入一些参数数据
+         * @param str 字符串
+         */
+        BeforeRequest(final String str) {
+            this.str = str;
+        }
+
+        /**
+         * 预处理（这里可以增加请求头，或者对报文进行签名啥的）
+         * @param requestTemplate 请求信息
+         */
+        @Override
+        public void apply(RequestTemplate requestTemplate) {
+            String timestamp = String.valueOf(new Date().getTime());
+            requestTemplate.header("Header-Timestamp", timestamp);
+            System.out.println("Request method: " + requestTemplate.method());
+            System.out.println("Request path: " + requestTemplate.path());
+            System.out.println("Request query line: " + requestTemplate.queryLine());
+            if (requestTemplate.body() != null) {
+                System.out.println("Request body in hex: " + Hex.toHexString(requestTemplate.body()));
+            }
         }
     }
 }

@@ -4,7 +4,6 @@ import com.basic.happytest.modules.feignClient.entity.FormatDto;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
-import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  * 官网地址：https://api.gmit.vip/Docs/#/ 一个用来免费测试接口的网站
@@ -29,5 +28,5 @@ public interface GmitService {
      */
     @RequestLine("POST /Api/WaSentence")
     @Headers("Content-Type: application/json;charset=UTF-8")
-    Object getWaSentence(@RequestBody FormatDto formatDto);
+    Object getWaSentence(FormatDto formatDto);
 }
