@@ -20,7 +20,30 @@ public class FileUploadController {
 
     private static final String FILE_STORE_FOLDER = "static/fileIO/uploadTmp/";
 
-    // todo 单文件上传
+    /**
+     * 处理上传的文件（结合postman测试）
+     * @param file 上传的文件数据
+     * @return 结束标识
+     */
+    @PostMapping("dealWithFile")
+    public Result<String> dealWithFile(@RequestParam("file")MultipartFile file) {
+        if (file == null) {
+            System.out.println("上传内容为空");
+            return Result.success("");
+        }
+        // 这里获取到的是，文件原始的文件名
+        System.out.println("上传文件的原始文件名：" + file.getOriginalFilename());
+        // 这里获取到的是，上传时设置的报文的字段的名字
+        System.out.println("上传文件的文件名：" + file.getName());
+        // 如果是通过前端上传，则往往会自动依据文件后缀进行设置这个值，导致这里获取的话其实并不是特别准确
+        // 实际获取文件类型，是处理文件内容，获取前n位，然后与一个对应表进行比较，哪个匹配就说明它是哪个文件类型
+        // 但是，实测发现，部分文件是没有文件头的，所以判断起来可能存在问题
+        System.out.println("上传文件的类型：" + file.getContentType());
+        // 单位：Byte
+        System.out.println("上传文件的大小：" + file.getSize());
+        // todo 获取文件头，文件头与常见标准文件头匹配以识别真实的文件类型
+        return Result.success("");
+    }
 
     /**
      * 多文件上传 <br/>

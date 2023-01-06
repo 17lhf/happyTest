@@ -3,7 +3,8 @@
 		"_postman_id": "15285795-3890-4e37-a4c3-fc56e93d43b2",
 		"name": "happyTest",
 		"description": "happyTest",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11283219"
 	},
 	"item": [
 		{
@@ -237,6 +238,42 @@
 						"happyTest",
 						"lombok-explore",
 						"useLombokAndProperty"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "dealWithFile",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/D:/JavaProjects/happyTest/README.md"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:12312/happyTest/upload-file/dealWithFile",
+					"host": [
+						"localhost"
+					],
+					"port": "12312",
+					"path": [
+						"happyTest",
+						"upload-file",
+						"dealWithFile"
 					]
 				}
 			},
