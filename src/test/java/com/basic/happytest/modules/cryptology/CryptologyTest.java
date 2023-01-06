@@ -4,6 +4,7 @@ import com.basic.happytest.modules.fileIO.FileIO;
 import com.sun.crypto.provider.SunJCE;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
@@ -548,5 +549,28 @@ class CryptologyTest {
         System.out.println("KeyPair is match? " + Cryptology.validRSAKeyPairMatch(keyPair.getPublic(), keyPair.getPrivate()));
         PrivateKey privateKey = Cryptology.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         System.out.println("KeyPair is match? " + Cryptology.validRSAKeyPairMatch(keyPair.getPublic(), privateKey));
+    }
+
+    /**
+     * 使用BC库加解密（填充方式选择NoPadding），在待加密的值开头是至少有两个0时（十六进制文本），解密后会丢失最开始的两个0，目测是在内部处理时
+     * 因为某种处理方式导致被删除掉了，于是解密结果与原文对不上。 <br/>
+     * 神奇的是，这个特殊的内部处理，只在开头大于等于两个0（十六进制文本）的情况下出问题，如果是1个0或者开头压根就不是0的时候，就一切正常。
+     * 其实，解决办法也很简单，就是改为加解密都使用PKCS1Padding就没问题了
+     * @throws Exception 异常
+     */
+    @Test
+    void testBCDescSpecialCondition() throws Exception {
+        KeyPair keyPair = Cryptology.generateKeyPair("RSA", 2048);
+
+        String tbsInHex = "00873031f2fe44f860ba4545e0445bbea1e84bf79b4ca0d0e03e8536881d36ac";
+        byte[] encData = Cryptology.encryptData(keyPair.getPrivate(), "RSA/ECB/PKCS1Padding", Hex.decode(tbsInHex), BouncyCastleProvider.PROVIDER_NAME);
+        byte[] decData = Cryptology.decryptData(keyPair.getPublic(), "RSA/ECB/PKCS1Padding", encData, BouncyCastleProvider.PROVIDER_NAME);
+        String decDataInHex = Hex.toHexString(decData);
+        System.out.println("解密后：" + decDataInHex);
+        if (tbsInHex.equals(decDataInHex)) {
+            System.out.println("解密后的明文与原文匹配");
+        } else {
+            System.out.println("解密后的明文与原文不匹配");
+        }
     }
 }
