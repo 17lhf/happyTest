@@ -132,4 +132,28 @@ public class FileIO {
         }
         // 结果： hello(回退,) !world
     }
+
+    /**
+     * // todo 待实现 校验文件名/文件夹名是否合法（限制的严格与否起始还是取决于项目需求）
+     * @param parentPath 父文件夹的绝对路径
+     * @param fileName 待校验的文件名/文件夹名
+     * @return true-合法，false-不合法
+     */
+    public static boolean validateFileName(String parentPath, String fileName) {
+        boolean validateResult = false;
+        // 注：以下都是指的ASCII字符时的长度
+        // Windows 的文件名不能包含： \/:*?"<>|
+        // 默认情况下下文件名不区分大小写，但是Win10开始可以改这个设置
+        // 1、以管理员身份运行命令提示符或 PowerShell。
+        // 2、执行如下命令就可以将指定文件夹的内容视为区分大小写：fsutil.exe file setCaseSensitiveInfo <path> enable
+        // 3、如果要将文件夹恢复为不区分大小写，可以执行：fsutil.exe file setCaseSensitiveInfo <path> disable
+        // 4、如果要检查文件夹是否区分大小写，可以执行：fsutil.exe file queryCaseSensitiveInfo <path>
+        // Windows 的文件夹绝对路径总长必须 <= 248, 如果前面文件夹名字太长了，达到了这个上限，则会不允许在底下继续创建新的文件夹
+        // Windows 的文件绝对路径总长必须 <= 260（包含本身的文件名和后缀名）, 如果这个文件存在的绝对路径已经占用了248，则只剩下11的长度可用来写文件名+后缀（还有1长度是路径用的斜杠占用）
+        // Linux 的文件长度限制在：/usr/include/linux/limits.h
+        // 默认情况下：文件名区分大小写（但是不建议用大小写来区分文件），文件名长度必须 <= 255， 文件总的绝对路径 <= 4096
+        // Linux 文件名除了 / 以外，都可以用。但是因为部分字符已经被系统用于特殊用途，所以不建议使用：?@#$&()\|;‘’“”<>
+        // Linux 文件名还有要注意：避免使用+ -或.作为普通文件名的第一个字符 (在Linux下以.开头的文件是属于隐藏文件)
+        return validateResult;
+    }
 }
