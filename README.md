@@ -75,6 +75,9 @@ MySQL的DATE类型，在比较时会自动设置为零点零分零秒
 ### (17)feignClient
 **关于模拟客户端向其他服务发送请求的示例**（使用openfeign）
 
+### (18)system
+**一些关于系统的操作（例如判定当前所处的系统环境）**
+
 ### (n) 补充
 **1.Linux运行jar包**<br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
