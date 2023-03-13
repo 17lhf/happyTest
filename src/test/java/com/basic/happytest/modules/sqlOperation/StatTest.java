@@ -24,12 +24,12 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Sql操作测试
+ * 统计相关 的 Sql操作测试
  * @author lhf
  */
 
 @SpringBootTest
-public class SqlTest{
+public class StatTest {
 
     @Autowired
     private StatClassDao statClassDao;
@@ -139,5 +139,13 @@ public class SqlTest{
             System.out.println("C: " + dto.getC());
             System.out.println("D: " + dto.getD());
         }
+    }
+
+    /**
+     * 排序测试
+     */
+    @Test
+    public void testOrder() {
+
     }
 }

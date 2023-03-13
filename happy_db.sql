@@ -113,16 +113,16 @@ CREATE TABLE `t_stat_subject_score` (
   UNIQUE KEY `id_UNIQUE` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=601 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='统计测试用的学科成绩表';
 
---
--- Dumping data for table `t_multithread_sync`
---
+DROP TABLE IF EXISTS `t_order_teacher`;
+CREATE TABLE `t_order_teacher` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `name` VARCHAR(32) NOT NULL COMMENT '名字',
+  `cre_time` DATETIME NOT NULL COMMENT '创建时间',
+  `upd_time` DATETIME NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE)
+COMMENT = '用于排序测试的教师';
 
-LOCK TABLES `t_multithread_sync` WRITE;
-/*!40000 ALTER TABLE `t_multithread_sync` DISABLE KEYS */;
-INSERT INTO `t_multithread_sync` VALUES (1,300,'Transactional + synchronized + sql'),(2,600,'synchronized + sql'),(3,351,'Transactional + synchronized + mybatisPlus'),(4,600,'Transactional+ synchronized + no select + sql');
-/*!40000 ALTER TABLE `t_multithread_sync` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

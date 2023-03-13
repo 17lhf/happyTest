@@ -70,7 +70,8 @@ file lib/ct.sym with class stubs.<br/>
 
 ### (16)sqlOperation
 **一些复杂的sql操作，特别是一些统计时使用的搜索归类** <br />
-MySQL的DATE类型，在比较时会自动设置为零点零分零秒
+MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
+查询时，如果依据排序列有相同项，则mysql会随机取相同的项的数据，导致数据混乱。<br />
 
 ### (17)feignClient
 **关于模拟客户端向其他服务发送请求的示例**（使用openfeign）

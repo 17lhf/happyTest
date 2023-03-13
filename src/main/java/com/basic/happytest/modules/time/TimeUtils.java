@@ -79,6 +79,17 @@ public class TimeUtils {
     }
 
     /**
+     * 获取指定格式的日期字符串
+     * @param date 日志
+     * @param pattern 格式
+     * @return 指定格式的日期字符串
+     */
+    public static String getFormatTime(Date date, String pattern) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        return simpleDateFormat.format(date);
+    }
+
+    /**
      * 获取日期对应的季节
      * @param date 日期
      * @return 季节（1-4）

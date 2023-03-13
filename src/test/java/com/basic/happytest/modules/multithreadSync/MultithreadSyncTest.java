@@ -30,7 +30,9 @@ public class MultithreadSyncTest {
      * Transactional的范围比synchronized大
      */
 
-
+    /**
+     * 先执行这一行初始化数据
+     */
     @Test
     public void testAdd() {
         // id = 1

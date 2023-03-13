@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.basic.happytest.modules.sqlOperation.dao.OrderTeacherDao">
+    <select id="query" resultType="com.basic.happytest.modules.sqlOperation.model.OrderTeacher">
+        select * from t_order_teacher order by cre_time desc limit #{beginNum}, #{num}
+    </select>
+
+    <select id="queryMultiOrder" resultType="com.basic.happytest.modules.sqlOperation.model.OrderTeacher">
+        select * from t_order_teacher order by cre_time asc, id desc limit #{beginNum}, #{num}
+    </select>
+</mapper>
