@@ -1,7 +1,8 @@
 package com.basic.happytest.modules.cryptology;
 
+import com.basic.happytest.modules.cryptology.entity.CsrInfos;
+import com.basic.happytest.modules.cryptology.enums.*;
 import com.basic.happytest.modules.fileIO.FileIO;
-import com.sun.crypto.provider.SunJCE;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.pkcs.*;
@@ -37,7 +38,6 @@ import sun.security.util.DerValue;
 import sun.security.x509.AVA;
 import sun.security.x509.X509CertImpl;
 
-import javax.crypto.Cipher;
 import javax.crypto.spec.DHPrivateKeySpec;
 import javax.security.auth.x500.X500Principal;
 import java.io.*;
@@ -54,7 +54,7 @@ import java.security.spec.*;
 import java.util.*;
 
 /**
- * 密码学相关的java操作
+ * 非对称密钥相关工具
  * (注意，部分内容会使用到BC库，特别是ECC算法相关，因为jdk不支持ECC)
  * (注意，java里面很多地方其实都是用的PKCS8标准来处理密钥，所以导入到处都会默认以PKCS8标准)
  * (注意，很多地方异常的处理没有做，请自行解决)
@@ -63,7 +63,7 @@ import java.util.*;
  * @author lhf
  */
 
-public class Cryptology {
+public class AsymmetricUtils {
 
     // 解决报错：no such provider: BC
     static {
@@ -72,54 +72,6 @@ public class Cryptology {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * 获取BC库支持的算法
-     */
-    public static void keyAloSupportedInBCLibrary() {
-        Provider provider = new org.bouncycastle.jce.provider.BouncyCastleProvider();
-        for (Provider.Service service : provider.getServices()) {
-            System.out.println(service.getType() + ": " + service.getAlgorithm());
-        }
-    }
-
-    /**
-     * 展示当前所有的算法提供者和信息
-     */
-    public static void showProviders() {
-        System.out.println("-------当前有这些算法提供者-------");
-        for (Provider provider : Security.getProviders()) {
-            System.out.println("算法提供者名：" + provider.getName());
-            System.out.println("算法提供者的版本：" + provider.getVersion());
-            System.out.println("算法提供者的信息：" + provider.getInfo());
-            if(Objects.equals(provider.getName(), "SunJCE")){
-                for (Provider.Service service : provider.getServices()) {
-                    System.out.println(service.getType() + ": " + service.getAlgorithm());
-                }
-            }
-        }
-        System.out.println("------------展示完毕------------");
-    }
-
-    /**
-     * 生成摘要
-     * @param data 等待获取摘要的数据
-     * @param alo 选择的算法， 可选：MD5、SHA-1(或SHA1)、SHA-256(或SHA256)
-     * @return 摘要值
-     * @throws NoSuchAlgorithmException 异常
-     */
-    public static byte[] digestData(byte[] data, String alo) throws NoSuchAlgorithmException {
-        System.out.println("---------------begin digest data---------------");
-        MessageDigest digest = MessageDigest.getInstance(alo);
-        // 更新要计算的内容
-        digest.update(data);
-        // 完成哈希计算，得到摘要
-        byte[] digestValue = digest.digest();
-        System.out.println("Original message(Hex): " + Hex.toHexString(data) + ", Digest Value(HEX): "
-                + Hex.toHexString(digestValue));
-        System.out.println("---------------end digest data---------------");
-        return digestValue;
     }
 
     /**
@@ -142,7 +94,7 @@ public class Cryptology {
         System.out.println("Key format = " + privateKey.getFormat()); // java中一直要求的是PKCS8格式的密钥
 
         KeyFactory keyFactory = KeyFactory.getInstance(alo);
-        if(Objects.equals(alo, "RSA")) {
+        if(KeyAlgorithmEnum.RSA.getAlgorithm().equals(alo)) {
             RSAPrivateKeySpec keySpec= keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
             // 由私钥获取模 N
             BigInteger modulus = keySpec.getModulus();
@@ -166,7 +118,7 @@ public class Cryptology {
             System.out.println("RSA public key exponent(e): " + pubKeySpec.getPublicExponent().toString(10));
             // 由公钥获取模 N
             System.out.println("RSA key size: " + pubKeySpec.getModulus().bitLength());
-        } else if (Objects.equals(alo, "DSA")){
+        } else if (KeyAlgorithmEnum.DSA.getAlgorithm().equals(alo)){
             DSAPrivateKeySpec keySpec = keyFactory.getKeySpec(privateKey, DSAPrivateKeySpec.class);
             System.out.println("P(the private key) = " + keySpec.getP());
             System.out.println("X(the prime) = " + keySpec.getX());
@@ -196,7 +148,8 @@ public class Cryptology {
      */
     public static KeyPair generateECCKeyPair(int keySize) throws Exception {
         System.out.println("---------------begin generate ECC key pair---------------");
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KeyAlgorithmEnum.EC.getAlgorithm(),
+                BouncyCastleProvider.PROVIDER_NAME);
         System.out.println("Provider: " + keyPairGenerator.getProvider());
         keyPairGenerator.initialize(keySize);
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
@@ -259,7 +212,7 @@ public class Cryptology {
         // 这里的keySpec是以PCKS1标准定义的
         RSAPrivateCrtKeySpec keySpec = new RSAPrivateCrtKeySpec(modulus, publicExp, privateExp, prime1,
                 prime2, exp1, exp2, crtCoef);
-        KeyFactory factory = KeyFactory.getInstance("RSA");
+        KeyFactory factory = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
         PrivateKey privateKey = factory.generatePrivate(keySpec);
         System.out.println("Private key algorithm: " + privateKey.getAlgorithm());
         System.out.println("---------------end pem file load private key PKCS1 encoded---------------");
@@ -346,7 +299,7 @@ public class Cryptology {
         // OutputEncryptor 操作器的常规接口，能够生成将输出加密数据的输出流
         OutputEncryptor encryptor = encryptorBuilder.build();
         // 读取无加密保护的私钥
-        PrivateKey privateKey = Cryptology.loadPrivateKey(filePath);
+        PrivateKey privateKey = AsymmetricUtils.loadPrivateKey(filePath);
         // PKCS8生成器
         JcaPKCS8Generator gen2 = new JcaPKCS8Generator(privateKey, encryptor);
         PemObject pemObject = gen2.generate();
@@ -432,7 +385,7 @@ public class Cryptology {
      */
     public static PublicKey loadRSAPubKeyByPriKey(PrivateKey privateKey) throws Exception {
         System.out.println("---------------begin load public key from private key---------------");
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+        KeyFactory kf = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
         PublicKey publicKey;
         RSAPrivateKeySpec prvKeySpec = kf.getKeySpec(privateKey, RSAPrivateKeySpec.class);
         // 参数：公钥模，公钥指数
@@ -523,14 +476,14 @@ public class Cryptology {
         String sigAlo; // 签名算法
         // 区分两种算法
         // RSA
-        if (StringUtils.equals(alo, "RSA")){
+        if (KeyAlgorithmEnum.RSA.getAlgorithm().equals(alo)){
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
-            sigAlo = "SHA256withRSA";
+            sigAlo = SignAlgorithmEnum.SHA256_WITH_RSA.getAlgorithm();
         } else { // ECC
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
-            sigAlo = "SHA256withECDSA";
+            sigAlo = SignAlgorithmEnum.SHA256_WITH_ECDSA.getAlgorithm();
         }
         // 申请者信息
         String subjectStr = "C=" + csrInfos.getCountry() + ",ST="+csrInfos.getState()
@@ -574,14 +527,14 @@ public class Cryptology {
         String sigAlo; // 签名算法
         // 区分两种算法
         // RSA
-        if (StringUtils.equals(alo, "RSA")){
+        if (KeyAlgorithmEnum.RSA.getAlgorithm().equals(alo)){
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
-            sigAlo = "SHA256withRSA";
+            sigAlo = SignAlgorithmEnum.SHA256_WITH_RSA.getAlgorithm();
         } else { // ECC
             publicKey = keyPair.getPublic();
             privateKey = keyPair.getPrivate();
-            sigAlo = "SHA256withECDSA";
+            sigAlo = SignAlgorithmEnum.SHA256_WITH_ECDSA.getAlgorithm();
         }
         // 申请者信息
         String subjectStr = "C=" + csrInfos.getCountry() + ",ST="+csrInfos.getState()
@@ -702,7 +655,7 @@ public class Cryptology {
         System.out.println("---------------begin load CSR from file(" + csrEncodeType + ")---------------");
         // 开始依据不同的编码类型来加载证书请求
         PKCS10CertificationRequest csr;
-        if("PEM".equals(csrEncodeType)) { // pem格式
+        if(EncodeTypeEnum.PEM.getType().equals(csrEncodeType)) { // pem格式
             PEMParser pemParser = new PEMParser(new FileReader(path));
             PemObject pemObject = pemParser.readPemObject();
             byte[] content = pemObject.getContent();
@@ -807,7 +760,8 @@ public class Cryptology {
                 new Date(System.currentTimeMillis() + validDays * 24 * 60 * 60 * 1000), // 过期时间
                 csr.getSubject(),                                                       // 使用者subject
                 csr.getSubjectPublicKeyInfo());
-        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA");
+        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder()
+                .find(SignAlgorithmEnum.SHA256_WITH_RSA.getAlgorithm());
         AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
         ContentSigner contentSigner = new BcRSAContentSignerBuilder(sigAlgId, digAlgId)
                         .build(PrivateKeyFactory.createKey(privateKey.getEncoded()));
@@ -839,13 +793,14 @@ public class Cryptology {
             System.out.println("CSR is not valid!");
             throw new Exception();
         }
-        certFactory = CertificateFactory.getInstance("X.509");
+        certFactory = CertificateFactory.getInstance(CertTypeEnum.X509.getType());
         // 读取Ca证书
         caCert = (X509Certificate) certFactory.generateCertificate(new FileInputStream(issuerCertPath));
         // 读取私钥文件
         caPrivateKey = loadRSAPKCS1PrivateKey(issuerPrvKeyPath);
         // ca的签名算法标识符
-        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA");
+        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder()
+                .find(SignAlgorithmEnum.SHA256_WITH_RSA.getAlgorithm());
         // 摘要算法标识符
         AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
         assert caCert != null;
@@ -877,7 +832,8 @@ public class Cryptology {
                 .build(PrivateKeyFactory.createKey(caPrivateKey.getEncoded()));
         // 生成BC结构的证书
         Security.addProvider(new BouncyCastleProvider());
-        cert = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certGen.build(signer));
+        cert = new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                .getCertificate(certGen.build(signer));
 
         System.out.println("新证书的版本： " + cert.getVersion());
         System.out.println("新证书的subject: " + cert.getSubjectX500Principal().getName());
@@ -902,13 +858,13 @@ public class Cryptology {
                                             String issuerPrvKeyPath, long validDays, boolean isCA,
                                             int pathLenConstraint, String alo) throws Exception {
         System.out.println("---------------begin issue attach extensions cert---------------");
-        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+        CertificateFactory certFactory = CertificateFactory.getInstance(CertTypeEnum.X509.getType());
         // 读取Ca证书
         X509Certificate caCert = (X509Certificate) certFactory.generateCertificate(new FileInputStream(issuerCertPath));
         // 读取私钥文件
         Key caPrivateKey = loadRSAPKCS1PrivateKey(issuerPrvKeyPath);
         // 读取csr的公钥
-        PublicKey csrPubKey = Cryptology.getPubKeyFromCsr(csr, alo);
+        PublicKey csrPubKey = AsymmetricUtils.getPubKeyFromCsr(csr, alo);
         // csr验签
         if(csr.isSignatureValid(new JcaContentVerifierProviderBuilder().build(csr.getSubjectPublicKeyInfo()))){
             System.out.println("CSR is valid!");
@@ -917,7 +873,8 @@ public class Cryptology {
             throw new Exception();
         }
         // ca的签名算法标识符
-        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA");
+        AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder()
+                .find(SignAlgorithmEnum.SHA256_WITH_RSA.getAlgorithm());
         // 摘要算法标识符
         AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
         assert caCert != null;
@@ -1012,7 +969,8 @@ public class Cryptology {
                 .build(PrivateKeyFactory.createKey(caPrivateKey.getEncoded()));
         // 生成BC结构的证书
         Security.addProvider(new BouncyCastleProvider());
-        cert = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certGen.build(signer));
+        cert = new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                .getCertificate(certGen.build(signer));
 
         System.out.println("新证书的版本： " + cert.getVersion());
         System.out.println("新证书的subject: " + cert.getSubjectX500Principal().getName());
@@ -1050,7 +1008,7 @@ public class Cryptology {
      */
     public static PublicKey getPubKeyFromCert(String path) throws Exception {
         System.out.println("---------------begin get public key from CERT---------------");
-        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        CertificateFactory certificateFactory = CertificateFactory.getInstance(CertTypeEnum.X509.getType());
         X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new FileInputStream(path));
         PublicKey publicKey = certificate.getPublicKey();
         System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
@@ -1123,18 +1081,14 @@ public class Cryptology {
         System.out.println("---------------begin (" + type + ") DER to PEM---------------");
         PemObject pemObject;
         byte[] derBytes = Hex.decode(der);
-        switch (type){
-            case "CSR":
-                pemObject = new PemObject("CERTIFICATE REQUEST", derBytes);
-                break;
-            case "CERT":
-                pemObject = new PemObject("CERTIFICATE", derBytes);
-                break;
-            case "PRV_KEY":
-                pemObject = new PemObject("PRIVATE KEY", derBytes);
-                break;
-            default:
-                pemObject = new PemObject("PUBLIC KEY", derBytes);
+        if (DataTypeEnum.CSR.getType().equals(type)) {
+            pemObject = new PemObject(PemTypeEnum.CSR.getType(), derBytes);
+        } else if (DataTypeEnum.CERT.getType().equals(type)) {
+            pemObject = new PemObject(PemTypeEnum.CERT.getType(), derBytes);
+        } else if (DataTypeEnum.PRV_KEY.getType().equals(type)) {
+            pemObject = new PemObject(PemTypeEnum.PRV_KEY.getType(), derBytes);
+        } else {
+            pemObject = new PemObject(PemTypeEnum.PUB_KEY.getType(), derBytes);
         }
         StringWriter stringWriter = new StringWriter();
         JcaPEMWriter pemWriter = new JcaPEMWriter(stringWriter);
@@ -1162,26 +1116,23 @@ public class Cryptology {
      */
     public static void der2Object(String der, String type, String keyAlo) throws Exception {
         System.out.println("---------------begin (" + type + ") DER to Object---------------");
-        switch (type){
-            case "CSR":
-                PKCS10CertificationRequest pkcs10Csr = new PKCS10CertificationRequest(Hex.decode(der));
-                System.out.println("Certificate Request: " + pkcs10Csr.getSubject());
-                break;
-            case "CERT":
-                X509Certificate cert = new X509CertImpl(Hex.decode(der));
-                System.out.println("Certificate: " + cert.getSubjectDN());
-                break;
-            case "PRV_KEY":
-                PKCS8EncodedKeySpec prvKeySpec = new PKCS8EncodedKeySpec(Hex.decode(der));
-                KeyFactory factory = KeyFactory.getInstance(keyAlo, BouncyCastleProvider.PROVIDER_NAME);
-                PrivateKey privateKey = factory.generatePrivate(prvKeySpec);
-                System.out.println("Private Key: " + privateKey.getAlgorithm());
-                break;
-            default:
-                X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Hex.decode(der));
-                KeyFactory factory2 = KeyFactory.getInstance(keyAlo, BouncyCastleProvider.PROVIDER_NAME);
-                PublicKey publicKey = factory2.generatePublic(pubKeySpec);
-                System.out.println("Public Key: " + publicKey.getAlgorithm());
+
+        if (DataTypeEnum.CSR.getType().equals(type)) {
+            PKCS10CertificationRequest pkcs10Csr = new PKCS10CertificationRequest(Hex.decode(der));
+            System.out.println("Certificate Request: " + pkcs10Csr.getSubject());
+        } else if (DataTypeEnum.CERT.getType().equals(type)) {
+            X509Certificate cert = new X509CertImpl(Hex.decode(der));
+            System.out.println("Certificate: " + cert.getSubjectDN());
+        } else if (DataTypeEnum.PRV_KEY.getType().equals(type)) {
+            PKCS8EncodedKeySpec prvKeySpec = new PKCS8EncodedKeySpec(Hex.decode(der));
+            KeyFactory factory = KeyFactory.getInstance(keyAlo, BouncyCastleProvider.PROVIDER_NAME);
+            PrivateKey privateKey = factory.generatePrivate(prvKeySpec);
+            System.out.println("Private Key: " + privateKey.getAlgorithm());
+        } else {
+            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Hex.decode(der));
+            KeyFactory factory2 = KeyFactory.getInstance(keyAlo, BouncyCastleProvider.PROVIDER_NAME);
+            PublicKey publicKey = factory2.generatePublic(pubKeySpec);
+            System.out.println("Public Key: " + publicKey.getAlgorithm());
         }
         System.out.println("---------------end (" + type + ") DER to Object---------------");
     }
@@ -1365,325 +1316,6 @@ public class Cryptology {
     }
 
     /**
-     * 加密（对长度有要求）<br/>
-     * RSA算法原理上，其实要求的明文和密文都是： 0<明文或密文大小<密钥的模大小，其实也对应了我们常说的“0<明文或密文的长度<密钥的模的长度”(长度相等时要额外多一步比较大小)，
-     * 实际上一些加密工具之类的会对明文长度为0的时候进行特殊处理，
-     * 另外，虽然最大可被加密的明文长度是密钥的长度，但是具体的实现工具或规范(如PKCS规范)都有进行限制（特别是当有填充时）。
-     * 所以具体情况要看你用的工具/库的限制是怎样的。
-     * 密文长度也要看工具/库，通常情况下都是模的长度，
-     * <br/>
-     * Java 默认的 RSA加密实现不允许明文长度超过密钥长度(单位是字节，也就是 byte)。
-     * 也就是说，如果我们定义的密钥(如：java.security.KeyPairGenerator.initialize(int keySize) 来定义密钥长度)长度为 1024(单位是位，也就是 bit)。
-     * 生成的密钥长度就是 1024位 /（8位/字节） = 128字节，那么我们需要加密的明文长度不能超过 128字节。
-     * 也就是说，我们最大能将 128 字节长度的明文进行加密，否则会抛异常<br/>
-     * 实测“RSA/ECB/PKCS1Padding”时，2048RSA是最大245，其实PKCS1Padding这种填充方式本来就是要占用至少11的长度，也就是明文只能是256-11=245了。
-     * <br/>
-     * BC库的话，也是密钥长度， 如128，256.超过的话，报错：org.bouncycastle.crypto.DataLengthException: input too large for RSA cipher。
-     * 但是，上面BC库时所说的，都是NoPadding的情况，如果有Padding，则blockSize大小就不一样。
-     * 具体限制可见org.bouncycastle.crypto.AsymmetricBlockCipher的各个实现类的getInputBlockSize方法
-     * <br/>
-     * 正常情况下，NoPadding占用大小是0，也就是你提供的明文可以是当前密钥最大的支持长度。PKCS1Padding占用的位数大小是11，也就是明文长度只能
-     * 是当前密钥最大支持长度-11
-     * <p>
-     * 关于填充：<br/>
-     * OAEP is less vulnerable to padding oracle attacks than PKCS#1 v1.5 padding. GCM is also protected against padding oracle attacks。<br/>
-     * 其实ECB是对称密码的一种分组模式，对非对称密钥没啥用，其实用None就行，例如RSA/None/PKCS1Padding，像RSA加密是不对数据进行分组的。<br/>
-     * 但是，实测发现，sun库要求得带ECB，None的话，得用BC库才支持<br/>
-     * </p>
-     * 注意：如果是ECC，则只能用公钥加密，不支持私钥加密数据 <br/>
-     * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认） <br/>
-     * @param key 用来加密的密钥
-     * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
-     *            “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“、
-     *            “ECIES"(ECIES表示ECC)。
-     * @param data 等待被加密的数据，数据不能太长
-     * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
-     * @return 密文数据
-     * @throws Exception 异常
-     */
-    public static byte[] encryptData(Key key, String alo, byte[] data, String provider) throws Exception{
-        System.out.println("---------------begin encrypt data---------------");
-        System.out.println("alo is: " + alo);
-        System.out.println("data length is: " + data.length);
-        Cipher cipher;
-        if(provider == null){
-            // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
-            cipher = Cipher.getInstance(alo);
-        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals("SunJCE")){
-            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE
-            cipher = Cipher.getInstance(alo, provider);
-        } else {
-            System.out.println("-----------No such provider: " + provider + "!!!-----------------");
-            throw new Exception();
-        }
-        System.out.println("Provider: " + cipher.getProvider());
-        // 使用默认的随机数生成器（未指定第三个参数）
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        byte[] res = cipher.doFinal(data);
-        System.out.println("Hex String type encrypted result data is: " + Hex.toHexString(res));
-        System.out.println("Base64 String type encrypted result data is: " + Base64.getEncoder().encodeToString(res));
-        System.out.println("---------------end encrypt data---------------");
-        return res;
-    }
-
-    /**
-     * 解密（对长度有要求，例如2048长度的RSA只能解密256长度的数据，1024的RSA只能解密128长度的数据）<br/>
-     * <p>
-     *     BC库的输出大小具体可见org.bouncycastle.crypto.AsymmetricBlockCipher的各个实现类的getOutputBlockSize方法
-     * </p>
-     * 注意：如果是ECC，则只能用私钥解密，不支持公钥解密数据<br/>
-     * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认）<br/>
-     * @param key 用来解密的密钥
-     * @param alo 密钥对应的算法/模式/填充模式，要和加密时使用的配置一致，
-     *            支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
-     *            “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“、
-     *            “ECIES"(ECIES表示ECC)
-     * @param encData 等待被解密的密文数据
-     * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
-     * @return 明文数据
-     * @throws Exception 异常
-     */
-    public static byte[] decryptData(Key key, String alo, byte[] encData, String provider) throws Exception{
-        System.out.println("---------------begin decrypt data---------------");
-        System.out.println("alo is: " + alo);
-        System.out.println("encrypted data length is: " + encData.length);
-        Cipher cipher;
-        if(provider == null){
-            // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
-            cipher = Cipher.getInstance(alo);
-        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(new SunJCE().getName())){
-            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE
-            cipher = Cipher.getInstance(alo, provider);
-        } else {
-            System.out.println("-----------No such provider: " + provider + "!!!-----------------");
-            throw new Exception();
-        }
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        System.out.println("Provider: " + cipher.getProvider());
-        byte[] res = cipher.doFinal(encData);
-        System.out.println("Hex String type decrypt result data is: " + Hex.toHexString(res));
-        System.out.println("Base64 String type decrypt result data is: " + Base64.getEncoder().encodeToString(res));
-        System.out.println("---------------end decrypt data---------------");
-        return res;
-    }
-
-    /**
-     * 分段加密（仅支持RSA）<br/>
-     * 更多内容，详见encryptData方法的说明<br/>
-     * <br/>
-     * 另外，每次加密生成密文的长度等于密钥长度，如1024bit的密钥，加密一次出来的密文长度是128字节（byte），
-     * 所以分段加密的最终的密文长度，必然是密钥长度的正整数倍（如：256字节、512字节）<br/>
-     * @param key 用于加密的密钥
-     * @param data 待加密的数据
-     * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
-     *      “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“)
-     * @param blockSize 分段的块的大小，如果密钥大小是2048，NoPadding时最大的块是256，如果是1024则最大的块是128。否则会报错。
-     * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
-     * @return 加密后的密文
-     * @throws Exception 异常
-     */
-    public static byte[] rsaBlockEncrypt(byte[] data, String alo, Key key, int blockSize, String provider) throws Exception {
-        System.out.println("---------------begin rsa block encrypt data---------------");
-        System.out.println("Key algorithm is: " + key.getAlgorithm());
-        Cipher cipher;
-        if(provider == null){
-            // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
-            cipher = Cipher.getInstance(alo);
-        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(new SunJCE().getName())){
-            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE
-            cipher = Cipher.getInstance(alo, provider);
-        } else {
-            System.out.println("-----------No such provider: " + provider + "!!!-----------------");
-            throw new Exception();
-        }
-        // 使用加密模式，并传入密钥
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        System.out.println("Provider: " + cipher.getProvider());
-        // 获取Cipher块的大小（以字节为单位），如果基础算法不是块 cipher，则返回 0
-        // 如果用的是java原生的，则是0
-        // 如果用的是BC库，则2048的RSA默认是255, 1024的RSA默认是127。所以这时候其实也可以就直接使用这个默认值。如：int blockSize = cipher.getBlockSize()
-        // BC库，使用“RSA/ECB/PKCS1Padding”，则2048RSA默认是245
-        System.out.println("Cipher default block size: " + cipher.getBlockSize());
-        // 在给定了输入长度 inputLen（以字节为单位）的情况下，返回用于保存下一个 update 或 doFinal 操作结果所需的输出缓冲区长度的字节数。
-        // 此调用还考虑到来自上一个 update 调用的未处理（已缓存）数据和填充。
-        // 下一个 update 或 doFinal 调用的实际输出长度可能小于此方法返回的长度。
-        // 2048的RSA则对应的是256, 1024的RSA对应的是128
-        System.out.println("Cipher output size: " + cipher.getOutputSize(cipher.getBlockSize()));
-        // 避免等下陷入死循环等问题
-        if(blockSize < 1){
-            throw new Exception("Block size can't be less than 1!");
-        }
-        // 分段加密
-        int inputLen = data.length;
-        // 偏移量
-        int offLen = 0;
-        // 暂存结果
-        ByteArrayOutputStream bops = new ByteArrayOutputStream();
-        // 开始循环加密
-        while(inputLen - offLen > 0) {
-            byte [] cache;
-            if(inputLen - offLen > blockSize) {
-                cache = cipher.doFinal(data, offLen, blockSize);
-            } else {
-                cache = cipher.doFinal(data, offLen,inputLen - offLen);
-            }
-            bops.write(cache);
-            offLen += blockSize;
-        }
-        bops.close();
-        // 获得加密结果
-        byte[] encryptedData = bops.toByteArray();
-        System.out.println("Encrypted data in hex format: " + Hex.toHexString(encryptedData));
-        System.out.println("---------------end rsa block encrypt data---------------");
-        return encryptedData;
-    }
-
-    /**
-     * 分段解密（仅支持RSA）<br/>
-     * 更多内容，详见encryptData方法的说明<br/>
-     * @param encData 待解密的密文
-     * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
-     *       “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“)
-     *       要求必须与加密时使用的一致，否则解密结果会与原文不匹配
-     * @param key 与加密密钥相对应的解密的密钥
-     * @param blockSize 解密分块的大小，如果密钥大小是2048则块大小是256，如果是1024则最大的块是128。
-     *                  此处的256和128其实对应的就是加密时每段被加密后的密文的大小。
-     *                  如果是用BC库，若输入的size不是解密分块大小，则不会报错，但是解密结果与原文对不上。
-     *                  如果是用JAVA库，若输入的size不是解密分块大小，则doFinal会报错javax.crypto.BadPaddingException: Decryption error。
-     * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
-     * @return 解密后的明文
-     * @throws Exception 异常
-     */
-    public static byte[] rsaBlockDecrypt(byte[] encData, String alo, Key key, int blockSize, String provider) throws Exception {
-        System.out.println("---------------begin rsa block decrypt data---------------");
-        System.out.println("Key algorithm is: " + key.getAlgorithm());
-        Cipher cipher;
-        if(provider == null){
-            // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
-            cipher = Cipher.getInstance(alo);
-        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(new SunJCE().getName())){
-            // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE库
-            cipher = Cipher.getInstance(alo, provider);
-        } else {
-            System.out.println("-----------No such provider: " + provider + "!!!-----------------");
-            throw new Exception();
-        }
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        System.out.println("Provider: " + cipher.getProvider());
-        int inputLen = encData.length;
-        // 避免等下陷入死循环等问题
-        if(blockSize < 1){
-            throw new Exception("Block size can't be less than 1!");
-        } else if(inputLen % blockSize != 0){ // 正常被RSA加密后的密文，肯定是单次加密结果的整数倍，也就是解密时要分块的整数倍
-            throw new Exception("Data length is error!");
-        }
-        // 偏移量
-        int offLen = 0;
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        while(inputLen - offLen > 0){
-            byte[] cache;
-            if(inputLen - offLen > blockSize){
-                cache = cipher.doFinal(encData, offLen, blockSize);
-            } else{
-                cache = cipher.doFinal(encData, offLen,inputLen - offLen);
-            }
-            byteArrayOutputStream.write(cache);
-            offLen += blockSize;
-        }
-        byteArrayOutputStream.close();
-        byte[] plainData = byteArrayOutputStream.toByteArray();
-        System.out.println("Plain data in hex format: " + Hex.toHexString(plainData));
-        System.out.println("---------------end rsa block decrypt data---------------");
-        return plainData;
-    }
-
-    /**
-     * 利用密钥对数据进行签名
-     * @param prvKey 私钥（签名用的都是私钥）
-     * @param keyAlo 密钥的算法, 支持：RSA,DSA,ECDSA、ECNR
-     * @param data 待签名数据
-     * @param hashType 签名过程中要用到的摘要算法, 支持：SHA1,SHA256 (较常用的是SHA256)
-     * @return 签名值
-     * @throws Exception 异常
-     */
-    public static byte[] signData(PrivateKey prvKey, String keyAlo, byte[] data, String hashType) throws Exception {
-        System.out.println("---------------begin sign data---------------");
-        String signAlo = hashType + "with" + keyAlo;
-        // java原生对ECC不支持，使用BC库是为了支持EC，如果不用ECC，那么可以不用设置provider
-        Signature signature = Signature.getInstance(signAlo, BouncyCastleProvider.PROVIDER_NAME);
-        signature.initSign(prvKey);
-        signature.update(data);
-        byte[] signatureValue = signature.sign();
-        System.out.println("Source data is(Hex-String): " + Hex.toHexString(data));
-        System.out.println("Signature algorithm is: " + signAlo);
-        System.out.println("Signature data is(Hex-String): " + Hex.toHexString(signatureValue));
-        System.out.println("---------------end sign data---------------");
-        return signatureValue;
-    }
-
-    /**
-     * 利用密钥对数据进行签名(分理论步骤进行，慎用！！！)
-     * @param prvKey 私钥（签名用的都是私钥）
-     * @param keyAlo 密钥的算法, 支持：RSA,DSA
-     * @param data 待签名数据
-     * @param hashType 签名过程中要用到的摘要算法, 支持：SHA-1(或SHA1),SHA-256(或SHA256) (较常用的是SHA-256)
-     * @return 签名值
-     * @throws Exception 异常
-     */
-    public static byte[] signData2(PrivateKey prvKey, String keyAlo, byte[] data, String hashType) throws Exception {
-        System.out.println("---------------begin sign data(way two)---------------");
-        byte[] hashData = Cryptology.digestData(data, hashType);
-        // 这个头很神奇，其实本质是一个ASN1编码的数据，而且值会因为摘要算法变，这里是一个经验值（ todo 不是特别确定，或许可以通过相关的标准文档来确认）
-        // todo 在JCE的实现底层RSACipher里，似乎有一个专门用于签名的Cipher模式，不知道是否可以利用起来以可以自动填充这个未知具体含义的字段
-        String header;
-        if("SHA-1".equals(hashType) || "SHA1".equals(hashType)){
-            header = "3021300906052b0e03021a05000414";
-        } else if("SHA-256".equals(hashType) || "SHA256".equals(hashType)){
-            header = "3031300d060960864801650304020105000420";
-        } else {
-            throw new NoSuchAlgorithmException();
-        }
-        String waitForEncryptData = header + Hex.toHexString(hashData);
-        byte[] signatureValue;
-        if("RSA".equals(keyAlo)) {
-            // 对于RSA密钥，一般签名内部使用的是 RSA/ECB/PKCS1Padding（signature内部就是这么设置，单元测试中可见）
-            signatureValue = encryptData(prvKey, keyAlo + "/ECB/PKCS1Padding", Hex.decode(waitForEncryptData),
-                    BouncyCastleProvider.PROVIDER_NAME);
-        } else{
-            throw new NoSuchAlgorithmException();
-        }
-        System.out.println("Source data is(Hex-String): " + Hex.toHexString(data));
-        System.out.println("Signature algorithm is: " + hashType + "with" + keyAlo);
-        System.out.println("Signature data is(Hex-String): " + Hex.toHexString(signatureValue));
-        System.out.println("---------------end sign data(way two)----------------");
-        return signatureValue;
-    }
-
-    /**
-     * 利用密钥对数据进行验签
-     * @param pubKey 公钥（验签用的都是公钥）
-     * @param keyAlo 密钥算法, 支持：RSA,DSA,ECDSA、ECNR
-     * @param data 原始数据
-     * @param hashType 签名过程中要用到的摘要算法, 支持：SHA1,SHA256 (较常用的是SHA256)
-     * @param signatureValue 签名值
-     * @return true-正确，false-错误
-     * @throws Exception 异常
-     */
-    public static boolean validSignature(PublicKey pubKey, String keyAlo, byte[] data, String hashType,
-                                         byte[] signatureValue) throws Exception {
-        System.out.println("---------------begin valid signature---------------");
-        String signAlo = hashType + "with" + keyAlo;
-        // java原生对ECC不支持，使用BC库是为了支持EC，如果不用ECC，那么可以不用设置provider
-        Signature signature = Signature.getInstance(signAlo, BouncyCastleProvider.PROVIDER_NAME);
-        signature.initVerify(pubKey);
-        signature.update(data);
-        boolean isOK = signature.verify(signatureValue);
-        System.out.println("Signature valid result is: " + isOK);
-        System.out.println("---------------end valid signature---------------");
-        return isOK;
-    }
-
-    /**
      * 验证一个公钥和一个私钥是否匹配，一般就是加密一个数据，然后解密，看看解密后的结果与原始数据是否一致。 <br/>
      * 否则就像这样利用算法原理，去验证RSA公私钥是否匹配
      * @param publicKey 公钥
@@ -1698,7 +1330,7 @@ public class Cryptology {
         BigInteger prvE = rsaPrivateKey.getPublicExponent();
         // 从私钥中获取密钥对共用的模数
         BigInteger prvM = rsaPrivateKey.getModulus();
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        KeyFactory keyFactory = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
         // 把公钥加载成RSA公钥spec对象，以此获取公钥的指数
         RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
         // 依据公钥获取公钥的指数
@@ -1734,7 +1366,7 @@ public class Cryptology {
         System.out.println("keyStore default type is: " + KeyStore.getDefaultType());
         // 此处设置存储的格式为pkcs12,实际上KeyStore还支持JKS(默认)
         // 用F4看KeyStore源码可以看到介绍和示例
-        KeyStore keyStore = KeyStore.getInstance("PKCS12",  new BouncyCastleProvider());
+        KeyStore keyStore = KeyStore.getInstance(KeyStoreTypeEnum.PKCS12.getType(),  new BouncyCastleProvider());
         keyStore.load(null, null);
         java.security.cert.Certificate[] certificates = new java.security.cert.Certificate[1];
         certificates[0] = subCert;
@@ -1754,9 +1386,9 @@ public class Cryptology {
         System.out.println("---------------end generate P12---------------");
         // 验证
         if(rootCert != null || StringUtils.isNotBlank(rootCertAlias)){
-            Cryptology.getCertMsg((X509Certificate) keyStore.getCertificate(rootCertAlias));
+            AsymmetricUtils.getCertMsg((X509Certificate) keyStore.getCertificate(rootCertAlias));
         }
-        Cryptology.getCertMsg((X509Certificate) keyStore.getCertificate(prvKeyAndSubCertAlias));
+        AsymmetricUtils.getCertMsg((X509Certificate) keyStore.getCertificate(prvKeyAndSubCertAlias));
     }
 
     /**
@@ -1777,7 +1409,7 @@ public class Cryptology {
             throw new FileNotFoundException();
         }
         InputStream inputStream = new FileInputStream(file);
-        KeyStore keyStore = KeyStore.getInstance("PKCS12",  new BouncyCastleProvider());
+        KeyStore keyStore = KeyStore.getInstance(KeyStoreTypeEnum.PKCS12.getType(),  new BouncyCastleProvider());
         // 要输入keyStore的口令才能读取
         keyStore.load(inputStream, p12Pwd.toCharArray());
         // 注意这里读取私钥时要提供保护私钥的密码
@@ -1786,11 +1418,11 @@ public class Cryptology {
         System.out.println("Private key algorithm is: " + privateKey.getAlgorithm());
         System.out.println("Private key be created to this object date is: " + keyStore.getCreationDate(prvKeyAlias).toString());
         X509Certificate subCert = (X509Certificate) keyStore.getCertificate(subCertAlias);
-        Cryptology.getCertMsg(subCert);
+        AsymmetricUtils.getCertMsg(subCert);
         System.out.println("SubCert be created to this object date is: " + keyStore.getCreationDate(subCertAlias));
         if(StringUtils.isNotBlank(rootCertAlias)){
             X509Certificate rootCert = (X509Certificate) keyStore.getCertificate(rootCertAlias);
-            Cryptology.getCertMsg(rootCert);
+            AsymmetricUtils.getCertMsg(rootCert);
         }
         System.out.println("SubCert alias is: " + keyStore.getCertificateAlias(subCert));
         System.out.println("---------------begin parse P12---------------");

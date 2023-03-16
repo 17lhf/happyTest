@@ -142,6 +142,7 @@ public class FileIO {
     public static boolean validateFileName(String parentPath, String fileName) {
         boolean validateResult = false;
         // 注：以下都是指的ASCII字符时的长度
+        // Windows官网限制说明：https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
         // Windows 的文件名不能包含： \/:*?"<>|
         // 默认情况下下文件名不区分大小写，但是Win10开始可以改这个设置
         // 1、以管理员身份运行命令提示符或 PowerShell。

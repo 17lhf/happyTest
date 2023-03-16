@@ -1,4 +1,4 @@
-package com.basic.happytest.modules.cryptology;
+package com.basic.happytest.modules.cryptology.entity;
 
 import lombok.Getter;
 import lombok.Setter;
