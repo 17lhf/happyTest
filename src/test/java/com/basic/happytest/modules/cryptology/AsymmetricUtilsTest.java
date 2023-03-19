@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.X509Certificate;
+import java.security.spec.RSAPrivateKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
 
 
@@ -378,7 +380,7 @@ class AsymmetricUtilsTest {
     @Test
     void prvKey2BCRSAPrvKey() throws Exception {
         KeyPair keyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
-        RSAPrivateKey rsaPrivateKey = AsymmetricUtils.prvKey2BCRSAPrvKey(keyPair.getPrivate());
+        RSAPrivateKey rsaPrivateKey = AsymmetricUtils.rsaPrvKey2BCRSAPrvKey(keyPair.getPrivate());
         System.out.println(rsaPrivateKey.getModulus().toString(16));
     }
 
@@ -388,5 +390,89 @@ class AsymmetricUtilsTest {
         System.out.println("KeyPair is match? " + AsymmetricUtils.validRSAKeyPairMatch(keyPair.getPublic(), keyPair.getPrivate()));
         PrivateKey privateKey = AsymmetricUtils.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         System.out.println("KeyPair is match? " + AsymmetricUtils.validRSAKeyPairMatch(keyPair.getPublic(), privateKey));
+    }
+
+    @Test
+    void loadRSAPubKeyOrPrvKeyByExponentAndModule() throws Exception {
+        KeyPair keyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
+        PublicKey publicKey = keyPair.getPublic();
+        PrivateKey privateKey = keyPair.getPrivate();
+        KeyFactory keyFactory = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        RSAPrivateKeySpec prvKeySpec= keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
+        RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
+        PublicKey publicKey1 = AsymmetricUtils.loadRSAPublicKeyByExponentAndModule(pubKeySpec.getPublicExponent(), pubKeySpec.getModulus());
+        PrivateKey privateKey1 = AsymmetricUtils.loadRSAPrivateKeyByExponentAndModule(prvKeySpec.getPrivateExponent(), prvKeySpec.getModulus());
+        if(Arrays.equals(publicKey1.getEncoded(), publicKey.getEncoded())) {
+            System.out.println("public key matches");
+        }
+        if (Arrays.equals(privateKey.getEncoded(), privateKey1.getEncoded())) {
+            System.out.println("private key matches");
+        } else {
+            System.out.println("Orignal Private Key: " + Hex.toHexString(privateKey.getEncoded()));
+            System.out.println("New Private Key: " + Hex.toHexString(privateKey1.getEncoded()));
+        }
+        System.out.println("Algorithm match? " + AsymmetricUtils.validRSAKeyPairMatch(publicKey1, privateKey1));
+        String message = "abcdefg";
+        byte[] encryptData = EncAndDecUtils.encryptData(publicKey1, EncryptAlgorithmEnums.RSA.getAlgorithm(),
+                message.getBytes(StandardCharsets.UTF_8), ProviderEnums.BC.getProvider());
+        byte[] decryptData = EncAndDecUtils.decryptData(privateKey1, EncryptAlgorithmEnums.RSA.getAlgorithm(),
+                encryptData, ProviderEnums.BC.getProvider());
+        System.out.println("Encrypt match? " + Arrays.equals(message.getBytes(StandardCharsets.UTF_8), decryptData));
+        System.out.println("-----private key information-----");
+        AsymmetricUtils.printRSAPrvKeyInformation(privateKey1);
+    }
+
+    @Test
+    void generateRSAKeyPairSpecifiesPubKeyExp() throws Exception {
+        KeyPair keyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
+        KeyFactory keyFactory = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(keyPair.getPublic(), RSAPublicKeySpec.class);
+        AsymmetricUtils.generateRSAKeyPairSpecifiesPubKeyExp(KeyLengthEnums.RSA_2048.getLength(), pubKeySpec.getPublicExponent());
+    }
+
+    @Test
+    void p8KeyAndP1Key() throws Exception {
+        // 获得PKCS8标准密钥对
+        KeyPair keyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
+        PublicKey oriPubKey = keyPair.getPublic();
+        PrivateKey oriPrvKey = keyPair.getPrivate();
+        System.out.println("Original PKCS8 Public Key: " + Hex.toHexString(oriPubKey.getEncoded()));
+        System.out.println("Original PKCS8 Private Key: " + Hex.toHexString(oriPrvKey.getEncoded()));
+        // 获得PKCS1标准公钥
+        byte[] p1PubKeyBytes = AsymmetricUtils.p8PubKey2P1PubKeyBytes(keyPair.getPublic());
+        System.out.println("PKCS1 Public Key: " + Hex.toHexString(p1PubKeyBytes));
+        if (Arrays.equals(oriPubKey.getEncoded(), p1PubKeyBytes)) {
+            System.out.println("PKCS1 Public Key == Original PKCS8 Public Key");
+        } else {
+            System.out.println("PKCS1 Public Key != Original PKCS8 Public Key");
+        }
+        // 获得PKCS1标准私钥
+        byte[] p1PrvKeyBytes = AsymmetricUtils.p8PrvKey2P1PrvKeyBytes(keyPair.getPrivate());
+        System.out.println("PKCS1 Private Key: " + Hex.toHexString(p1PrvKeyBytes));
+        byte[] p1PrvKeyBytes2 = AsymmetricUtils.rsaP8PrvKey2P1PrvKeyBytes2(keyPair.getPrivate());
+        System.out.println("PKCS1 Private Key 2: " + Hex.toHexString(p1PrvKeyBytes2));
+        if (Arrays.equals(p1PrvKeyBytes, p1PrvKeyBytes2)) {
+            System.out.println("PKCS1 Private Key == PKCS1 Private Key 2");
+        } else {
+            System.out.println("PKCS1 Private Key != PKCS1 Private Key 2");
+        }
+        // PKCS1私钥转对象
+        RSAPrivateKey rsaPrivateKey = AsymmetricUtils.rsaP1PrvKey2Obj(p1PrvKeyBytes);
+        System.out.println("PKCS1 Private Key Object: " + rsaPrivateKey.getVersion());
+        // PKCS1公钥转PKCS8对象
+        PublicKey publicKey = AsymmetricUtils.rsaP1PuKey2P8PubKey(p1PubKeyBytes);
+        System.out.println("New PKCS8 Public Key: " + Hex.toHexString(publicKey.getEncoded()));
+        if (Arrays.equals(oriPubKey.getEncoded(), publicKey.getEncoded())) {
+            System.out.println("New PKCS8 Public Key == Original PKCS8 Public Key");
+        } else {
+            System.out.println("New PKCS8 Public Key != Original PKCS8 Public Key");
+        }
+        PublicKey publicKey2 = AsymmetricUtils.rsaP1PuKey2P8PubKey2(p1PubKeyBytes);
+        System.out.println("New PKCS8 Public Key 2: " + Hex.toHexString(publicKey2.getEncoded()));
+        if (Arrays.equals(oriPubKey.getEncoded(), publicKey2.getEncoded())) {
+            System.out.println("New PKCS8 Public Key 2 == Original PKCS8 Public Key");
+        } else {
+            System.out.println("New PKCS8 Public Key 2 != Original PKCS8 Public Key");
+        }
     }
 }

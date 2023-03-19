@@ -95,29 +95,8 @@ public class AsymmetricUtils {
 
         KeyFactory keyFactory = KeyFactory.getInstance(alo);
         if(KeyAlgorithmEnum.RSA.getAlgorithm().equals(alo)) {
-            RSAPrivateKeySpec keySpec= keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
-            // 由私钥获取模 N
-            BigInteger modulus = keySpec.getModulus();
-            int length = modulus.bitLength();
-            // RSA密钥的长度实际上指的是模的长度（以Bit为单位）, 模是私钥和公钥共有的
-            System.out.println("RSA key size: " + length);
-            // RSA byte长度
-            System.out.println("RSA key byte length(by sun.security.rsa.RSACore): " + (length + 7 >> 3));
-            System.out.println("The length of RSA key module in decimal: " + modulus.toString(10).length());
-            // 私钥的指数d
-            System.out.println("RSA private key exponent(d) size: " + keySpec.getPrivateExponent().bitLength());
-            // 借助RSAPrivateKey可以获取私钥的所有信息
-            RSAPrivateKey rsaPrivateKey = prvKey2BCRSAPrvKey(privateKey);
-            System.out.println("RSA private key prime1 length(p): " + rsaPrivateKey.getPrime1().bitLength());
-            System.out.println("RSA private key prime2 length(q): " + rsaPrivateKey.getPrime2().bitLength());
-            System.out.println("p*q = module: " + (rsaPrivateKey.getPrime1().multiply(rsaPrivateKey.getPrime2()))
-                    .equals(rsaPrivateKey.getModulus()));
-            // 以下是公钥信息
-            RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
-            // 公钥的指数e
-            System.out.println("RSA public key exponent(e): " + pubKeySpec.getPublicExponent().toString(10));
-            // 由公钥获取模 N
-            System.out.println("RSA key size: " + pubKeySpec.getModulus().bitLength());
+            printRSAPubKeyInformation(publicKey);
+            printRSAPrvKeyInformation(privateKey);
         } else if (KeyAlgorithmEnum.DSA.getAlgorithm().equals(alo)){
             DSAPrivateKeySpec keySpec = keyFactory.getKeySpec(privateKey, DSAPrivateKeySpec.class);
             System.out.println("P(the private key) = " + keySpec.getP());
@@ -137,6 +116,47 @@ public class AsymmetricUtils {
         System.out.println("---------------end generate key pair---------------");
         System.out.println();
         return keyPair;
+    }
+
+    /**
+     * 打印RSA公钥信息
+     * @param publicKey 公钥
+     * @throws Exception 异常
+     */
+    public static void printRSAPubKeyInformation(PublicKey publicKey) throws Exception {
+        KeyFactory keyFactory = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        // 以下是公钥信息
+        RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
+        // 公钥的指数e
+        System.out.println("RSA public key exponent(e): " + pubKeySpec.getPublicExponent().toString(10));
+        // 由公钥获取模 N
+        System.out.println("RSA key size: " + pubKeySpec.getModulus().bitLength());
+    }
+
+    /**
+     * 打印RSA私钥信息
+     * @param privateKey 私钥
+     * @throws Exception 异常
+     */
+    public static void printRSAPrvKeyInformation(PrivateKey privateKey) throws Exception {
+        KeyFactory keyFactory = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        RSAPrivateKeySpec keySpec= keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
+        // 由私钥获取模 N
+        BigInteger modulus = keySpec.getModulus();
+        int length = modulus.bitLength();
+        // RSA密钥的长度实际上指的是模的长度（以Bit为单位）, 模是私钥和公钥共有的
+        System.out.println("RSA key size: " + length);
+        // RSA byte长度
+        System.out.println("RSA key byte length(by sun.security.rsa.RSACore): " + (length + 7 >> 3));
+        System.out.println("The length of RSA key module in decimal: " + modulus.toString(10).length());
+        // 私钥的指数d
+        System.out.println("RSA private key exponent(d) size: " + keySpec.getPrivateExponent().bitLength());
+        // 借助RSAPrivateKey可以获取私钥的所有信息
+        RSAPrivateKey rsaPrivateKey = rsaPrvKey2BCRSAPrvKey(privateKey);
+        System.out.println("RSA private key prime1 length(p): " + rsaPrivateKey.getPrime1().bitLength());
+        System.out.println("RSA private key prime2 length(q): " + rsaPrivateKey.getPrime2().bitLength());
+        System.out.println("p*q = module: " + (rsaPrivateKey.getPrime1().multiply(rsaPrivateKey.getPrime2()))
+                .equals(rsaPrivateKey.getModulus()));
     }
 
     /**
@@ -326,11 +346,11 @@ public class AsymmetricUtils {
     }
 
     /**
-     * 将java.security.PrivateKey转换成org.bouncycastle.asn1.pkcs.RSAPrivateKey对象
+     * 将java.security.PrivateKey（PKCS8）转换成org.bouncycastle.asn1.pkcs.RSAPrivateKey对象(PKCS1对象)
      * @param privateKey java.security.PrivateKey对象
      * @return org.bouncycastle.asn1.pkcs.RSAPrivateKey对象
      */
-    public static RSAPrivateKey prvKey2BCRSAPrvKey(PrivateKey privateKey) throws Exception {
+    public static RSAPrivateKey rsaPrvKey2BCRSAPrvKey(PrivateKey privateKey) throws Exception {
         // 这里getInstance只接受PKCS1的私钥转换成的byte数组，否则会报错
         // 报错信息：org.bouncycastle.asn1.DLSequence cannot be cast to org.bouncycastle.asn1.ASN1Integer
         // 所以需要先转换成PKCS1的私钥信息，才能输入进来
@@ -338,6 +358,66 @@ public class AsymmetricUtils {
         RSAPrivateKey rsaPrivateKey = RSAPrivateKey.getInstance(p8PrvKey2P1PrvKeyBytes(privateKey));
         System.out.println("RSA key version is: " + rsaPrivateKey.getVersion());
         return rsaPrivateKey;
+    }
+
+    /**
+     * RSA PKCS1标准 私钥 转 PKCS1标准 私钥对象
+     * @param p1KeyBytes PKCS1标准私钥字节数组
+     * @return PKCS1私钥对象
+     */
+    public static RSAPrivateKey rsaP1PrvKey2Obj(byte[] p1KeyBytes) {
+        return RSAPrivateKey.getInstance(p1KeyBytes);
+    }
+
+    /**
+     * RSA PKCS8标准 的私钥转 PCKS1标准 的私钥字节数组（或者可以说是从中提取出最原始的密钥算法的那一部分内容）
+     * @param privateKey java默认的PKCS8标准的私钥对象
+     * @return PCKS1标准的私钥字节数组
+     * @throws Exception 异常
+     */
+    public static byte[] rsaP8PrvKey2P1PrvKeyBytes2(PrivateKey privateKey) throws Exception {
+        PrivateKeyInfo privateKeyInfo = PrivateKeyInfo.getInstance(privateKey.getEncoded());
+        RSAPrivateKey rsaPrivateKey = RSAPrivateKey.getInstance(privateKeyInfo.parsePrivateKey());
+        return rsaPrivateKey.getEncoded();
+    }
+
+    /**
+     * PKCS8标准 的公钥转 PKCS1标准的公钥字节数组
+     * @param pubKey PKCS8标准的公钥
+     * @return PKCS1标准的公钥字节数组
+     * @throws Exception 异常
+     */
+    public static byte[] p8PubKey2P1PubKeyBytes(PublicKey pubKey) throws Exception {
+        SubjectPublicKeyInfo publicKeyInfo = SubjectPublicKeyInfo.getInstance(pubKey.getEncoded());
+        ASN1Encodable pubKeyP1Asn1Encodable = publicKeyInfo.parsePublicKey();
+        ASN1Primitive asn1Primitive = pubKeyP1Asn1Encodable.toASN1Primitive();
+        return asn1Primitive.getEncoded();
+    }
+
+    /**
+     * RSA PKCS1公钥转PKCS8公钥（方式1）（含有已弃用的类）
+     * @param p1PubKeyBytes PKCS1公钥数组
+     * @return PKCS8公钥对象
+     * @throws Exception 异常
+     */
+    public static PublicKey rsaP1PuKey2P8PubKey(byte[] p1PubKeyBytes) throws Exception {
+        RSAPublicKeyStructure rsaPublicKeyStructure = new RSAPublicKeyStructure((ASN1Sequence) ASN1Sequence.fromByteArray(p1PubKeyBytes));
+        RSAPublicKeySpec rsaPublicKeySpec = new RSAPublicKeySpec(rsaPublicKeyStructure.getModulus(), rsaPublicKeyStructure.getPublicExponent());
+        KeyFactory keyFactory = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        return keyFactory.generatePublic(rsaPublicKeySpec);
+    }
+
+    /**
+     * RSA PKCS1公钥转PKCS8公钥（方式2）（推荐使用的方式）
+     * @param p1PubKeyBytes PKCS1公钥数组
+     * @return PKCS8公钥对象
+     * @throws Exception 异常
+     */
+    public static PublicKey rsaP1PuKey2P8PubKey2(byte[] p1PubKeyBytes) throws Exception {
+        RSAPublicKey rsaPub = RSAPublicKey.getInstance(p1PubKeyBytes);
+        KeyFactory kf = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        PublicKey publicKey = kf.generatePublic(new RSAPublicKeySpec(rsaPub.getModulus(), rsaPub.getPublicExponent()));
+        return publicKey;
     }
 
     /**
@@ -395,6 +475,58 @@ public class AsymmetricUtils {
         System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
         System.out.println("---------------end load public key from private key---------------");
         return publicKey;
+    }
+
+    /**
+     * 依据指数和模，生成RSA公钥
+     * @param exponent 指数
+     * @param modules 模
+     * @return RSA公钥对象
+     * @throws Exception 异常
+     */
+    public static PublicKey loadRSAPublicKeyByExponentAndModule(BigInteger exponent, BigInteger modules) throws Exception {
+        System.out.println("---------------begin load public key by exponent and modules---------------");
+        RSAPublicKeySpec keySpec = new RSAPublicKeySpec(modules, exponent);
+        KeyFactory kf = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        PublicKey publicKey = kf.generatePublic(keySpec);
+        System.out.println("Public key algorithm: " + publicKey.getAlgorithm());
+        System.out.println("---------------end load public key by exponent and modules---------------");
+        return publicKey;
+    }
+
+    /**
+     * 依据指数和模，生成RSA私钥(未设置p、q，编码数据比原来更短，且导致只能用于加解密，无法用于推算公钥或者用算法的方式判定是否与公钥匹配)
+     * @param exponent 指数
+     * @param module 模
+     * @return RSA私钥对象
+     * @throws Exception 异常
+     */
+    public static PrivateKey loadRSAPrivateKeyByExponentAndModule(BigInteger exponent, BigInteger module) throws Exception {
+        System.out.println("---------------begin load private key by exponent and modules---------------");
+        RSAPrivateKeySpec keySpec = new RSAPrivateKeySpec(module, exponent);
+        KeyFactory kf = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        PrivateKey privateKey = kf.generatePrivate(keySpec);
+        printRSAPrvKeyInformation(privateKey);
+        System.out.println("---------------end load private key by exponent and modules---------------");
+        return privateKey;
+    }
+
+    /**
+     * 依据密钥长度和公钥指数来生成RSA密钥对
+     * @param keySize 密钥长度
+     * @param pubKeyExponent 公钥指数
+     * @return 密钥对
+     */
+    public static KeyPair generateRSAKeyPairSpecifiesPubKeyExp(int keySize, BigInteger pubKeyExponent) throws Exception {
+        System.out.println("---------------begin generate RSA key pair specifies public key exponent---------------");
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        keyPairGenerator.initialize(new RSAKeyGenParameterSpec(keySize, pubKeyExponent));
+        System.out.println("Provider: " + keyPairGenerator.getProvider());
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        printRSAPubKeyInformation(keyPair.getPublic());
+        printRSAPrvKeyInformation(keyPair.getPrivate());
+        System.out.println("---------------end generate RSA key pair specifies public key exponent---------------");
+        return keyPair;
     }
 
     /**
@@ -1325,7 +1457,7 @@ public class AsymmetricUtils {
      */
     public static boolean validRSAKeyPairMatch(PublicKey publicKey, PrivateKey privateKey) throws Exception {
         // 必须把私钥转成BC库里的RSA私钥对象，才是PKCS1标准的私钥形式，此时才能依据私钥获取一些理论算法中提及的各种密钥参数
-        RSAPrivateKey rsaPrivateKey = prvKey2BCRSAPrvKey(privateKey);
+        RSAPrivateKey rsaPrivateKey = rsaPrvKey2BCRSAPrvKey(privateKey);
         // 从私钥中获取公钥的指数
         BigInteger prvE = rsaPrivateKey.getPublicExponent();
         // 从私钥中获取密钥对共用的模数
