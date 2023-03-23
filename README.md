@@ -79,6 +79,9 @@ MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
 ### (18)system
 **一些关于系统的操作（例如判定当前所处的系统环境）**
 
+### (18)math
+**一些关于数学的操作（包含但不限于进制转换处理）**
+
 ### (n) 补充
 **1.Linux运行jar包**<br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
