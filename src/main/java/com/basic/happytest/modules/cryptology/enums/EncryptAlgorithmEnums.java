@@ -12,7 +12,13 @@ public enum EncryptAlgorithmEnums {
 
     RSA_NONE_OAEP_WITH_SHA1_AND_MGF1PADDING("RSA/None/OAEPWithSHA-1AndMGF1Padding"),
 
+    // OAEP cannot be used to sign or verify signatures
+    RSA_ECB_OAEP_WITH_SHA1_AND_MGF1PADDING("RSA/ECB/OAEPWithSHA-1AndMGF1Padding"),
+
     RSA_NONE_OAEP_WITH_SHA256_AND_MGF1PADDING("RSA/None/OAEPWithSHA-256AndMGF1Padding"),
+
+    // OAEP cannot be used to sign or verify signatures
+    RSA_ECB_OAEP_WITH_SHA256_AND_MGF1PADDING("RSA/ECB/OAEPWithSHA-256AndMGF1Padding"),
 
     RSA_ECB_NOPADDING("RSA/ECB/NoPadding"),
 

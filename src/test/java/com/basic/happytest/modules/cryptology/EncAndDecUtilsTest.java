@@ -10,11 +10,14 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
 
@@ -31,30 +34,29 @@ class EncAndDecUtilsTest {
         String s = "abc123,.中文";
         byte[] sBytes = s.getBytes(StandardCharsets.UTF_8);
 
-
         String ecAlo = EncryptAlgorithmEnums.ECIES.getAlgorithm();
         int ecSize = KeyLengthEnums.EC_256.getLength();
         KeyPair ecKeyPair = AsymmetricUtils.generateECCKeyPair(ecSize);
-        byte[] ecEncData = EncAndDecUtils.encryptData(ecKeyPair.getPublic(), ecAlo, sBytes, null);
-        byte[] ecDecData = EncAndDecUtils.decryptData(ecKeyPair.getPrivate(), ecAlo, ecEncData, null);
+        byte[] ecEncData = EncAndDecUtils.encryptData(ecKeyPair.getPublic(), ecAlo, sBytes);
+        byte[] ecDecData = EncAndDecUtils.decryptData(ecKeyPair.getPrivate(), ecAlo, ecEncData);
         System.out.println(new String(ecDecData, StandardCharsets.UTF_8));
 
         String alo = KeyAlgorithmEnum.RSA.getAlgorithm();
         Integer size = KeyLengthEnums.RSA_2048.getLength();
         KeyPair keyPair = AsymmetricUtils.generateKeyPair(alo, size);
-        byte[] encData1 = EncAndDecUtils.encryptData(keyPair.getPrivate(), alo, sBytes, null);
-        byte[] encData2 = EncAndDecUtils.encryptData(keyPair.getPrivate(), EncryptAlgorithmEnums.RSA_ECB_PKCS1PADDING.getAlgorithm(), sBytes, null);
-        byte[] encData3 = EncAndDecUtils.encryptData(keyPair.getPrivate(), EncryptAlgorithmEnums.RSA_NONE_OAEP_WITH_SHA1_AND_MGF1PADDING.getAlgorithm(), sBytes, null);
-        byte[] encData4 = EncAndDecUtils.encryptData(keyPair.getPrivate(), EncryptAlgorithmEnums.RSA_NONE_OAEP_WITH_SHA256_AND_MGF1PADDING.getAlgorithm(), sBytes, null);
-        byte[] encData5 = EncAndDecUtils.encryptData(keyPair.getPrivate(), EncryptAlgorithmEnums.RSA_ECB_NOPADDING.getAlgorithm(), sBytes, null);
-        byte[] encData6 = EncAndDecUtils.encryptData(keyPair.getPrivate(), EncryptAlgorithmEnums.RSA_NONE_NOPADDING.getAlgorithm(), sBytes, null);
+        byte[] encData1 = EncAndDecUtils.encryptData(keyPair.getPrivate(), alo, sBytes);
+        byte[] encData2 = EncAndDecUtils.encryptData(keyPair.getPrivate(), EncryptAlgorithmEnums.RSA_ECB_PKCS1PADDING.getAlgorithm(), sBytes);
+        byte[] encData3 = EncAndDecUtils.encryptData(keyPair.getPrivate(), EncryptAlgorithmEnums.RSA_NONE_OAEP_WITH_SHA1_AND_MGF1PADDING.getAlgorithm(), sBytes);
+        byte[] encData4 = EncAndDecUtils.encryptData(keyPair.getPrivate(), EncryptAlgorithmEnums.RSA_NONE_OAEP_WITH_SHA256_AND_MGF1PADDING.getAlgorithm(), sBytes);
+        byte[] encData5 = EncAndDecUtils.encryptData(keyPair.getPrivate(), EncryptAlgorithmEnums.RSA_ECB_NOPADDING.getAlgorithm(), sBytes);
+        byte[] encData6 = EncAndDecUtils.encryptData(keyPair.getPrivate(), EncryptAlgorithmEnums.RSA_NONE_NOPADDING.getAlgorithm(), sBytes);
 
-        byte[] decData1 = EncAndDecUtils.decryptData(keyPair.getPublic(), alo, encData1, null);
-        byte[] decData2 = EncAndDecUtils.decryptData(keyPair.getPublic(), EncryptAlgorithmEnums.RSA_ECB_PKCS1PADDING.getAlgorithm(), encData2, null);
-        byte[] decData3 = EncAndDecUtils.decryptData(keyPair.getPublic(), EncryptAlgorithmEnums.RSA_NONE_OAEP_WITH_SHA1_AND_MGF1PADDING.getAlgorithm(), encData3, null);
-        byte[] decData4 = EncAndDecUtils.decryptData(keyPair.getPublic(), EncryptAlgorithmEnums.RSA_NONE_OAEP_WITH_SHA256_AND_MGF1PADDING.getAlgorithm(), encData4, null);
-        byte[] decData5 = EncAndDecUtils.decryptData(keyPair.getPublic(), EncryptAlgorithmEnums.RSA_ECB_NOPADDING.getAlgorithm(), encData5, null);
-        byte[] decData6 = EncAndDecUtils.decryptData(keyPair.getPublic(), EncryptAlgorithmEnums.RSA_NONE_NOPADDING.getAlgorithm(), encData6, null);
+        byte[] decData1 = EncAndDecUtils.decryptData(keyPair.getPublic(), alo, encData1);
+        byte[] decData2 = EncAndDecUtils.decryptData(keyPair.getPublic(), EncryptAlgorithmEnums.RSA_ECB_PKCS1PADDING.getAlgorithm(), encData2);
+        byte[] decData3 = EncAndDecUtils.decryptData(keyPair.getPublic(), EncryptAlgorithmEnums.RSA_NONE_OAEP_WITH_SHA1_AND_MGF1PADDING.getAlgorithm(), encData3);
+        byte[] decData4 = EncAndDecUtils.decryptData(keyPair.getPublic(), EncryptAlgorithmEnums.RSA_NONE_OAEP_WITH_SHA256_AND_MGF1PADDING.getAlgorithm(), encData4);
+        byte[] decData5 = EncAndDecUtils.decryptData(keyPair.getPublic(), EncryptAlgorithmEnums.RSA_ECB_NOPADDING.getAlgorithm(), encData5);
+        byte[] decData6 = EncAndDecUtils.decryptData(keyPair.getPublic(), EncryptAlgorithmEnums.RSA_NONE_NOPADDING.getAlgorithm(), encData6);
 
         System.out.println(new String(decData1, StandardCharsets.UTF_8));
         System.out.println(new String(decData2, StandardCharsets.UTF_8));
@@ -83,6 +85,45 @@ class EncAndDecUtilsTest {
         byte[] encData = EncAndDecUtils.encryptData(keyPair.getPublic(), alo, bytes, ProviderEnums.BC.getProvider());
         byte[] decData = EncAndDecUtils.decryptData(keyPair.getPrivate(), alo, encData, ProviderEnums.BC.getProvider());
         System.out.println(Arrays.equals(bytes, decData));
+    }
+
+    /**
+     * 关于使用指定填充模式的加解密测试（OAEP）
+     * @throws Exception 异常
+     */
+    @Test
+    void oaepEncryptAndDecryptData2() throws Exception {
+        String s = "abc123,.中文";
+        byte[] sBytes = s.getBytes(StandardCharsets.UTF_8);
+
+        Integer size = KeyLengthEnums.RSA_2048.getLength();
+        String alo = KeyAlgorithmEnum.RSA.getAlgorithm();
+        KeyPair keyPair = AsymmetricUtils.generateKeyPair(alo, size);
+
+        String encAlo = EncryptAlgorithmEnums.RSA_ECB_OAEP_WITH_SHA1_AND_MGF1PADDING.getAlgorithm();
+        OAEPParameterSpec oaepParams = new OAEPParameterSpec("SHA1", "MGF1", new MGF1ParameterSpec("SHA-1"), PSource.PSpecified.DEFAULT);
+
+        // SUN JCE
+        byte[] encData = EncAndDecUtils.encryptData(keyPair.getPublic(), encAlo, sBytes, ProviderEnums.SUN.getProvider());
+        byte[] decData = EncAndDecUtils.decryptData(keyPair.getPrivate(), encAlo, encData, ProviderEnums.SUN.getProvider());
+        System.out.println(new String(decData, StandardCharsets.UTF_8));
+        // SUN JCE OAEPParameterSpec
+        byte[] encData1 = EncAndDecUtils.encryptData(keyPair.getPublic(), encAlo, sBytes, ProviderEnums.SUN.getProvider(), oaepParams);
+        byte[] decData1 = EncAndDecUtils.decryptData(keyPair.getPrivate(), encAlo, encData1, ProviderEnums.SUN.getProvider(), oaepParams);
+        System.out.println(new String(decData1, StandardCharsets.UTF_8));
+        // BC
+        byte[] encData2 = EncAndDecUtils.encryptData(keyPair.getPublic(), encAlo, sBytes, ProviderEnums.BC.getProvider());
+        byte[] decData2 = EncAndDecUtils.decryptData(keyPair.getPrivate(), encAlo, encData2, ProviderEnums.BC.getProvider());
+        System.out.println(new String(decData2, StandardCharsets.UTF_8));
+        // BC OAEPParameterSpec
+        byte[] encData3 = EncAndDecUtils.encryptData(keyPair.getPublic(), encAlo, sBytes, ProviderEnums.BC.getProvider(), oaepParams);
+        byte[] decData3 = EncAndDecUtils.decryptData(keyPair.getPrivate(), encAlo, encData3, ProviderEnums.BC.getProvider(), oaepParams);
+        System.out.println(new String(decData3, StandardCharsets.UTF_8));
+        // BC NONE OAEPParameterSpec
+        String encAlo1 = EncryptAlgorithmEnums.RSA_NONE_OAEP_WITH_SHA1_AND_MGF1PADDING.getAlgorithm();
+        byte[] encData4 = EncAndDecUtils.encryptData(keyPair.getPublic(), encAlo1, sBytes, ProviderEnums.BC.getProvider(), oaepParams);
+        byte[] decData4 = EncAndDecUtils.decryptData(keyPair.getPrivate(), encAlo1, encData4, ProviderEnums.BC.getProvider(), oaepParams);
+        System.out.println(new String(decData4, StandardCharsets.UTF_8));
     }
 
     /**

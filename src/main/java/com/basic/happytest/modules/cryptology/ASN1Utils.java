@@ -55,7 +55,7 @@ public class ASN1Utils {
             System.out.println("内容长度，十六进制表示为：" + length2 + ", 十进制表示为：" + Integer.parseInt(length2, 16));
             String objId = pubKeyHex.substring(nowIndex, nowIndex + 18);
             nowIndex += 18;
-            // 1.2.840.113549.1.1是RSA加密算法的标识符，而42 134 72 134 247 13 1 1是该算法的OID（Object Identifier）表示方式
+            // 1.2.840.113549.1.1是RSA算法的标识符，而42 134 72 134 247 13 1 1是该算法的OID（Object Identifier）表示方式 todo 不知道两种oid表示方式为什么相等
             System.out.println("ObjectId: " + objId);
 
             String nullStr = pubKeyHex.substring(nowIndex, nowIndex + 4);

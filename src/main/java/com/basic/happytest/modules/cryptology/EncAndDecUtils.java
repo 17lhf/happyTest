@@ -9,6 +9,7 @@ import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
 import java.security.Key;
 import java.security.Security;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.Base64;
 
 /**
@@ -25,6 +26,31 @@ public class EncAndDecUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 加密（对长度有要求）
+     * @param key 用于加密的密钥
+     * @param alo 算法
+     * @param data 待加密数据
+     * @return 加密结果
+     * @throws Exception 异常
+     */
+    public static byte[] encryptData(Key key, String alo, byte[] data) throws Exception {
+        return encryptData(key, alo, data, null);
+    }
+
+    /**
+     * 加密（对长度有要求）
+     * @param key 用于加密的密钥
+     * @param alo 算法
+     * @param data 待加密数据
+     * @param provider 算法提供者
+     * @return 加密结果
+     * @throws Exception 异常
+     */
+    public static byte[] encryptData(Key key, String alo, byte[] data, String provider) throws Exception {
+        return encryptData(key, alo, data, provider, null);
     }
 
     /**
@@ -56,15 +82,14 @@ public class EncAndDecUtils {
      * 注意：如果是ECC，则只能用公钥加密，不支持私钥加密数据 <br/>
      * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认） <br/>
      * @param key 用来加密的密钥
-     * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
-     *            “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“、
-     *            “ECIES"(ECIES表示ECC)。
+     * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）
      * @param data 等待被加密的数据，数据不能太长
      * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
+     * @param spec 填充模式
      * @return 密文数据
      * @throws Exception 异常
      */
-    public static byte[] encryptData(Key key, String alo, byte[] data, String provider) throws Exception{
+    public static byte[] encryptData(Key key, String alo, byte[] data, String provider, AlgorithmParameterSpec spec) throws Exception {
         System.out.println("---------------begin encrypt data---------------");
         System.out.println("alo is: " + alo);
         System.out.println("data length is: " + data.length);
@@ -80,13 +105,43 @@ public class EncAndDecUtils {
             throw new Exception();
         }
         System.out.println("Provider: " + cipher.getProvider());
-        // 使用默认的随机数生成器（未指定第三个参数）
-        cipher.init(Cipher.ENCRYPT_MODE, key);
+        // 使用默认的随机数生成器和算法参数配置
+        if (spec == null) {
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+        } else {
+            cipher.init(Cipher.ENCRYPT_MODE, key, spec);
+        }
+
         byte[] res = cipher.doFinal(data);
         System.out.println("Hex String type encrypted result data is: " + Hex.toHexString(res));
         System.out.println("Base64 String type encrypted result data is: " + Base64.getEncoder().encodeToString(res));
         System.out.println("---------------end encrypt data---------------");
         return res;
+    }
+
+    /**
+     * 解密（对长度有要求，例如2048长度的RSA只能解密256长度的数据，1024的RSA只能解密128长度的数据）
+     * @param key 解密密钥
+     * @param alo 算法
+     * @param encData 被加密的数据
+     * @return 解密后的数据
+     * @throws Exception 异常
+     */
+    public static byte[] decryptData(Key key, String alo, byte[] encData) throws Exception {
+        return decryptData(key, alo, encData, null);
+    }
+
+    /**
+     * 解密（对长度有要求，例如2048长度的RSA只能解密256长度的数据，1024的RSA只能解密128长度的数据）
+     * @param key 解密密钥
+     * @param alo 算法
+     * @param encData 被加密的数据
+     * @param provider 算法提供者
+     * @return 解密后的数据
+     * @throws Exception 异常
+     */
+    public static byte[] decryptData(Key key, String alo, byte[] encData, String provider) throws Exception {
+        return decryptData(key, alo, encData, provider, null);
     }
 
     /**
@@ -98,15 +153,14 @@ public class EncAndDecUtils {
      * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认）<br/>
      * @param key 用来解密的密钥
      * @param alo 密钥对应的算法/模式/填充模式，要和加密时使用的配置一致，
-     *            支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）、
-     *            “RSA/ECB/PKCS1Padding”、”RSA/ECB/OAEPWithSHA-1AndMGF1Padding“、”RSA/ECB/OAEPWithSHA-256AndMGF1Padding“、
-     *            “ECIES"(ECIES表示ECC)
+     *            支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）
      * @param encData 等待被解密的密文数据
      * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
+     * @param spec 填充模式
      * @return 明文数据
      * @throws Exception 异常
      */
-    public static byte[] decryptData(Key key, String alo, byte[] encData, String provider) throws Exception{
+    public static byte[] decryptData(Key key, String alo, byte[] encData, String provider, AlgorithmParameterSpec spec) throws Exception {
         System.out.println("---------------begin decrypt data---------------");
         System.out.println("alo is: " + alo);
         System.out.println("encrypted data length is: " + encData.length);
@@ -121,7 +175,13 @@ public class EncAndDecUtils {
             System.out.println("-----------No such provider: " + provider + "!!!-----------------");
             throw new Exception();
         }
-        cipher.init(Cipher.DECRYPT_MODE, key);
+        // 使用默认的随机数生成器和算法参数配置
+        if (spec == null) {
+            cipher.init(Cipher.DECRYPT_MODE, key);
+        } else {
+            cipher.init(Cipher.DECRYPT_MODE, key, spec);
+        }
+
         System.out.println("Provider: " + cipher.getProvider());
         byte[] res = cipher.doFinal(encData);
         System.out.println("Hex String type decrypt result data is: " + Hex.toHexString(res));
