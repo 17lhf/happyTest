@@ -6,6 +6,12 @@ package com.basic.happytest.modules.cryptology.enums;
  */
 
 public enum EncryptAlgorithmEnums {
+    AES("AES"),
+    // 此时要求数据长度为 16*n 字节
+    AES_CBC_NOPADDING("AES/CBC/NoPadding"),
+    AES_CBC_PKCS5PADDING("AES/CBC/PKCS5Padding"),
+
+
     RSA("RSA"),
 
     RSA_ECB_PKCS1PADDING("RSA/ECB/PKCS1Padding"),

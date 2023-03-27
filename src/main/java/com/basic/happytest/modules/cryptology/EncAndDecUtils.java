@@ -30,7 +30,7 @@ public class EncAndDecUtils {
 
     /**
      * 加密（对长度有要求）
-     * @param key 用于加密的密钥
+     * @param key 用于加密的密钥(支持对称密钥和非对称密钥)
      * @param alo 算法
      * @param data 待加密数据
      * @return 加密结果
@@ -42,7 +42,7 @@ public class EncAndDecUtils {
 
     /**
      * 加密（对长度有要求）
-     * @param key 用于加密的密钥
+     * @param key 用于加密的密钥(支持对称密钥和非对称密钥)
      * @param alo 算法
      * @param data 待加密数据
      * @param provider 算法提供者
@@ -55,6 +55,8 @@ public class EncAndDecUtils {
 
     /**
      * 加密（对长度有要求）<br/>
+     * 支持对称密钥和非对称密钥<br/>
+     * 通常情况下RSA用的多<br/>
      * RSA算法原理上，其实要求的明文和密文都是： 0<明文或密文大小<密钥的模大小，其实也对应了我们常说的“0<明文或密文的长度<密钥的模的长度”(长度相等时要额外多一步比较大小)，
      * 实际上一些加密工具之类的会对明文长度为0的时候进行特殊处理，
      * 另外，虽然最大可被加密的明文长度是密钥的长度，但是具体的实现工具或规范(如PKCS规范)都有进行限制（特别是当有填充时）。
@@ -71,6 +73,8 @@ public class EncAndDecUtils {
      * 但是，上面BC库时所说的，都是NoPadding的情况，如果有Padding，则blockSize大小就不一样。
      * 具体限制可见org.bouncycastle.crypto.AsymmetricBlockCipher的各个实现类的getInputBlockSize方法
      * <br/>
+     * 算法”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）
+     * <br/>
      * 正常情况下，NoPadding占用大小是0，也就是你提供的明文可以是当前密钥最大的支持长度。PKCS1Padding占用的位数大小是11，也就是明文长度只能
      * 是当前密钥最大支持长度-11
      * <p>
@@ -82,7 +86,7 @@ public class EncAndDecUtils {
      * 注意：如果是ECC，则只能用公钥加密，不支持私钥加密数据 <br/>
      * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认） <br/>
      * @param key 用来加密的密钥
-     * @param alo 密钥对应的算法/模式/填充模式，支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）
+     * @param alo 密钥对应的算法/模式/填充模式
      * @param data 等待被加密的数据，数据不能太长
      * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
      * @param spec 填充模式
@@ -121,7 +125,7 @@ public class EncAndDecUtils {
 
     /**
      * 解密（对长度有要求，例如2048长度的RSA只能解密256长度的数据，1024的RSA只能解密128长度的数据）
-     * @param key 解密密钥
+     * @param key 解密密钥(支持对称密钥和非对称密钥)
      * @param alo 算法
      * @param encData 被加密的数据
      * @return 解密后的数据
@@ -133,7 +137,7 @@ public class EncAndDecUtils {
 
     /**
      * 解密（对长度有要求，例如2048长度的RSA只能解密256长度的数据，1024的RSA只能解密128长度的数据）
-     * @param key 解密密钥
+     * @param key 解密密钥(支持对称密钥和非对称密钥)
      * @param alo 算法
      * @param encData 被加密的数据
      * @param provider 算法提供者
@@ -152,8 +156,7 @@ public class EncAndDecUtils {
      * 注意：如果是ECC，则只能用私钥解密，不支持公钥解密数据<br/>
      * 注意：ECC本身并没有真正定义任何加密/解密操作，构建在椭圆曲线上的算法确实如此（todo 待确认）<br/>
      * @param key 用来解密的密钥
-     * @param alo 密钥对应的算法/模式/填充模式，要和加密时使用的配置一致，
-     *            支持”RSA“（这么写的话，模式和填充模式依赖于算法提供者怎么设置默认值,BC库的话等同于“RSA/ECB/NoPadding”）
+     * @param alo 密钥对应的算法/模式/填充模式，要和加密时使用的配置一致(支持对称密钥和非对称密钥)
      * @param encData 等待被解密的密文数据
      * @param provider 指定算法提供者，支持“BC”、“SunJCE”、null(null表示由系统自动选择匹配的算法提供者)
      * @param spec 填充模式

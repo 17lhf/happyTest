@@ -10,13 +10,11 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
@@ -191,5 +189,36 @@ class EncAndDecUtilsTest {
         } else {
             System.out.println("解密后的明文与原文不匹配");
         }
+    }
+
+    /**
+     * AES加解密测试
+     * @throws Exception 异常
+     */
+    @Test
+    void aesEncAndDecTest() throws Exception {
+        Key key = SysmmetricUtils.generateKey(KeyAlgorithmEnum.AES.getAlgorithm(),  KeyLengthEnums.AES_256.getLength());
+        String s = "abc123,.中文";
+        byte[] sBytes = s.getBytes(StandardCharsets.UTF_8); // 数据长度不要超过16
+
+        byte[] encData1 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.AES.getAlgorithm(), sBytes);
+        byte[] decData1 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.AES.getAlgorithm(), encData1);
+        System.out.println(new String(decData1, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+
+        // 使用IvParameterSpec类，该类指定初始化向量（IV）。 对于任何反馈模式（例如CBC）中的任何密码，初始化向量都是必需的。否则会报错。
+        byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        IvParameterSpec ivspec = new IvParameterSpec(iv);
+        // 因为nopadding需要原始数据长度为16的倍数，所以这里进行流氓式填充，否则会报错
+        byte[] newData = new byte[16];
+        System.arraycopy(sBytes, 0, newData, 0, sBytes.length);
+        byte[] encData2 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.AES_CBC_NOPADDING.getAlgorithm(), newData, ProviderEnums.SUN.getProvider(), ivspec);
+        byte[] decData2 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.AES_CBC_NOPADDING.getAlgorithm(), encData2, ProviderEnums.SUN.getProvider(), ivspec);
+        System.out.println(new String(decData2, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+        byte[] encData3 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.AES_CBC_PKCS5PADDING.getAlgorithm(), sBytes, ProviderEnums.SUN.getProvider(), ivspec);
+        byte[] decData3 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.AES_CBC_PKCS5PADDING.getAlgorithm(), encData3, ProviderEnums.SUN.getProvider(), ivspec);
+        System.out.println(new String(decData3, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
     }
 }
