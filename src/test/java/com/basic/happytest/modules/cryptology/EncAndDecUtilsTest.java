@@ -199,19 +199,22 @@ class EncAndDecUtilsTest {
     void aesEncAndDecTest() throws Exception {
         Key key = SysmmetricUtils.generateKey(KeyAlgorithmEnum.AES.getAlgorithm(),  KeyLengthEnums.AES_256.getLength());
         String s = "abc123,.中文";
-        byte[] sBytes = s.getBytes(StandardCharsets.UTF_8); // 数据长度不要超过16
+        byte[] sBytes = s.getBytes(StandardCharsets.UTF_8);
+        System.out.println("原始数据长度：" + sBytes.length);
 
         byte[] encData1 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.AES.getAlgorithm(), sBytes);
         byte[] decData1 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.AES.getAlgorithm(), encData1);
         System.out.println(new String(decData1, StandardCharsets.UTF_8));
         System.out.println("----------------------------------------------------------------");
 
-        // 使用IvParameterSpec类，该类指定初始化向量（IV）。 对于任何反馈模式（例如CBC）中的任何密码，初始化向量都是必需的。否则会报错。
+        // 使用IvParameterSpec类，该类指定初始化向量（IV）。 对于任何反馈模式（例如CBC）中的任何密码，初始化向量都是必需的。否则会报错: Parameters missing
         byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         IvParameterSpec ivspec = new IvParameterSpec(iv);
         // 因为nopadding需要原始数据长度为16的倍数，所以这里进行流氓式填充，否则会报错
-        byte[] newData = new byte[16];
+        int multiple = sBytes.length % 16;
+        byte[] newData = new byte[multiple != 0 ? (sBytes.length / 16 + 1) * 16 : sBytes.length];
         System.arraycopy(sBytes, 0, newData, 0, sBytes.length);
+
         byte[] encData2 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.AES_CBC_NOPADDING.getAlgorithm(), newData, ProviderEnums.SUN.getProvider(), ivspec);
         byte[] decData2 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.AES_CBC_NOPADDING.getAlgorithm(), encData2, ProviderEnums.SUN.getProvider(), ivspec);
         System.out.println(new String(decData2, StandardCharsets.UTF_8));
@@ -220,5 +223,87 @@ class EncAndDecUtilsTest {
         byte[] decData3 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.AES_CBC_PKCS5PADDING.getAlgorithm(), encData3, ProviderEnums.SUN.getProvider(), ivspec);
         System.out.println(new String(decData3, StandardCharsets.UTF_8));
         System.out.println("----------------------------------------------------------------");
+        byte[] encData4 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.AES_ECB_NOPADDING.getAlgorithm(), newData);
+        byte[] decData4 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.AES_ECB_NOPADDING.getAlgorithm(), encData4);
+        System.out.println(new String(decData4, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+    }
+
+    /**
+     * DES加解密测试
+     * @throws Exception 异常
+     */
+    @Test
+    void desEncAndDecTest() throws Exception {
+        Key key = SysmmetricUtils.generateKey(KeyAlgorithmEnum.DES.getAlgorithm(),  KeyLengthEnums.DES_56.getLength());
+        String s = "abc123,.中文";
+        byte[] sBytes = s.getBytes(StandardCharsets.UTF_8);
+        System.out.println("原始数据长度：" + sBytes.length);
+
+        byte[] encData1 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.DES.getAlgorithm(), sBytes);
+        byte[] decData1 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.DES.getAlgorithm(), encData1);
+        System.out.println(new String(decData1, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+
+        // 使用IvParameterSpec类，该类指定初始化向量（IV）。 对于任何反馈模式（例如CBC）中的任何密码，初始化向量都是必需的。否则会报错: Parameters missing
+        byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        IvParameterSpec ivspec = new IvParameterSpec(iv);
+        // 因为nopadding需要原始数据长度为8的倍数，所以这里进行流氓式填充，否则会报错
+        int multiple = sBytes.length % 8;
+        byte[] newData = new byte[multiple != 0 ? (sBytes.length / 8 + 1) * 8 : sBytes.length];
+        System.arraycopy(sBytes, 0, newData, 0, sBytes.length);
+
+        byte[] encData2 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.DES_CBC_NOPADDING.getAlgorithm(), newData, ProviderEnums.SUN.getProvider(), ivspec);
+        byte[] decData2 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.DES_CBC_NOPADDING.getAlgorithm(), encData2, ProviderEnums.SUN.getProvider(), ivspec);
+        System.out.println(new String(decData2, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+        byte[] encData3 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.DES_CBC_PKCS5PADDING.getAlgorithm(), sBytes, ProviderEnums.SUN.getProvider(), ivspec);
+        byte[] decData3 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.DES_CBC_PKCS5PADDING.getAlgorithm(), encData3, ProviderEnums.SUN.getProvider(), ivspec);
+        System.out.println(new String(decData3, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+        byte[] encData4 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.DES_ECB_PKCS5PADDING.getAlgorithm(), sBytes);
+        byte[] decData4 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.DES_ECB_PKCS5PADDING.getAlgorithm(), encData4);
+        System.out.println(new String(decData4, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+    }
+
+    /**
+     * 三倍长DES(双倍长)加解密测试
+     * @throws Exception 异常
+     */
+    @Test
+    void desedeEncAndDecTest() throws Exception {
+        Key key = SysmmetricUtils.generateKey(KeyAlgorithmEnum.TDES.getAlgorithm(),  KeyLengthEnums.TDES_112.getLength());
+        // Key key = SysmmetricUtils.generateKey(KeyAlgorithmEnum.TDES.getAlgorithm(),  KeyLengthEnums.TDES_168.getLength());
+        String s = "abc123,.中文";
+        byte[] sBytes = s.getBytes(StandardCharsets.UTF_8);
+        System.out.println("原始数据长度：" + sBytes.length);
+
+        byte[] encData1 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.DESEDE.getAlgorithm(), sBytes);
+        byte[] decData1 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.DESEDE.getAlgorithm(), encData1);
+        System.out.println(new String(decData1, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+
+        // 使用IvParameterSpec类，该类指定初始化向量（IV）。 对于任何反馈模式（例如CBC）中的任何密码，初始化向量都是必需的。否则会报错: Parameters missing
+        byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        IvParameterSpec ivspec = new IvParameterSpec(iv);
+        // 因为nopadding需要原始数据长度为8的倍数，所以这里进行流氓式填充，否则会报错
+        int multiple = sBytes.length % 8;
+        byte[] newData = new byte[multiple != 0 ? (sBytes.length / 8 + 1) * 8 : sBytes.length];
+        System.arraycopy(sBytes, 0, newData, 0, sBytes.length);
+
+        byte[] encData2 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.DESEDE_CBC_NOPADDING.getAlgorithm(), newData, ProviderEnums.SUN.getProvider(), ivspec);
+        byte[] decData2 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.DESEDE_CBC_NOPADDING.getAlgorithm(), encData2, ProviderEnums.SUN.getProvider(), ivspec);
+        System.out.println(new String(decData2, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+        byte[] encData3 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.DESEDE_CBC_PKCS5PADDING.getAlgorithm(), sBytes, ProviderEnums.SUN.getProvider(), ivspec);
+        byte[] decData3 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.DESEDE_CBC_PKCS5PADDING.getAlgorithm(), encData3, ProviderEnums.SUN.getProvider(), ivspec);
+        System.out.println(new String(decData3, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+        byte[] encData4 = EncAndDecUtils.encryptData(key, EncryptAlgorithmEnums.DESEDE_ECB_PKCS5PADDING.getAlgorithm(), sBytes);
+        byte[] decData4 = EncAndDecUtils.decryptData(key, EncryptAlgorithmEnums.DESEDE_ECB_PKCS5PADDING.getAlgorithm(), encData4);
+        System.out.println(new String(decData4, StandardCharsets.UTF_8));
+        System.out.println("----------------------------------------------------------------");
+
     }
 }

@@ -2,16 +2,71 @@ package com.basic.happytest.modules.cryptology.enums;
 
 /**
  * 加密算法枚举
+ * 实际支持的算法类型至少包含这些（可参考）：https://www.runoob.com/manual/jdk11api/java.base/javax/crypto/Cipher.html
  * @author lhf
  */
 
 public enum EncryptAlgorithmEnums {
+    /**
+     * SunJCE下加密结果等同于“DES/ECB/PKCS5Padding”
+     */
+    DES("DES"),
+
+    /**
+     * 此时要求数据长度为 8*n 字节 <br />
+     * CBC模式需要初始化向量(见使用示例)
+     */
+    DES_CBC_NOPADDING("DES/CBC/NoPadding"),
+
+    /**
+     * CBC模式需要初始化向量(见使用示例)
+     */
+    DES_CBC_PKCS5PADDING("DES/CBC/PKCS5Padding"),
+
+    DES_ECB_PKCS5PADDING("DES/ECB/PKCS5Padding"),
+
+    /**
+     * SunJCE下加密结果等同于“DESede/ECB/PKCS5Padding”
+     */
+    DESEDE("DESede"),
+
+    /**
+     * 此时要求数据长度为 8*n 字节 <br />
+     * CBC模式需要初始化向量(见使用示例)
+     */
+    DESEDE_CBC_NOPADDING("DESede/CBC/NoPadding"),
+
+    /**
+     * CBC模式需要初始化向量(见使用示例)
+     */
+    DESEDE_CBC_PKCS5PADDING("DESede/CBC/PKCS5Padding"),
+
+    DESEDE_ECB_PKCS5PADDING("DESede/ECB/PKCS5Padding"),
+
+    /**
+     * SunJCE下加密结果等同于“AES/CBC/PKCS5Padding”，但是不用初始化向量
+     */
     AES("AES"),
-    // 此时要求数据长度为 16*n 字节
+
+    /**
+     * 此时要求数据长度为 16*n 字节 <br />
+     * CBC模式需要初始化向量(见使用示例)
+     */
     AES_CBC_NOPADDING("AES/CBC/NoPadding"),
+
+    /**
+     * CBC模式需要初始化向量（见使用示例）
+     */
     AES_CBC_PKCS5PADDING("AES/CBC/PKCS5Padding"),
 
+    /**
+     * 此时要求数据长度为 16*n 字节
+     */
+    AES_ECB_NOPADDING("AES/ECB/NoPadding"),
 
+    /**
+     * BC库的话等同于“RSA/ECB/NoPadding”
+     */
     RSA("RSA"),
 
     RSA_ECB_PKCS1PADDING("RSA/ECB/PKCS1Padding"),
