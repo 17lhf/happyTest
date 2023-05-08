@@ -60,7 +60,7 @@ public class FeignClient {
                 .requestInterceptor(new BeforeRequest("nothingStr"))
                 .options(new Request.Options(CONNECT_TIMEOUT, TimeUnit.SECONDS,
                         READ_TIMEOUT, TimeUnit.SECONDS, true))
-                .target(tClass, rootUri);
+                .target(tClass, rootUri); // 这里rootUri在方法内部会被校验，不允许为空字符串或者null
     }
 
     /**
