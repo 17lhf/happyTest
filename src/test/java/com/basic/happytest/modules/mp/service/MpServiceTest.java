@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 class MpServiceTest {
     @Autowired
-    MpService mpService;
+    private MpService mpService;
 
     /**
      * 当使用updateById时，若依据的实体对象中，有字段值为null,则MybatisPlus的默认策略会自动忽略这个字段的更新
