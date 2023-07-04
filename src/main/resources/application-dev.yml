@@ -4,6 +4,11 @@ spring:
     username: happytest
     password: happytest
 
+email:
+  host-name: smtp.163.com
+  send-address: happytest@163.com # 需要修改为真实的地址
+  authorization-code: happytest # 需要修改为真实的客户端授权码
+
 test-config:
   hello: Hello
   world: world!

@@ -85,6 +85,9 @@ MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
 ### (19)textProcessing
 **一些文本处理工具方法**
 
+### (20)email
+**邮箱相关示例**
+
 ### (n) 补充
 **1.Linux运行jar包**<br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
