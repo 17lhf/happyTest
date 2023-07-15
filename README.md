@@ -88,6 +88,9 @@ MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
 ### (20)email
 **邮箱相关示例**
 
+### (21)schedules
+**定时任务的cron依据配置文件设置**
+
 ### (n) 补充
 **1.Linux运行jar包**<br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
