@@ -91,6 +91,10 @@ MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
 ### (21)schedules
 **定时任务的cron依据配置文件设置**
 
+### (22)objectUtils
+**对象相关的一些工具方法** <br />
+对象和Map键值对之间通过反射进行相互转换<br />
+
 ### (n) 补充
 **1.Linux运行jar包**<br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
