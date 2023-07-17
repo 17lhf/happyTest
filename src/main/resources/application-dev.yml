@@ -11,7 +11,8 @@ spring:
     execution:
       pool:
         core-size: 8 # 核心线程数，默认就是8
-
+# thymeleaf相关配置
+  thymeleaf:
 
 email:
   host-name: smtp.163.com

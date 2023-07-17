@@ -1,8 +1,14 @@
 package com.basic.happytest.modules.email;
 
+import com.basic.happytest.modules.objectUtils.ObjMapTransformUtil;
+import com.basic.happytest.modules.objectUtils.Objs.TestClass;
 import org.apache.commons.mail.HtmlEmail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+
+import java.util.Map;
 
 /**
  * 发送邮件的工具 <br />
@@ -17,6 +23,8 @@ public class EmailUtils {
 
     @Autowired
     private EmailConfig emailConfig;
+    @Autowired
+    private TemplateEngine templateEngine;
 
     /**
      * 发送邮件
@@ -44,5 +52,23 @@ public class EmailUtils {
         }
     }
 
-    // todo 可整合一个邮件发送工具，统一处理邮件发送请求，同时使用模板来发送html邮件
+    /**
+     * 使用模板来发送html邮件（示例）
+     * @param testClass 入参实体
+     * @param sendUserName 发送者名字
+     * @param emailAddress 收件地址
+     * @param title 邮件标题
+     * @param templateFilePath 模板文件路径
+     * @return 是否发送成功
+     * @throws Exception 异常
+     */
+    public boolean sendTemplateEmail(TestClass testClass, String sendUserName, String emailAddress, String title,
+                                     String templateFilePath) throws Exception {
+        Map<String, Object> map = ObjMapTransformUtil.Obj2Map(testClass);
+        Context context = new Context();
+        context.setVariables(map);
+        // templateFilePath模板文件路径默认是resources/templates/底下的html后缀文件，符合的话甚至可以不用带html后缀
+        String content = templateEngine.process(templateFilePath, context);
+        return sendEmail(sendUserName, emailAddress, title, content);
+    }
 }
