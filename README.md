@@ -5,7 +5,7 @@
 部分内容需要结合前端项目来实现完整流程，[点击前往前端项目](https://github.com/17lhf/vue-happy-test)<br/>
 todo 的地方表示还不确定是否正确
 
-## 已包含内容有： 
+## 已包含内容有：
 ### (1)multithreadSync 
 **synchronized 和 @Trasational同时使用时，产生的多线程并发问题**
 
@@ -96,7 +96,12 @@ MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
 **对象相关的一些工具方法** <br />
 对象和Map键值对之间通过反射进行相互转换<br />
 
-### (n) 补充
+### (n)others
+**不知道咋归类的都丢这里** <br />
+关于List.subList的坑的测试<br />
+关于数组的一些测试(按数组下标取值是引用取值，如果是对象，改属性值将影响原数组的相应元素)<br />
+
+### (n+1) 补充
 **1.Linux运行jar包**<br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
 通过–spring.profiles.active指定不同的环境(如开发dev、测试test、生产prod等，主要看配置文件里怎么定义) <br />
