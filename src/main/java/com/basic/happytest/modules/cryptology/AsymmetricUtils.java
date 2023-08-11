@@ -560,36 +560,37 @@ public class AsymmetricUtils {
 
     /**
      * 输出pem格式的密钥到指定文件中
-     * @param alo 生成密钥对使用的算法，可选算法：DiffieHellman(等同于：DH)、DSA、RSA
-     * @param keySize RSA时推荐长度为：2048/1024/3096 DH时推荐为：1024 DSA时推荐长度为：1024
+     * @param prvKeyFileName 私钥文件名，没有私钥输入时传null
+     * @param privateKey 私钥对象，没有时传null
+     * @param pubKeyFileName 公钥文件名，没有公钥输入时传null
+     * @param publicKey 公钥对象，没有时传null
      * @param basePath 输出密钥文件到的文件夹目录路径
      * @throws Exception 异常
      */
-    public static void key2PemFile(String alo, Integer keySize, String basePath) throws Exception {
-        KeyPair keyPair = generateKeyPair(alo, keySize);
+    public static void key2PemFile(String basePath, String prvKeyFileName, PrivateKey privateKey,
+                                   String pubKeyFileName, PublicKey publicKey) throws Exception {
         System.out.println("---------------begin out put pem format key to file---------------");
-        PrivateKey privateKey = keyPair.getPrivate();
-        PublicKey publicKey = keyPair.getPublic();
-
-        String prvKeyPath = basePath + System.currentTimeMillis() + "_prvKey.key";
-        File prvFile = new File(prvKeyPath);
-        prvFile.createNewFile();
-        PrintWriter printWriter = new PrintWriter(prvFile);
-        PemWriter pemWriter = new PemWriter(printWriter);
-        PemObject pemObject = new PemObject("PRIVATE KEY", privateKey.getEncoded());
-        pemWriter.writeObject(pemObject);
-        pemWriter.close();
-
-        String pubKeyPath = basePath + System.currentTimeMillis() + "_pubKey.key";
-        File pubFile = new File(pubKeyPath);
-        PrintWriter printWriter2 = new PrintWriter(pubFile);
-        PemWriter pemWriter2 = new PemWriter(printWriter2);
-        PemObject pemObject2 = new PemObject("PUBLIC KEY", publicKey.getEncoded());
-        pemWriter2.writeObject(pemObject2);
-        pemWriter2.close();
+        if (privateKey != null) {
+            String prvKeyPath = basePath + prvKeyFileName;
+            File prvFile = new File(prvKeyPath);
+            PrintWriter printWriter = new PrintWriter(prvFile);
+            PemWriter pemWriter = new PemWriter(printWriter);
+            PemObject pemObject = new PemObject("PRIVATE KEY", privateKey.getEncoded());
+            pemWriter.writeObject(pemObject);
+            pemWriter.close();
+            loadPrivateKey(prvKeyPath);
+        }
+        if (publicKey != null) {
+            String pubKeyPath = basePath + pubKeyFileName;
+            File pubFile = new File(pubKeyPath);
+            PrintWriter printWriter2 = new PrintWriter(pubFile);
+            PemWriter pemWriter2 = new PemWriter(printWriter2);
+            PemObject pemObject2 = new PemObject("PUBLIC KEY", publicKey.getEncoded());
+            pemWriter2.writeObject(pemObject2);
+            pemWriter2.close();
+            loadPublicKey(pubKeyPath);
+        }
         System.out.println("---------------end out put pem format key to file---------------");
-        loadPublicKey(pubKeyPath);
-        loadPrivateKey(prvKeyPath);
     }
 
     /**
@@ -618,12 +619,7 @@ public class AsymmetricUtils {
             sigAlo = SignAlgorithmEnum.SHA256_WITH_ECDSA.getAlgorithm();
         }
         // 申请者信息
-        String subjectStr = "C=" + csrInfos.getCountry() + ",ST="+csrInfos.getState()
-                + ",L=" + csrInfos.getLocal() + ",O=" + csrInfos.getOrganization()
-                + ",OU=" + csrInfos.getOrganizationUnit() + ",CN="+csrInfos.getCommonName();
-        if(StringUtils.isNotBlank(csrInfos.getEmailAddress())){
-            subjectStr += (",EmailAddress=" + csrInfos.getEmailAddress());
-        }
+        String subjectStr = csrInfos.getSubject();
         // 开始构造CSR
         X500Principal subject = new X500Principal(subjectStr);
         PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(subject, publicKey);
@@ -668,13 +664,8 @@ public class AsymmetricUtils {
             privateKey = keyPair.getPrivate();
             sigAlo = SignAlgorithmEnum.SHA256_WITH_ECDSA.getAlgorithm();
         }
-        // 申请者信息
-        String subjectStr = "C=" + csrInfos.getCountry() + ",ST="+csrInfos.getState()
-                + ",L=" + csrInfos.getLocal() + ",O=" + csrInfos.getOrganization()
-                + ",OU=" + csrInfos.getOrganizationUnit() + ",CN="+csrInfos.getCommonName();
-        if(StringUtils.isNotBlank(csrInfos.getEmailAddress())){
-            subjectStr += (",EmailAddress=" + csrInfos.getEmailAddress());
-        }
+        // 申请者信息(注意，这里信息的字段顺序，最好和你的CA链是一致的，通常应该是和Openssl或者加密机的默认顺序一致，即E、CN、OU、O、L、S、C)
+        String subjectStr = csrInfos.getSubject();
         // 开始构造CSR
         X500Principal subject = new X500Principal(subjectStr);
         PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(subject, publicKey);
@@ -929,7 +920,7 @@ public class AsymmetricUtils {
         // 读取Ca证书
         caCert = (X509Certificate) certFactory.generateCertificate(new FileInputStream(issuerCertPath));
         // 读取私钥文件
-        caPrivateKey = loadRSAPKCS1PrivateKey(issuerPrvKeyPath);
+        caPrivateKey = loadPrivateKey(issuerPrvKeyPath);
         // ca的签名算法标识符
         AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder()
                 .find(SignAlgorithmEnum.SHA256_WITH_RSA.getAlgorithm());
@@ -937,10 +928,9 @@ public class AsymmetricUtils {
         AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
         assert caCert != null;
         // 颁发者信息
-        // 不能直接使用X500Name issuer = new X500Name(caCert.getSubjectX500Principal().getName());来获得颁发者subject
-        // X500Principal转字符串的subject的各项数据与正常的相反（从E到C,正常的是C到E）,虽然能被openssl和操作系统识别，但是在进行证书链校验时会失败
-        // 如果subject信息顺序反了，则openssl进行证书链校验时的报错信息：unable to get local issuer certificate
+        // 不能直接将这个值放入X509v3CertificateBuilder
         X500Name x500Name = new X500Name(caCert.getSubjectX500Principal().getName());
+        System.out.println("从证书里提取出来的Issuer Subject: " + x500Name);
         String issuerDN = "C=" + x500Name.getRDNs(BCStyle.C)[0].getFirst().getValue().toString()
                 + ",ST=" + x500Name.getRDNs(BCStyle.ST)[0].getFirst().getValue().toString()
                 + ",L=" + x500Name.getRDNs(BCStyle.L)[0].getFirst().getValue().toString()
@@ -949,13 +939,18 @@ public class AsymmetricUtils {
                 + ",CN=" + x500Name.getRDNs(BCStyle.CN)[0].getFirst().getValue().toString()
                 + ",E="+ x500Name.getRDNs(BCStyle.E)[0].getFirst().getValue().toString();
         X500Name issuer = new X500Name(issuerDN);
+        System.out.println("手动设置的Issuer Subject: " + issuer);
         // 序列号, 最长是20字节
         BigInteger serial = new BigInteger(160, new SecureRandom());
         // 证书起始生效时间
         Date from = new Date();
         // 证书失效时间
         Date to = new Date(System.currentTimeMillis() + validDays * 24 * 60 * 60 * 1000);
+        System.out.println("CSR Subject: " + csr.getSubject());
         // 使用x509来组装证书
+        // 这里构造后的证书里的issuer subject值的字段顺序会和传入的issuer.toString值恰好相反（例如原本是E到C，从C到E）。
+        // 如果issuer subject信息和原CA的subject不是完全一致，则openssl进行证书链校验时的报错信息：unable to get local issuer certificate
+        // 这里构造后的证书里的csr subject值的字段顺序会和传入的csrSubject.toString值恰好相反（例如原本是E到C，从C到E）
         X509v3CertificateBuilder certGen = new X509v3CertificateBuilder(issuer, serial, from, to,
                 csr.getSubject(), csr.getSubjectPublicKeyInfo());
         // CA端进行签名, 才有具有法律效力
@@ -994,7 +989,7 @@ public class AsymmetricUtils {
         // 读取Ca证书
         X509Certificate caCert = (X509Certificate) certFactory.generateCertificate(new FileInputStream(issuerCertPath));
         // 读取私钥文件
-        Key caPrivateKey = loadRSAPKCS1PrivateKey(issuerPrvKeyPath);
+        Key caPrivateKey = loadPrivateKey(issuerPrvKeyPath);
         // 读取csr的公钥
         PublicKey csrPubKey = AsymmetricUtils.getPubKeyFromCsr(csr, alo);
         // csr验签
@@ -1011,10 +1006,9 @@ public class AsymmetricUtils {
         AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
         assert caCert != null;
         // 颁发者信息
-        // 不能直接使用X500Name issuer = new X500Name(caCert.getSubjectX500Principal().getName());来获得颁发者subject
-        // X500Principal转字符串的subject的各项数据与正常的相反（从E到C,正常的是C到E）,虽然能被openssl和操作系统识别，但是在进行证书链校验时会失败
-        // 如果subject信息顺序反了，则openssl进行证书链校验时的报错信息：unable to get local issuer certificate
+        // 不能直接将这个值放入X509v3CertificateBuilder
         X500Name x500Name = new X500Name(caCert.getSubjectX500Principal().getName());
+        System.out.println("从证书里提取出来的Issuer Subject: " + x500Name);
         String issuerDN = "C=" + x500Name.getRDNs(BCStyle.C)[0].getFirst().getValue().toString()
                 + ",ST=" + x500Name.getRDNs(BCStyle.ST)[0].getFirst().getValue().toString()
                 + ",L=" + x500Name.getRDNs(BCStyle.L)[0].getFirst().getValue().toString()
@@ -1023,13 +1017,18 @@ public class AsymmetricUtils {
                 + ",CN=" + x500Name.getRDNs(BCStyle.CN)[0].getFirst().getValue().toString()
                 + ",E="+ x500Name.getRDNs(BCStyle.E)[0].getFirst().getValue().toString();
         X500Name issuer = new X500Name(issuerDN);
+        System.out.println("手动设置的Issuer Subject: " + issuer);
         // 序列号, 最长是20字节=160bit
         BigInteger serial = new BigInteger(160, new SecureRandom());
         // 证书起始生效时间
         Date from = new Date();
         // 证书失效时间
         Date to = new Date(System.currentTimeMillis() + validDays * 24 * 60 * 60 * 1000);
+        System.out.println("CSR Subject: " + csr.getSubject());
         // 使用x509来组装证书
+        // 这里构造后的证书里的issuer subject值的字段顺序会和传入的issuer.toString值恰好相反（例如原本是E到C，从C到E）。
+        // 如果issuer subject信息和原CA的subject不是完全一致，则openssl进行证书链校验时的报错信息：unable to get local issuer certificate
+        // 这里构造后的证书里的csr subject值的字段顺序会和传入的csrSubject.toString值恰好相反（例如原本是E到C，从C到E）
         X509v3CertificateBuilder certGen = new X509v3CertificateBuilder(issuer, serial, from, to,
                 csr.getSubject(), csr.getSubjectPublicKeyInfo());
         // 获取csr中的扩展项（这里只是举例获取密钥用途和扩展密钥用途，实际还可以获取其他类型的属性）

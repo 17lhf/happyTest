@@ -120,6 +120,7 @@ class AsymmetricUtilsTest {
         csrInfos.setCommonName("lhf");
         csrInfos.setEmailAddress("lhf@qq.com");
         KeyPair rsaKeyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
+
         PKCS10CertificationRequest csr = AsymmetricUtils.generateP10CertRequest(KeyAlgorithmEnum.RSA.getAlgorithm(), rsaKeyPair, csrInfos);
         AsymmetricUtils.issueCert(csr, issuerCertPath, issuerKeyPath, 3650);
     }
@@ -208,12 +209,6 @@ class AsymmetricUtilsTest {
     }
 
     @Test
-    void key2PemFile() throws Exception {
-        AsymmetricUtils.key2PemFile(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength(),
-                FileIO.getAbsolutePath(STORE_PATH) + "/");
-    }
-
-    @Test
     void der2pem() throws Exception {
         /*String pem = AsymmetricUtils.der2pem(Hex.toHexString(AsymmetricUtils.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY)).getEncoded()), DataTypeEnum.PUB_EY.getType());
         System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath(RSA_PUB_KEY))));*/
@@ -247,6 +242,7 @@ class AsymmetricUtilsTest {
         csrInfos.setEmailAddress("lhf@qq.com");
         KeyPair rsaKeyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
         PKCS10CertificationRequest csr = AsymmetricUtils.generateP10CertRequest(KeyAlgorithmEnum.RSA.getAlgorithm(), rsaKeyPair, csrInfos);
+        AsymmetricUtils.csr2PemFile(csr, FileIO.getAbsolutePath(STORE_PATH) + "/");
         String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
         String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
         AsymmetricUtils.cert2PemFile(AsymmetricUtils.issueCert(csr, issuerCertPath, issuerKeyPath, 3650),
@@ -326,6 +322,11 @@ class AsymmetricUtilsTest {
 
     @Test
     void issueAttachExtensionsCert() throws Exception {
+        String baseDir = FileIO.getAbsolutePath(STORE_PATH) + "/";
+        String timeStamp = String.valueOf(System.currentTimeMillis());
+        String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
+        String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
+
         String alo = KeyAlgorithmEnum.RSA.getAlgorithm();
         CsrInfos csrInfos = new CsrInfos();
         csrInfos.setCountry("CN");
@@ -336,13 +337,39 @@ class AsymmetricUtilsTest {
         csrInfos.setCommonName("lhf");
         csrInfos.setEmailAddress("lhf@qq.com");
         KeyPair rsaKeyPair = AsymmetricUtils.generateKeyPair(alo, KeyLengthEnums.RSA_2048.getLength());
-        // PKCS10CertificationRequest csr = Cryptology.generateAttachExtensionsP10Csr(alo, rsaKeyPair, csrInfos);
+        AsymmetricUtils.key2PemFile(baseDir, timeStamp + "_prv.key", rsaKeyPair.getPrivate(),
+                timeStamp + "_pub.key", rsaKeyPair.getPublic());
+        // PKCS10CertificationRequest csr = AsymmetricUtils.generateAttachExtensionsP10Csr(alo, rsaKeyPair, csrInfos);
         PKCS10CertificationRequest csr = AsymmetricUtils.generateP10CertRequest(alo, rsaKeyPair, csrInfos);
-        String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
-        String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
         X509Certificate x509Certificate = AsymmetricUtils.issueAttachExtensionsCert(csr, issuerCertPath, issuerKeyPath,
                 3650, false, 0, alo);
-        // Cryptology.cert2PemFile(x509Certificate, FileIO.getAbsolutePath(STORE_PATH) + "/");
+        AsymmetricUtils.cert2PemFile(x509Certificate, baseDir);
+        AsymmetricUtils.getCertMsg(x509Certificate);
+    }
+
+    @Test
+    void issueV3CaCert() throws Exception {
+        String baseDir = FileIO.getAbsolutePath(STORE_PATH) + "/";
+        String timeStamp = String.valueOf(System.currentTimeMillis());
+        String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
+        String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
+
+        String alo = KeyAlgorithmEnum.RSA.getAlgorithm();
+        CsrInfos csrInfos = new CsrInfos();
+        csrInfos.setCountry("CN");
+        csrInfos.setState("FuJian");
+        csrInfos.setLocal("FuZhou");
+        csrInfos.setOrganization("Organization");
+        csrInfos.setOrganizationUnit("Organization Unit");
+        csrInfos.setCommonName("SubCA");
+        csrInfos.setEmailAddress("SubCA@qq.com");
+        KeyPair rsaKeyPair = AsymmetricUtils.generateKeyPair(alo, KeyLengthEnums.RSA_2048.getLength());
+        AsymmetricUtils.key2PemFile(baseDir, timeStamp + "_prv.key", rsaKeyPair.getPrivate(),
+                timeStamp + "_pub.key", rsaKeyPair.getPublic());
+        PKCS10CertificationRequest csr = AsymmetricUtils.generateAttachExtensionsP10Csr(alo, rsaKeyPair, csrInfos);
+        X509Certificate x509Certificate = AsymmetricUtils.issueAttachExtensionsCert(csr, issuerCertPath, issuerKeyPath,
+                3650, true, 1, alo);
+        AsymmetricUtils.cert2PemFile(x509Certificate, baseDir);
         AsymmetricUtils.getCertMsg(x509Certificate);
     }
 
