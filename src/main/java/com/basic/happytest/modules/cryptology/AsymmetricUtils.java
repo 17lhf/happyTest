@@ -751,12 +751,13 @@ public class AsymmetricUtils {
     /**
      * 将csr对象存入pem格式的文件中
      * @param csr csr对象
+     * @param fileName 文件名（要带后缀）
      * @param basePath 基本路径
      * @throws Exception 异常
      */
-    public static void csr2PemFile(PKCS10CertificationRequest csr, String basePath) throws Exception {
+    public static void csr2PemFile(PKCS10CertificationRequest csr, String fileName, String basePath) throws Exception {
         System.out.println("---------------begin store P10 CSR to pem file---------------");
-        String csrPath = basePath + System.currentTimeMillis() + "_csr.csr";
+        String csrPath = basePath + fileName;
         File csrFile = new File(csrPath);
         csrFile.createNewFile();
         PrintWriter printWriter = new PrintWriter(csrFile);
@@ -1065,10 +1066,15 @@ public class AsymmetricUtils {
             extensionsGenerator.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
         }
         certGen.addExtension(extensionsGenerator.getExtension(Extension.basicConstraints));
-        // 这里是尝试性地添加了一个密钥用途的扩展字段，具体是——数字签名。
+
         // KeyUsage里有很多可选用的密钥用途可以用来设置
+        int usageBits = 0;
+        if (isCA) { // 如果是CA,必须带上这个用途，否则无法用于验签
+            usageBits |= KeyUsage.keyCertSign;
+        }
+        // 这里默认尝试性地添加了一个密钥用途的扩展字段，具体是——数字签名。
         extensionsGenerator.addExtension(Extension.keyUsage, false,
-                new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | csrKeyUsageInt));
+                new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | csrKeyUsageInt | usageBits));
         certGen.addExtension(extensionsGenerator.getExtension(Extension.keyUsage));
         // 添加使用者密钥标识
         JcaX509ExtensionUtils jcaX509ExtensionUtils = new JcaX509ExtensionUtils();
@@ -1113,12 +1119,13 @@ public class AsymmetricUtils {
     /**
      * 将一个证书对象以PEM格式存入对应路径的文件中
      * @param x509Certificate 证书对象
+     * @param fileName 文件名(要带上后缀)
      * @param basePath 要存放的路径目录
      * @throws Exception 异常
      */
-    public static void cert2PemFile(X509Certificate x509Certificate, String basePath) throws Exception{
+    public static void cert2PemFile(X509Certificate x509Certificate, String fileName, String basePath) throws Exception{
         System.out.println("---------------begin store certificate object to pem file---------------");
-        String certPath = basePath + System.currentTimeMillis() + "_cert.crt";
+        String certPath = basePath + fileName;
         File certFile = new File(certPath);
         certFile.createNewFile();
         PrintWriter printWriter = new PrintWriter(certFile);
