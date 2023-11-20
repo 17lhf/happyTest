@@ -17,7 +17,7 @@ import java.util.Map;
 @Service
 public class JudgeExpService {
     @Autowired
-    JudgeExpDao judgeExpDao;
+    private JudgeExpDao judgeExpDao;
 
     public List<JudgeExp> select(Map<String, Object> params){
         return judgeExpDao.listSelectFromExternal(params);
