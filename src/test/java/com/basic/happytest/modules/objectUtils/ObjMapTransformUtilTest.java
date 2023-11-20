@@ -26,6 +26,9 @@ class ObjMapTransformUtilTest {
         Map<String, Object> map = new HashMap<>();
         map.put("num", 1);
         map.put("pubFloat", 2.1f);
+        map.put("str", "aaa");
+        map.put("ftNum", 20);
+        map.put("subNum", 30);
         TestClass testClass = ObjMapTransformUtil.map2Obj(map, TestClass.class);
         System.out.println(ObjMapTransformUtil.Obj2Map(testClass));
     }
