@@ -51,10 +51,16 @@
             <version>2.11.0</version>
         </dependency>
 
+        <!--
+            MyBatis-Plus 1.x 对应 MyBatis 3.3.x
+            MyBatis-Plus 2.x 对应 MyBatis 3.4.x
+            MyBatis-Plus 3.x 对应 MyBatis 3.5.x
+            ——来自CSDN文档库
+        -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.5.1</version>
+            <version>3.5.3.1</version>
         </dependency>
 
         <!-- BC库，密码学相关的轻量级API库 -->

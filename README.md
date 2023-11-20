@@ -53,7 +53,8 @@ file lib/ct.sym with class stubs.<br/>
 **调用子进程**
 
 ### (11)mp
-**MybatisPlus的使用笔记**（包含有：updateById的字段忽略策略）
+**MybatisPlus的使用笔记**（包含有：updateById的字段忽略策略）  
+**MybatisPlus的配置**（包含有:解决分页查询指定页码溢出时的自动处理，关于多参数时Map作为查询条件的话如何取值的问题）
 
 ### (12)uniformPackagingReturn
 **统一封装应答对象**（包含有：解决返回String基本数据类型时的异常）

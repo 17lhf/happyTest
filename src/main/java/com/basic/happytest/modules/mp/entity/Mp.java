@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Mybatis Plus相关测试的实体
+ * Mybatis Plus相关实验的实体
  * @author lhf
  */
 

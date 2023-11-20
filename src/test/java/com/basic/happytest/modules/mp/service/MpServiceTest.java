@@ -20,7 +20,7 @@ class MpServiceTest {
      * 辅助参考文章： https://blog.csdn.net/weixin_42151235/article/details/121222174
      */
     @Test
-    void updByMp() {
+    public void updByMp() {
         Mp mp = new Mp();
         mp.setNumValue(1);
         mp.setStrValue("one");
