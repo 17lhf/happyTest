@@ -1,4 +1,4 @@
-package com.basic.happytest.modules.ymlConfig.method2;
+package com.basic.happytest.modules.property.ymlConfig.method2;
 
 import lombok.Getter;
 import lombok.Setter;

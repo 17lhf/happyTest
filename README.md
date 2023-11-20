@@ -36,8 +36,8 @@ file lib/ct.sym with class stubs.<br/>
 **关于mybatis的dao层传递参数时，xml里的if条件判断使用内置类型_parameter的探索**<br/>
 **以及传入的数字值为0时，mybatis里的if条件判断会将其认为是‘’空字符串的问题**(有解决策略，也有规避方式)
 
-### (7)ymlConfig 
-**关于优雅地读取配置文件中自定义的配置的实例(多种方式)**
+### (7)property 
+**关于优雅地读取yml配置文件中自定义的配置的实例(多种方式)**
 
 ### (8)lombokExplore 
 **关于lombok的注解里的坑**（推荐最多只用lombok的getter和setter两个注解，其他的自己实现）<br />
@@ -92,7 +92,6 @@ MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
 若使用的是JavaMailSender, @Autowired时会爆红，但是实际运行没问题，其实这个是误报。因为这家伙必须要见到application.properties这个文件里
 有它对应的配置才不会爆红，即便压根就没设置值。但是如果用的是yml弄配置，本身没问题，只是会爆红，如果不想看到爆红，
 所以可以专门弄一个application.properties文件，里面放上空值的JavaMailSender相关配置。
-
 
 ### (21)schedules
 **定时任务的cron依据配置文件设置**

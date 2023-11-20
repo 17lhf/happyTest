@@ -1,9 +1,9 @@
-package com.basic.happytest.modules.ymlConfig;
+package com.basic.happytest.modules.property.ymlConfig;
 
-import com.basic.happytest.modules.ymlConfig.method1.YmlConfig;
-import com.basic.happytest.modules.ymlConfig.method2.YmlConfig2;
-import com.basic.happytest.modules.ymlConfig.method3.AutoYmlConfig3;
-import com.basic.happytest.modules.ymlConfig.method3.YmlConfig3;
+import com.basic.happytest.modules.property.ymlConfig.method1.YmlConfig;
+import com.basic.happytest.modules.property.ymlConfig.method2.YmlConfig2;
+import com.basic.happytest.modules.property.ymlConfig.method3.AutoYmlConfig3;
+import com.basic.happytest.modules.property.ymlConfig.method3.YmlConfig3;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  */
 
 @SpringBootTest
-public class YmlconfigTest {
+public class YmlConfigTest {
     @Autowired
     private YmlConfig ymlConfig;
 
