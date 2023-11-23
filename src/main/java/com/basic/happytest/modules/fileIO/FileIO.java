@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.*;
+import java.net.URL;
 
 /**
  * 一系列的关于文件和流的操作
@@ -20,7 +21,14 @@ public class FileIO {
      * @throws IOException 异常
      */
     public static String getAbsolutePath(String path) throws IOException {
-        String filePath = (new ClassPathResource(path)).getFile().getPath();
+        // 打包后不能用File读取jar里面的文件，否则会报错：java.io.FileNotFoundException: class path resource [xxx] cannot be resolved to absolute file path because it does not reside in the file system:
+        // String filePath = (new ClassPathResource(path)).getFile().getPath();
+        URL fileURL = FileIO.class.getResource(path);
+        if (fileURL == null) {
+            System.out.println("定位文件路径失败！！！");
+            throw new IOException();
+        }
+        String filePath = fileURL.getPath().substring(1);
         System.out.println("文件路径为： " + filePath);
         return filePath;
     }
@@ -65,13 +73,13 @@ public class FileIO {
         if(fileLen > 20 * 1024) {
             throw new OutOfMemoryError();
         }
-        byte[] filecontent = new byte[(int) fileLen];
+        byte[] fileContent = new byte[(int) fileLen];
         try (FileInputStream in = new FileInputStream(file)){
-            in.read(filecontent);
+            in.read(fileContent);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new String(filecontent, encoding);
+        return new String(fileContent, encoding);
     }
 
     /**
