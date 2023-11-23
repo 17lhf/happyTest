@@ -94,7 +94,7 @@ public class CustomConfig {
         // 内外部文件流拼接
         Vector<InputStream> inputStreamVector = new Vector<>(3);
         inputStreamVector.add(innerInputStream);
-        // 补充换行，放置无法正常连接两个Properties数据流，默认连接后没有换行
+        // 补充换行，防止无法正常连接两个Properties数据流，默认连接后没有换行
         inputStreamVector.add(new ByteArrayInputStream("\n".getBytes(StandardCharsets.UTF_8)));
         inputStreamVector.add(extInputStream);
         try (SequenceInputStream sequenceInputStream = new SequenceInputStream(inputStreamVector.elements())){
