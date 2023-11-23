@@ -46,6 +46,41 @@
 			"response": []
 		},
 		{
+			"name": "properties/updConfig",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\" : \"postmanTest（外部人士）\",\r\n    \"age\" : \"42岁\"\r\n}"
+				},
+				"url": {
+					"raw": "localhost:12312/happyTest/customConfig/updConfig",
+					"host": [
+						"localhost"
+					],
+					"port": "12312",
+					"path": [
+						"happyTest",
+						"customConfig",
+						"updConfig"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "uniformPackagingReturn/num",
 			"protocolProfileBehavior": {
 				"disabledSystemHeaders": {
