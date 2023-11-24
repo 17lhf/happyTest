@@ -71,8 +71,8 @@ file lib/ct.sym with class stubs.<br/>
 
 ### (16)sqlOperation
 **一些复杂的sql操作，特别是一些统计时使用的搜索归类** <br />
-MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
-查询时，如果依据排序列有相同项，则mysql会随机取相同的项的数据，导致数据混乱。<br />
+- MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
+- 查询时，如果依据排序列有相同项，则mysql会随机取相同的项的数据，导致数据混乱。<br />
 
 ### (17)feignClient
 **关于模拟客户端向其他服务发送请求的示例**（使用openfeign）
@@ -89,7 +89,7 @@ MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
 ### (20)email
 **邮箱相关示例**
 简单的发送邮件、利用模板引擎构造邮件内容后发送邮件 <br />
-若使用的是JavaMailSender, @Autowired时会爆红，但是实际运行没问题，其实这个是误报。因为这家伙必须要见到application.properties这个文件里
+- 若使用的是JavaMailSender, @Autowired时会爆红，但是实际运行没问题，其实这个是误报。因为这家伙必须要见到application.properties这个文件里
 有它对应的配置才不会爆红，即便压根就没设置值。但是如果用的是yml弄配置，本身没问题，只是会爆红，如果不想看到爆红，
 所以可以专门弄一个application.properties文件，里面放上空值的JavaMailSender相关配置。
 
@@ -98,23 +98,27 @@ MySQL的DATE类型，在比较时会自动设置为零点零分零秒<br />
 
 ### (22)objectUtils
 **对象相关的一些工具方法** <br />
-对象和Map键值对之间通过反射进行相互转换<br />
+- 对象和Map键值对之间通过反射进行相互转换<br />
 
 ### (23)jaCoCo
 **关于JaCoCo代码覆盖率的使用测试**
 
+### (24)startLoad
+**关于启动加载的实例**
+
 ### (n)others
 **不知道咋归类的都丢这里** <br />
-关于List.subList的坑的测试<br />
-关于数组的一些测试(按数组下标取值是引用取值，如果是对象，改属性值将影响原数组的相应元素)<br />
+- 关于List.subList的坑的测试<br />
+- 关于数组的一些测试(按数组下标取值是引用取值，如果是对象，改属性值将影响原数组的相应元素)<br />
+- SerializationUtils.clone(obj); 深度拷贝，实际上此类更多时候是用于序列化和反序列化。此用法执行速度慢，不适用于对执行速度要求高的项目。（无测试方法）<br />
 
 ### (n+1) 补充
 **1.Linux运行jar包**<br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
-通过–spring.profiles.active指定不同的环境(如开发dev、测试test、生产prod等，主要看配置文件里怎么定义) <br />
-nohup （可选）表示本jar包是不挂断地运行命令，退出终端不会影响程序的运行。在默认情况下（非重定向时），会输出一个名叫 nohup.out 的文件到当前目
+- 通过–spring.profiles.active指定不同的环境(如开发dev、测试test、生产prod等，主要看配置文件里怎么定义) <br />
+- nohup （可选）表示本jar包是不挂断地运行命令，退出终端不会影响程序的运行。在默认情况下（非重定向时），会输出一个名叫 nohup.out 的文件到当前目
 录下，如果当前目录的 nohup.out 文件不可写，输出重定向到 $HOME/nohup.out 文件中 <br />
-& （可选）是指在后台运行，但当用户推出(挂起)的时候，命令自动也跟着退出 <br />
+- & （可选）是指在后台运行，但当用户推出(挂起)的时候，命令自动也跟着退出 <br />
 两者结合就是：在后台不挂断地运行  
 
 **2.获取在后台不断运行中的xxx.jar包的进程的进程编号**<br/>
@@ -124,10 +128,10 @@ ps aux|grep xxx.jar
 kill -9 jar包对应的进程编号  
 
 **4.使用外置配置文件（yml）**<br />
-SpringBoot外部配置配置文件，使用命令:--spring.config.location=<br/>
-=后面如果是一个文件夹，则会自动去找里面的所有yml文件，并忽略对应的jar包内的配置文件(因为有加载的优先级)
-（此时可以结合--spring.profiles.active来配置环境）。 如果是特定文件，则只会去找单个文件。<br/>
-注意：jar包默认会优先加载同一目录底下的yml配置文件  
+- SpringBoot外部配置配置文件，使用命令:--spring.config.location=<br/>
+- =后面如果是一个文件夹，则会自动去找里面的所有yml文件，并忽略对应的jar包内的配置文件(因为有加载的优先级)
+- （此时可以结合--spring.profiles.active来配置环境）。 如果是特定文件，则只会去找单个文件。<br/>
+- 注意：jar包默认会优先加载同一目录底下的yml配置文件  
 
 **5.部署相关**<br/>
 ①如果有涉及访问别的服务，则部署后需要进行网络通信是否能通的验证（ping或telnet）。如果访问还涉及SSL通信，
