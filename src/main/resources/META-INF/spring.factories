@@ -1,0 +1,2 @@
+org.springframework.context.ApplicationListener=com.basic.happytest.modules.startRun.MyApplicationContextInitializedListener,\
+com.basic.happytest.modules.startRun.MyApplicationStartingListener

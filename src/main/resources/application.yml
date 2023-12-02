@@ -20,3 +20,12 @@ mybatis-plus:
   typeAliasesPackage: com.basic.happytest.mudules.*.entity
   Configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# actuator 配置
+management:
+  server:
+    port: 12313 # 使用独立端口，不设置的话和web端口就一样
+  endpoints:
+    web:
+      exposure:
+        include: startup # 暴露 startup 端点

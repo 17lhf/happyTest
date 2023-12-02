@@ -103,8 +103,10 @@ file lib/ct.sym with class stubs.<br/>
 ### (23)jaCoCo
 **关于JaCoCo代码覆盖率的使用测试**
 
-### (24)startLoad
-**关于启动加载的实例**
+### (24)startRun
+**关于项目启动时运行方法的实例**
+事件监听器不应该运行潜在耗时的任务，因为它们默认是在同一个线程中执行。 考虑使用 ApplicationRunner 和 CommandLineRunner 代替。<br />
+如果执行的时机在bean可以开始实例化前（比如BeanDefined都还没开始），请不要使用@Autowired等方式注入bean依赖项，因为你会获得null。<br />
 
 ### (n)others
 **不知道咋归类的都丢这里** <br />
@@ -113,6 +115,7 @@ file lib/ct.sym with class stubs.<br/>
 - SerializationUtils.clone(obj); 深度拷贝，实际上此类更多时候是用于序列化和反序列化。此用法执行速度慢，不适用于对执行速度要求高的项目。（无测试方法）<br />
 
 ### (n+1) 补充
+Spring Boot文档：https://springdoc.cn/spring-boot/index.html  
 **1.Linux运行jar包**<br/>
 nohup java -jar xxx.jar --spring.profiles.active=prod &  <br/>
 - 通过–spring.profiles.active指定不同的环境(如开发dev、测试test、生产prod等，主要看配置文件里怎么定义) <br />
@@ -136,5 +139,10 @@ kill -9 jar包对应的进程编号
 **5.部署相关**<br/>
 ①如果有涉及访问别的服务，则部署后需要进行网络通信是否能通的验证（ping或telnet）。如果访问还涉及SSL通信，
 则也需要进行相应的通信测试。（当然，业务上的验证也不能遗漏）
+
+**6.Spring Boot的Application执行**  
+注意：JUnit测试时，如果使用的是@SpringBootTest @ExtendWith(SpringExtension.class) 注解，则是不会启动Tomcat和WebApplicationContext，
+这意味着相关的监听器都会监听不到东西。
+
 
 

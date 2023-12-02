@@ -135,6 +135,14 @@
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
+        <!-- Spring Boot Actuator 模块提供了生产级别的功能，比如健康检查，审计，指标收集，HTTP 跟踪等，帮助我们监控和管理Spring Boot 应用。 -->
+        <!-- 文档：https://docs.spring.io/spring-boot/docs/3.2.0-SNAPSHOT/actuator-api/htmlsingle/#overview -->
+        <!-- todo 待研究 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
