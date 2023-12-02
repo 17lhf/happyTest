@@ -10,4 +10,9 @@ class SystemOperationTest {
     void isWinSystem() {
         System.out.println("是否是Windows系统？ " + SystemOperation.isWinSystem());
     }
+
+    @Test
+    void printSpringVersion() {
+        SystemOperation.printSpringVersion();
+    }
 }

@@ -1,5 +1,8 @@
 package com.basic.happytest.modules.system;
 
+import org.springframework.boot.SpringBootVersion;
+import org.springframework.core.SpringVersion;
+
 /**
  * 一些关于系统的操作
  * @author lhf
@@ -16,5 +19,13 @@ public class SystemOperation {
         System.out.println("系统名： " + system);
         // system.toLowerCase().startsWith("linux"); // 检测Linux环境
         return system.toLowerCase().startsWith("win");
+    }
+
+    /**
+     * 打印Spring和SpringBoot的版本
+     */
+    public static void printSpringVersion() {
+        System.out.println("Spring version: " + SpringVersion.getVersion());
+        System.out.println("Spring Boot version: " + SpringBootVersion.getVersion());
     }
 }
