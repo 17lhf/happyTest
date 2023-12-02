@@ -313,6 +313,31 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "actuator/startup",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:12313/actuator/startup",
+					"host": [
+						"localhost"
+					],
+					"port": "12313",
+					"path": [
+						"actuator",
+						"startup"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
