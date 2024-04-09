@@ -26,7 +26,7 @@ class ExecuteProcessTest {
     @Test
     void execCmd() throws IOException {
         List<String> cmds = new ArrayList<>();
-        String subProcessPath = FileIO.getAbsolutePath(IN_OUT_NORMAL_PROCESS_PROCESS1);
+        String subProcessPath = FileIO.getResourceAbsolutePath(IN_OUT_NORMAL_PROCESS_PROCESS1);
         cmds.add(subProcessPath);
         cmds.add("123");
         cmds.add("One");
@@ -38,7 +38,7 @@ class ExecuteProcessTest {
     @Test
     void execTimeoutCmd() throws IOException {
         List<String> cmds = new ArrayList<>();
-        String subProcessPath = FileIO.getAbsolutePath(IN_OUT_NORMAL_PROCESS_PROCESS2);
+        String subProcessPath = FileIO.getResourceAbsolutePath(IN_OUT_NORMAL_PROCESS_PROCESS2);
         cmds.add(subProcessPath);
         // 超时测试
         ExecuteProcess.execTimeoutCmd(cmds, 4000);

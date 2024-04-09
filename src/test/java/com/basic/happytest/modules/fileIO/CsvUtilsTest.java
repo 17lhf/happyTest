@@ -30,7 +30,7 @@ class CsvUtilsTest {
             list.add(String.valueOf(GenNumber.getIntegerNumber(0, true, 200, true) * 0.5));
             content.add(list);
         }
-        String filePath = FileIO.getAbsolutePath(STORE_PATH) + "/test1.csv";
+        String filePath = FileIO.getResourceAbsolutePath(STORE_PATH) + "/test1.csv";
         CsvUtils.write(titles, content, filePath);
         // FileIO.deleteFile(filePath);
     }

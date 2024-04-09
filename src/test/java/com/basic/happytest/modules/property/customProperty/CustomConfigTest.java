@@ -23,7 +23,7 @@ class CustomConfigTest {
     @Test
     void init2() throws IOException {
         // 加载外部配置时
-        CustomConfig.init(FileIO.getAbsolutePath(EXT_CONFIG_FILE_PATH)); // 如果EXT_CONFIG_FILE_PATH是绝对路径，这里传参要修改
+        CustomConfig.init(FileIO.getResourceAbsolutePath(EXT_CONFIG_FILE_PATH)); // 如果EXT_CONFIG_FILE_PATH是绝对路径，这里传参要修改
         System.out.println("name：" + CustomConfig.getProp(CustomConfigEnum.NAME.getKeyName()));
         System.out.println("age：" + CustomConfig.getProp(CustomConfigEnum.AGE.getKeyName()));
     }
@@ -44,7 +44,7 @@ class CustomConfigTest {
     @Test
     void updProps2() throws IOException {
         // 加载外部配置时
-        CustomConfig.init(FileIO.getAbsolutePath(EXT_CONFIG_FILE_PATH)); // 如果EXT_CONFIG_FILE_PATH是绝对路径，这里传参要修改
+        CustomConfig.init(FileIO.getResourceAbsolutePath(EXT_CONFIG_FILE_PATH)); // 如果EXT_CONFIG_FILE_PATH是绝对路径，这里传参要修改
         System.out.println("--------------------------初始配置------------------------------");
         System.out.println("name：" + CustomConfig.getProp(CustomConfigEnum.NAME.getKeyName()));
         System.out.println("age：" + CustomConfig.getProp(CustomConfigEnum.AGE.getKeyName()));

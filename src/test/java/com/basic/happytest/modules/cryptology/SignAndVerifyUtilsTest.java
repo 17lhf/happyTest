@@ -31,13 +31,13 @@ class SignAndVerifyUtilsTest {
         byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
 
         // RSA
-        PrivateKey privateKey = AsymmetricUtils.loadRSAPKCS1PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
+        PrivateKey privateKey = AsymmetricUtils.loadRSAPKCS1PrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
         System.out.println();
         byte[] res1 = SignAndVerifyUtils.signData(privateKey, dataBytes, SignAlgorithmEnum.SHA256_WITH_RSA.getAlgorithm());
         System.out.println();
         byte[] res2 = SignAndVerifyUtils.signData2(privateKey, KeyAlgorithmEnum.RSA.getAlgorithm(), dataBytes, DigestTypeEnum.SHA256.getDigestType());
         System.out.println(Hex.toHexString(res1).equals(Hex.toHexString(res2)));
-        PublicKey publicKey = AsymmetricUtils.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY));
+        PublicKey publicKey = AsymmetricUtils.loadPublicKey(FileIO.getResourceAbsolutePath(RSA_PUB_KEY));
         System.out.println();
         String sunJCEName = new SunJCE().getName();
         EncAndDecUtils.decryptData(publicKey, EncryptAlgorithmEnums.RSA.getAlgorithm(), res1, sunJCEName);
@@ -49,7 +49,7 @@ class SignAndVerifyUtilsTest {
         EncAndDecUtils.decryptData(publicKey, EncryptAlgorithmEnums.RSA_ECB_PKCS1PADDING.getAlgorithm(), res2, sunJCEName);
 
         // ECC
-        PrivateKey ecPrvKey = AsymmetricUtils.loadPrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
+        PrivateKey ecPrvKey = AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
         System.out.println();
         SignAndVerifyUtils.signData(ecPrvKey, dataBytes, SignAlgorithmEnum.SHA256_WITH_ECDSA.getAlgorithm());
     }
@@ -59,17 +59,17 @@ class SignAndVerifyUtilsTest {
         String data = "a data to be signed";
         byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
         // RSA
-        PrivateKey privateKey = AsymmetricUtils.loadRSAPKCS1PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
+        PrivateKey privateKey = AsymmetricUtils.loadRSAPKCS1PrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
         System.out.println();
         byte[] res1 = SignAndVerifyUtils.signData(privateKey, dataBytes, SignAlgorithmEnum.SHA256_WITH_RSA.getAlgorithm());
-        PublicKey publicKey = AsymmetricUtils.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY));
+        PublicKey publicKey = AsymmetricUtils.loadPublicKey(FileIO.getResourceAbsolutePath(RSA_PUB_KEY));
         System.out.println();
         SignAndVerifyUtils.validSignature(publicKey, KeyAlgorithmEnum.RSA.getAlgorithm(), dataBytes, DigestTypeEnum.SHA256.getDigestType(), res1);
         // ECC
-        PrivateKey ecPrvKey = AsymmetricUtils.loadPrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
+        PrivateKey ecPrvKey = AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
         System.out.println();
         byte[] res11 = SignAndVerifyUtils.signData(ecPrvKey, dataBytes, SignAlgorithmEnum.SHA256_WITH_ECDSA.getAlgorithm());
-        PublicKey ecPubKey = AsymmetricUtils.loadPublicKey(FileIO.getAbsolutePath(ECC_PUB_KEY));
+        PublicKey ecPubKey = AsymmetricUtils.loadPublicKey(FileIO.getResourceAbsolutePath(ECC_PUB_KEY));
         SignAndVerifyUtils.validSignature(ecPubKey, KeyAlgorithmEnum.ECDSA.getAlgorithm(), dataBytes, DigestTypeEnum.SHA256.getDigestType(), res11);
     }
 }

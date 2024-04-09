@@ -64,7 +64,7 @@ class AsymmetricUtilsTest {
 
     @Test
     void testGetAbsoluteFolderPath() throws IOException {
-        FileIO.getAbsolutePath(STORE_PATH);
+        FileIO.getResourceAbsolutePath(STORE_PATH);
     }
 
     @Test
@@ -77,8 +77,8 @@ class AsymmetricUtilsTest {
 
     @Test
     void getPubKeyFromCert() throws Exception {
-        AsymmetricUtils.getPubKeyFromCert(FileIO.getAbsolutePath(CA_CERT_PEM));
-        AsymmetricUtils.getPubKeyFromCert(FileIO.getAbsolutePath(CA_CERT_DER));
+        AsymmetricUtils.getPubKeyFromCert(FileIO.getResourceAbsolutePath(CA_CERT_PEM));
+        AsymmetricUtils.getPubKeyFromCert(FileIO.getResourceAbsolutePath(CA_CERT_DER));
     }
 
     @Test
@@ -104,49 +104,49 @@ class AsymmetricUtilsTest {
 
     @Test
     void loadRSAPrivateKey() throws Exception {
-        AsymmetricUtils.loadRSAPKCS1PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
+        AsymmetricUtils.loadRSAPKCS1PrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
     }
 
     @Test
     void loadPKCS8EncryptedPrivateKey() throws Exception {
-        AsymmetricUtils.loadPKCS8EncryptedPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_ENCRYPT), RSA_PRV_KEY_PKCS8_ENCRYPT_PWD);
-        AsymmetricUtils.loadPKCS8EncryptedPrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_ENCRYPT), ECC_PRV_KEY_PKCS8_ENCRYPT_PWD);
+        AsymmetricUtils.loadPKCS8EncryptedPrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS8_ENCRYPT), RSA_PRV_KEY_PKCS8_ENCRYPT_PWD);
+        AsymmetricUtils.loadPKCS8EncryptedPrivateKey(FileIO.getResourceAbsolutePath(ECC_PRV_KEY_PKCS8_ENCRYPT), ECC_PRV_KEY_PKCS8_ENCRYPT_PWD);
     }
 
     @Test
     void loadPrivateKey() throws Exception {
-         AsymmetricUtils.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
-         AsymmetricUtils.loadPrivateKey(FileIO.getAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
-         AsymmetricUtils.loadPrivateKey(FileIO.getAbsolutePath(PEM_KEY_PAIR_PRV_KEY));
-         AsymmetricUtils.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
+         AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+         AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(ECC_PRV_KEY_PKCS8_NO_ENCRYPT));
+         AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(PEM_KEY_PAIR_PRV_KEY));
+         AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
     }
 
     @Test
     void loadPublicKey() throws Exception {
-        AsymmetricUtils.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY));
-        AsymmetricUtils.loadPublicKey(FileIO.getAbsolutePath(ECC_PUB_KEY));
+        AsymmetricUtils.loadPublicKey(FileIO.getResourceAbsolutePath(RSA_PUB_KEY));
+        AsymmetricUtils.loadPublicKey(FileIO.getResourceAbsolutePath(ECC_PUB_KEY));
     }
 
     @Test
     void loadPublicKey2() throws Exception {
-        AsymmetricUtils.loadPublicKey2(FileIO.getAbsolutePath(RSA_PUB_KEY), KeyAlgorithmEnum.RSA.getAlgorithm());
-        AsymmetricUtils.loadPublicKey2(FileIO.getAbsolutePath(ECC_PUB_KEY), KeyAlgorithmEnum.EC.getAlgorithm());
+        AsymmetricUtils.loadPublicKey2(FileIO.getResourceAbsolutePath(RSA_PUB_KEY), KeyAlgorithmEnum.RSA.getAlgorithm());
+        AsymmetricUtils.loadPublicKey2(FileIO.getResourceAbsolutePath(ECC_PUB_KEY), KeyAlgorithmEnum.EC.getAlgorithm());
     }
 
     @Test
     void loadCertFromFile() throws Exception {
-        AsymmetricUtils.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), EncodeTypeEnum.PEM.getType());
-        AsymmetricUtils.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_DER), EncodeTypeEnum.DER.getType());
+        AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(CA_CERT_PEM), EncodeTypeEnum.PEM.getType());
+        AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(CA_CERT_DER), EncodeTypeEnum.DER.getType());
     }
 
     @Test
     void getCertMsg() throws Exception {
-        AsymmetricUtils.getCertMsg(AsymmetricUtils.loadCertFromFile(FileIO.getAbsolutePath(RSA_CERT_PEM), EncodeTypeEnum.PEM.getType()));
+        AsymmetricUtils.getCertMsg(AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(RSA_CERT_PEM), EncodeTypeEnum.PEM.getType()));
     }
 
     @Test
     void getPubKeyFromCsr() throws Exception {
-        PKCS10CertificationRequest csr = AsymmetricUtils.loadCsrFromFile(FileIO.getAbsolutePath(RSA_CSR_PEM), EncodeTypeEnum.PEM.getType());
+        PKCS10CertificationRequest csr = AsymmetricUtils.loadCsrFromFile(FileIO.getResourceAbsolutePath(RSA_CSR_PEM), EncodeTypeEnum.PEM.getType());
         AsymmetricUtils.getPubKeyFromCsr(csr, KeyAlgorithmEnum.RSA.getAlgorithm());
 
         CsrInfos csrInfos = new CsrInfos();
@@ -164,8 +164,8 @@ class AsymmetricUtilsTest {
 
     @Test
     void testLoadCsrFromFile() throws Exception {
-        AsymmetricUtils.loadCsrFromFile(FileIO.getAbsolutePath(RSA_CSR_PEM), EncodeTypeEnum.PEM.getType());
-        AsymmetricUtils.loadCsrFromFile(FileIO.getAbsolutePath(RSA_CSR_DER), EncodeTypeEnum.DER.getType());
+        AsymmetricUtils.loadCsrFromFile(FileIO.getResourceAbsolutePath(RSA_CSR_PEM), EncodeTypeEnum.PEM.getType());
+        AsymmetricUtils.loadCsrFromFile(FileIO.getResourceAbsolutePath(RSA_CSR_DER), EncodeTypeEnum.DER.getType());
     }
 
     @Test
@@ -202,15 +202,15 @@ class AsymmetricUtilsTest {
         System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath(RSA_CSR_PEM))));*/
         String pem = AsymmetricUtils.der2pem(Hex.toHexString(
                 AsymmetricUtils.loadCertFromFile(
-                        FileIO.getAbsolutePath(CA_CERT_PEM), EncodeTypeEnum.PEM.getType()).getEncoded()), DataTypeEnum.CERT.getType());
-        System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getAbsolutePath(CA_CERT_PEM))));
+                        FileIO.getResourceAbsolutePath(CA_CERT_PEM), EncodeTypeEnum.PEM.getType()).getEncoded()), DataTypeEnum.CERT.getType());
+        System.out.println(StringUtils.compare(pem, FileIO.getFileContent(FileIO.getResourceAbsolutePath(CA_CERT_PEM))));
     }
 
     @Test
     void cert2PemFile() throws Exception {
-        AsymmetricUtils.cert2PemFile(AsymmetricUtils.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), EncodeTypeEnum.PEM.getType()),
+        AsymmetricUtils.cert2PemFile(AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(CA_CERT_PEM), EncodeTypeEnum.PEM.getType()),
                 System.currentTimeMillis() + "_cert.crt",
-                FileIO.getAbsolutePath(STORE_PATH) + "/");
+                FileIO.getResourceAbsolutePath(STORE_PATH) + "/");
     }
 
     @Test
@@ -225,49 +225,49 @@ class AsymmetricUtilsTest {
         csrInfos.setEmailAddress("lhf@qq.com");
         KeyPair rsaKeyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
         PKCS10CertificationRequest csr = AsymmetricUtils.generateP10CertRequest(KeyAlgorithmEnum.RSA.getAlgorithm(), rsaKeyPair, csrInfos);
-        AsymmetricUtils.csr2PemFile(csr, System.currentTimeMillis() + "_csr.csr", FileIO.getAbsolutePath(STORE_PATH) + "/");
-        String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
-        String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
+        AsymmetricUtils.csr2PemFile(csr, System.currentTimeMillis() + "_csr.csr", FileIO.getResourceAbsolutePath(STORE_PATH) + "/");
+        String issuerCertPath = FileIO.getResourceAbsolutePath(CA_CERT_PEM);
+        String issuerKeyPath = FileIO.getResourceAbsolutePath(CA_KEY);
         AsymmetricUtils.cert2PemFile(AsymmetricUtils.issueCert(csr, issuerCertPath, issuerKeyPath, 3650),
                 System.currentTimeMillis() + "_cert.crt",
-                FileIO.getAbsolutePath(STORE_PATH) + "/");
+                FileIO.getResourceAbsolutePath(STORE_PATH) + "/");
     }
 
     @Test
     void certPem2DerHexStr() throws Exception {
-        String certInDER = AsymmetricUtils.certPem2DerHexStr(FileIO.getFileContent(FileIO.getAbsolutePath(CA_CERT_PEM)));
+        String certInDER = AsymmetricUtils.certPem2DerHexStr(FileIO.getFileContent(FileIO.getResourceAbsolutePath(CA_CERT_PEM)));
         X509Certificate x509Certificate = new X509CertImpl(Hex.decode(certInDER));
         System.out.println(x509Certificate.getSubjectDN().getName());
     }
 
     @Test
     void generateP12() throws Exception {
-        X509Certificate rootCert = AsymmetricUtils.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), EncodeTypeEnum.PEM.getType());
-        X509Certificate subCert = AsymmetricUtils.loadCertFromFile(FileIO.getAbsolutePath(RSA_CERT_PEM), EncodeTypeEnum.PEM.getType());
-        PrivateKey privateKey = AsymmetricUtils.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+        X509Certificate rootCert = AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(CA_CERT_PEM), EncodeTypeEnum.PEM.getType());
+        X509Certificate subCert = AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(RSA_CERT_PEM), EncodeTypeEnum.PEM.getType());
+        PrivateKey privateKey = AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         AsymmetricUtils.generateP12(rootCert, "rootCert",
                 subCert, "sub",
-                privateKey, "654321", "123456", FileIO.getAbsolutePath(STORE_PATH) + "/");
+                privateKey, "654321", "123456", FileIO.getResourceAbsolutePath(STORE_PATH) + "/");
     }
 
     @Test
     void validCertChain() throws Exception {
-        X509Certificate subCert = AsymmetricUtils.loadCertFromFile(FileIO.getAbsolutePath(RSA_CERT_PEM), EncodeTypeEnum.PEM.getType());
-        X509Certificate rootCert = AsymmetricUtils.loadCertFromFile(FileIO.getAbsolutePath(CA_CERT_PEM), EncodeTypeEnum.PEM.getType());
+        X509Certificate subCert = AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(RSA_CERT_PEM), EncodeTypeEnum.PEM.getType());
+        X509Certificate rootCert = AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(CA_CERT_PEM), EncodeTypeEnum.PEM.getType());
         AsymmetricUtils.validCertChain(subCert, rootCert);
         AsymmetricUtils.validCertChain(rootCert, subCert);
     }
 
     @Test
     void loadAndParseP12() throws Exception {
-       AsymmetricUtils.loadAndParseP12(FileIO.getAbsolutePath(STORE_PATH) + "/genByJavaRSA1.p12",
+       AsymmetricUtils.loadAndParseP12(FileIO.getResourceAbsolutePath(STORE_PATH) + "/genByJavaRSA1.p12",
                "123456", "sub", "654321", "sub", "rootCert");
     }
 
     @Test
     public void genP10() throws Exception{
-        PublicKey publicKey = AsymmetricUtils.loadPublicKey(FileIO.getAbsolutePath(RSA_PUB_KEY));
-        PrivateKey privateKey = AsymmetricUtils.loadRSAPKCS1PrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
+        PublicKey publicKey = AsymmetricUtils.loadPublicKey(FileIO.getResourceAbsolutePath(RSA_PUB_KEY));
+        PrivateKey privateKey = AsymmetricUtils.loadRSAPKCS1PrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS1_NO_ENCRYPT));
         CsrInfos csrInfos = new CsrInfos();
         csrInfos.setCountry("CN");
         csrInfos.setState("FuJian");
@@ -279,13 +279,13 @@ class AsymmetricUtilsTest {
         byte[] csrInfoBytes = AsymmetricUtils.getP10CsrInfoToBeSign(csrInfos, publicKey);
         byte[] signature = SignAndVerifyUtils.signData(privateKey, csrInfoBytes, SignAlgorithmEnum.SHA256_WITH_RSA.getAlgorithm());
         PKCS10CertificationRequest csr = AsymmetricUtils.constructP10Csr(signature, csrInfoBytes);
-        AsymmetricUtils.csr2PemFile(csr, System.currentTimeMillis() + "_csr.csr", FileIO.getAbsolutePath(STORE_PATH) + "/");
+        AsymmetricUtils.csr2PemFile(csr, System.currentTimeMillis() + "_csr.csr", FileIO.getResourceAbsolutePath(STORE_PATH) + "/");
     }
 
     @Test
     void encryptP8KeyFromFileAnd2File() throws Exception {
-        AsymmetricUtils.encryptP8KeyFromFileAnd2File(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT),
-                "123456", FileIO.getAbsolutePath(STORE_PATH) + "/");
+        AsymmetricUtils.encryptP8KeyFromFileAnd2File(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT),
+                "123456", FileIO.getResourceAbsolutePath(STORE_PATH) + "/");
     }
 
     @Test
@@ -320,14 +320,14 @@ class AsymmetricUtilsTest {
         X509Certificate x509Certificate = AsymmetricUtils.issueSelfSignV1Cert(csr, rsaKeyPair.getPrivate(), 3650);
         AsymmetricUtils.cert2PemFile(x509Certificate,
                 System.currentTimeMillis() + "_cert.crt",
-                FileIO.getAbsolutePath(STORE_PATH) + "/");
+                FileIO.getResourceAbsolutePath(STORE_PATH) + "/");
         AsymmetricUtils.getCertMsg(x509Certificate);
     }
 
     @Test
     void issueCert() throws Exception {
-        String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
-        String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
+        String issuerCertPath = FileIO.getResourceAbsolutePath(CA_CERT_PEM);
+        String issuerKeyPath = FileIO.getResourceAbsolutePath(CA_KEY);
         CsrInfos csrInfos = new CsrInfos();
         csrInfos.setCountry("CN");
         csrInfos.setState("FuJian");
@@ -343,10 +343,10 @@ class AsymmetricUtilsTest {
 
     @Test
     void issueV3CaCert() throws Exception {
-        String baseDir = FileIO.getAbsolutePath(STORE_PATH) + "/";
+        String baseDir = FileIO.getResourceAbsolutePath(STORE_PATH) + "/";
         String timeStamp = String.valueOf(System.currentTimeMillis());
-        String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
-        String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
+        String issuerCertPath = FileIO.getResourceAbsolutePath(CA_CERT_PEM);
+        String issuerKeyPath = FileIO.getResourceAbsolutePath(CA_KEY);
 
         String alo = KeyAlgorithmEnum.RSA.getAlgorithm();
         CsrInfos csrInfos = new CsrInfos();
@@ -368,10 +368,10 @@ class AsymmetricUtilsTest {
     }
     @Test
     void issueAttachExtensionsCert() throws Exception {
-        String baseDir = FileIO.getAbsolutePath(STORE_PATH) + "/";
+        String baseDir = FileIO.getResourceAbsolutePath(STORE_PATH) + "/";
         String timeStamp = String.valueOf(System.currentTimeMillis());
-        String issuerCertPath = FileIO.getAbsolutePath(CA_CERT_PEM);
-        String issuerKeyPath = FileIO.getAbsolutePath(CA_KEY);
+        String issuerCertPath = FileIO.getResourceAbsolutePath(CA_CERT_PEM);
+        String issuerKeyPath = FileIO.getResourceAbsolutePath(CA_KEY);
 
         String alo = KeyAlgorithmEnum.RSA.getAlgorithm();
         CsrInfos csrInfos = new CsrInfos();
@@ -396,7 +396,7 @@ class AsymmetricUtilsTest {
     @Test
     void loadRSAPubKeyByPriKeyTest() throws Exception {
         PrivateKey privateKey =
-                AsymmetricUtils.loadPrivateKey(FileIO.getAbsolutePath(AsymmetricUtilsTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+                AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(AsymmetricUtilsTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         PublicKey publicKey = AsymmetricUtils.loadRSAPubKeyByPriKey(privateKey);
         String s = "abc";
         String sunJCEName = new SunJCE().getName();
@@ -417,7 +417,7 @@ class AsymmetricUtilsTest {
     void validRSAKeyPairMatch() throws Exception {
         KeyPair keyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
         System.out.println("KeyPair is match? " + AsymmetricUtils.validRSAKeyPairMatch(keyPair.getPublic(), keyPair.getPrivate()));
-        PrivateKey privateKey = AsymmetricUtils.loadPrivateKey(FileIO.getAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+        PrivateKey privateKey = AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         System.out.println("KeyPair is match? " + AsymmetricUtils.validRSAKeyPairMatch(keyPair.getPublic(), privateKey));
     }
 

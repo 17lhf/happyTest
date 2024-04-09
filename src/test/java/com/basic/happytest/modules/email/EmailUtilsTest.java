@@ -36,7 +36,7 @@ class EmailUtilsTest {
         String title = "nothing title";
         String content = "Hello world and attach a file";
         String receiveAddress = "123@qq.com";
-        File file = new File(FileIO.getAbsolutePath("/static/attachments/attach1.txt"));
+        File file = new File(FileIO.getResourceAbsolutePath("/static/attachments/attach1.txt"));
         System.out.println(emailUtils.sendEmail(senderName, receiveAddress, title, content, file));
     }
 

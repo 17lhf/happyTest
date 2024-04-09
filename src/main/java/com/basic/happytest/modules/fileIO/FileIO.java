@@ -6,6 +6,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import java.io.*;
 import java.net.URL;
+import java.net.URLClassLoader;
 
 /**
  * 一系列的关于文件和流的操作
@@ -15,14 +16,16 @@ import java.net.URL;
 public class FileIO {
 
     /**
-     * 依据相对路径获取绝对路径
+     * 获取资源的绝对路径 <br />
+     * 资源需要放置在 resource 目录下，以在 resource 的目录路径为参数传入 <br />
+     * 资源可以在 test目录 或者 main目录 底下的 resource 目录下，默认都会去找 <br />
      * @param path resource文件夹底下的相对路径
-     * @return 绝对路径
+     * @return 绝对路径（如果是获取文件夹路径，则最后会自动带上斜杠）
      * @throws IOException 异常
      */
-    public static String getAbsolutePath(String path) throws IOException {
-        // 打包后不能用File读取jar里面的文件，否则会报错：java.io.FileNotFoundException: class path resource [xxx] cannot be resolved to absolute file path because it does not reside in the file system:
-        // String filePath = (new ClassPathResource(path)).getFile().getPath();
+    public static String getResourceAbsolutePath(String path) throws IOException {
+        // class.getResource(name) 如果 name 不加斜杠，则会自动从类所在的包目录下获取资源，这里即为 com.basic.happytest.modules.fileIO。
+        // 如果 name 加斜杠，则从 classPath根目录下获取资源，即 classes目录 或者 test-classes目录
         URL fileURL = FileIO.class.getResource(path);
         if (fileURL == null) {
             System.out.println("定位文件路径失败！！！");
@@ -164,5 +167,14 @@ public class FileIO {
         // Linux 文件名除了 / 以外，都可以用。但是因为部分字符已经被系统用于特殊用途，所以不建议使用：?@#$&()\|;‘’“”<>
         // Linux 文件名还有要注意：避免使用+ -或.作为普通文件名的第一个字符 (在Linux下以.开头的文件是属于隐藏文件)
         return validateResult;
+    }
+
+    public static void main(String[] args) throws IOException {
+        //    /target/classes/static/fileIO/loadTestFile1.txt
+        System.out.println("18:" + FileIO.class.getResource("/static/fileIO/loadTestFile1.txt"));
+        //    /target/classes/static/fileIO/loadTestFile1.txt
+        System.out.println("19:" + URLClassLoader.getSystemResource("static/fileIO/loadTestFile1.txt"));
+        //    \target\classes\static\fileIO\loadTestFile1.txt
+        System.out.println("20:" + (new ClassPathResource("/static/fileIO/loadTestFile1.txt")).getFile().getPath());
     }
 }
