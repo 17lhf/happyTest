@@ -14,7 +14,7 @@ import java.util.List;
 
 class CsvUtilsTest {
     // 存储生成的文件的路径
-    static String STORE_PATH = "static/fileIO/csv/";
+    static String STORE_PATH = "/static/fileIO/csv/";
 
     @Test
     void write() throws Exception {

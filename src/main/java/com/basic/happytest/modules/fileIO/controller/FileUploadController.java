@@ -18,7 +18,7 @@ import java.io.IOException;
 @CrossOrigin
 public class FileUploadController {
 
-    private static final String FILE_STORE_FOLDER = "static/fileIO/uploadTmp/";
+    private static final String FILE_STORE_FOLDER = "/static/fileIO/uploadTmp/";
 
     /**
      * 处理上传的文件（结合postman测试）
@@ -54,7 +54,7 @@ public class FileUploadController {
     @PostMapping("files")
     public Result<String> uploadFiles(@RequestParam("files")MultipartFile[] files) throws IOException {
         // 本次上传的文件暂放的文件夹
-        String folderPath = FileIO.getAbsolutePath(FILE_STORE_FOLDER) + "/" + System.currentTimeMillis();
+        String folderPath = FileIO.getAbsolutePath(FILE_STORE_FOLDER) + System.currentTimeMillis();
         FileIO.createFolder(folderPath);
         // 开始往文件夹中存放上传上来的文件
         for (MultipartFile multipartFile : files) {

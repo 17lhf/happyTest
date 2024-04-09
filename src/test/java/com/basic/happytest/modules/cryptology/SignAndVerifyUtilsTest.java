@@ -17,12 +17,12 @@ class SignAndVerifyUtilsTest {
 
     // <editor-fold desc="一些会被用到的文件路径">
     // RSA私钥示例1
-    static String RSA_PRV_KEY_PKCS1_NO_ENCRYPT = "static/cryptologyFiles/rsaPrivateKey1.key";
+    static String RSA_PRV_KEY_PKCS1_NO_ENCRYPT = "/static/cryptologyFiles/rsaPrivateKey1.key";
     // RSA公钥示例1
-    static String RSA_PUB_KEY = "static/cryptologyFiles/rsaPublicKey1.key";
-    static String ECC_PRV_KEY_PKCS8_NO_ENCRYPT = "static/cryptologyFiles/ecPkcs8PrivateKey1.key";
+    static String RSA_PUB_KEY = "/static/cryptologyFiles/rsaPublicKey1.key";
+    static String ECC_PRV_KEY_PKCS8_NO_ENCRYPT = "/static/cryptologyFiles/ecPkcs8PrivateKey1.key";
     // ECC公钥示例1
-    static String ECC_PUB_KEY = "static/cryptologyFiles/ecPublicKey1.key";
+    static String ECC_PUB_KEY = "/static/cryptologyFiles/ecPublicKey1.key";
     // </editor-fold>
 
     @Test

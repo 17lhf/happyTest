@@ -28,38 +28,38 @@ import java.util.Arrays;
 class AsymmetricUtilsTest {
     // <editor-fold desc="一些会被用到的文件路径">
     // 存储生成的文件的路径
-    static String STORE_PATH = "static/cryptologyFiles/storeFiles/";
+    static String STORE_PATH = "/static/cryptologyFiles/storeFiles/";
     // RSA私钥示例1
-    static String RSA_PRV_KEY_PKCS1_NO_ENCRYPT = "static/cryptologyFiles/rsaPrivateKey1.key";
-    static String RSA_PRV_KEY_PKCS8_NO_ENCRYPT = "static/cryptologyFiles/pkcs8RsaPrivateKey1.key";
+    static String RSA_PRV_KEY_PKCS1_NO_ENCRYPT = "/static/cryptologyFiles/rsaPrivateKey1.key";
+    static String RSA_PRV_KEY_PKCS8_NO_ENCRYPT = "/static/cryptologyFiles/pkcs8RsaPrivateKey1.key";
     // RSA公钥示例1
-    static String RSA_PUB_KEY = "static/cryptologyFiles/rsaPublicKey1.key";
+    static String RSA_PUB_KEY = "/static/cryptologyFiles/rsaPublicKey1.key";
     // RSA私钥示例2
-    static String RSA_PRV_KEY_PKCS1_ENCRYPT = "static/cryptologyFiles/rsaProtectedByPwd.key";
-    static String RSA_PRV_KEY_PKCS8_ENCRYPT = "static/cryptologyFiles/pkcs8RsaProtectedByPwd.key";
+    static String RSA_PRV_KEY_PKCS1_ENCRYPT = "/static/cryptologyFiles/rsaProtectedByPwd.key";
+    static String RSA_PRV_KEY_PKCS8_ENCRYPT = "/static/cryptologyFiles/pkcs8RsaProtectedByPwd.key";
     static String RSA_PRV_KEY_PKCS8_ENCRYPT_PWD = "123456";
     // RSA CSR示例
-    static String RSA_CSR_PEM = "static/cryptologyFiles/rsa1.csr";
-    static String RSA_CSR_DER = "static/cryptologyFiles/rsa1_der.csr";
+    static String RSA_CSR_PEM = "/static/cryptologyFiles/rsa1.csr";
+    static String RSA_CSR_DER = "/static/cryptologyFiles/rsa1_der.csr";
     // RSA CERT示例
-    static String RSA_CERT_PEM = "static/cryptologyFiles/rsa1.crt";
+    static String RSA_CERT_PEM = "/static/cryptologyFiles/rsa1.crt";
     // ECC私钥示例1
-    static String ECC_PRV_KEY_PKCS1_NO_ENCRYPT = "static/cryptologyFiles/ecPrivateKey1.key";
-    static String ECC_PRV_KEY_PKCS1_ENCRYPT = "static/cryptologyFiles/ecProtectedPrvKey1.key";
+    static String ECC_PRV_KEY_PKCS1_NO_ENCRYPT = "/static/cryptologyFiles/ecPrivateKey1.key";
+    static String ECC_PRV_KEY_PKCS1_ENCRYPT = "/static/cryptologyFiles/ecProtectedPrvKey1.key";
     static String ECC_PRV_KEY_PKCS1_ENCRYPT_PWD = "123456";
-    static String ECC_PRV_KEY_PKCS8_ENCRYPT = "static/cryptologyFiles/ecPkcs8ProtectedPrivateKey1.key";
+    static String ECC_PRV_KEY_PKCS8_ENCRYPT = "/static/cryptologyFiles/ecPkcs8ProtectedPrivateKey1.key";
     static String ECC_PRV_KEY_PKCS8_ENCRYPT_PWD = "123456";
-    static String ECC_PRV_KEY_PKCS8_NO_ENCRYPT = "static/cryptologyFiles/ecPkcs8PrivateKey1.key";
+    static String ECC_PRV_KEY_PKCS8_NO_ENCRYPT = "/static/cryptologyFiles/ecPkcs8PrivateKey1.key";
     // ECC公钥示例1
-    static String ECC_PUB_KEY = "static/cryptologyFiles/ecPublicKey1.key";
+    static String ECC_PUB_KEY = "/static/cryptologyFiles/ecPublicKey1.key";
     // CA证书示例
-    static String CA_CERT_PEM = "static/cryptologyFiles/ca.crt";
-    static String CA_CERT_DER = "static/cryptologyFiles/ca.der";
+    static String CA_CERT_PEM = "/static/cryptologyFiles/ca.crt";
+    static String CA_CERT_DER = "/static/cryptologyFiles/ca.der";
     // CA私钥示例
-    static String CA_KEY = "static/cryptologyFiles/ca.key";
+    static String CA_KEY = "/static/cryptologyFiles/ca.key";
     // 比较特殊的一对密钥，其私钥加载后是PEMKeyPair对象。由“OpenSSL 1.1.1h  22 Sep 2020”生成
-    static String PEM_KEY_PAIR_PRV_KEY = "static/cryptologyFiles/keypair_pri_1.key";
-    static String PEM_KEY_PAIR_PUB_KEY = "static/cryptologyFiles/keypair_pub_1.key";
+    static String PEM_KEY_PAIR_PRV_KEY = "/static/cryptologyFiles/keypair_pri_1.key";
+    static String PEM_KEY_PAIR_PUB_KEY = "/static/cryptologyFiles/keypair_pub_1.key";
     // </editor-fold>
 
     @Test

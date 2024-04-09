@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * 关于运行子进程的测试案例
  * @author lhf
@@ -18,11 +16,11 @@ class ExecuteProcessTest {
     /**
      * 能输出，能接受输入的程序
      */
-    private static final String IN_OUT_NORMAL_PROCESS_PROCESS1 = "static/SubProcesses/testForJava1.exe";
+    private static final String IN_OUT_NORMAL_PROCESS_PROCESS1 = "/static/SubProcesses/test1.exe";
     /**
      * 先输出一句，然后延迟5s后输出后面两句
      */
-    private static final String IN_OUT_NORMAL_PROCESS_PROCESS2 = "static/SubProcesses/testForJava2.exe";
+    private static final String IN_OUT_NORMAL_PROCESS_PROCESS2 = "/static/SubProcesses/testForJava2.exe";
 
     // 寻常的与子进程交互的测试
     @Test

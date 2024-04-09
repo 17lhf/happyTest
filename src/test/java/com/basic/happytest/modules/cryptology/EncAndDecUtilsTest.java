@@ -19,11 +19,11 @@ import java.util.Arrays;
 
 class EncAndDecUtilsTest {
 
-    static String RSA_PRV_KEY_PKCS8_NO_ENCRYPT = "static/cryptologyFiles/pkcs8RsaPrivateKey1.key";
+    static String RSA_PRV_KEY_PKCS8_NO_ENCRYPT = "/static/cryptologyFiles/pkcs8RsaPrivateKey1.key";
 
     // 比较特殊的一对密钥，其私钥加载后是PEMKeyPair对象。由“OpenSSL 1.1.1h  22 Sep 2020”生成
-    static String PEM_KEY_PAIR_PRV_KEY = "static/cryptologyFiles/keypair_pri_1.key";
-    static String PEM_KEY_PAIR_PUB_KEY = "static/cryptologyFiles/keypair_pub_1.key";
+    static String PEM_KEY_PAIR_PRV_KEY = "/static/cryptologyFiles/keypair_pri_1.key";
+    static String PEM_KEY_PAIR_PUB_KEY = "/static/cryptologyFiles/keypair_pub_1.key";
 
     @Test
     void encryptAndDecryptData() throws Exception {

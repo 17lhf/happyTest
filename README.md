@@ -47,7 +47,8 @@ file lib/ct.sym with class stubs.<br/>
 **关于一些比较怪的文件操作及流的实例**<br />
 **关于单文件/多文件通过接口上传实例**<br />
 **关于CSV文件操作实例**<br />
-**ZIP的压缩和解压**
+**ZIP的压缩和解压**<br />
+打包后不能用File读取jar里面的文件，否则会报错：java.io.FileNotFoundException: class path resource [xxx] cannot be resolved to absolute file path because it does not reside in the file system
 
 ### (10)subProcess
 **调用子进程**
