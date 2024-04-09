@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -32,9 +33,10 @@ public class EmailUtils {
      * @param emailAddress 收件地址
      * @param title 邮件标题
      * @param content 邮件内容
+     * @param file 附件的文件流（若无附件，则可直接为null）
      * @return 是否成功
      */
-    public boolean sendEmail(String sendUserName, String emailAddress, String title, String content){
+    public boolean sendEmail(String sendUserName, String emailAddress, String title, String content, File file){
         try {
             HtmlEmail email = new HtmlEmail();
             email.setHostName(emailConfig.getHostName()); // 设置邮件SMTP服务器
@@ -44,6 +46,9 @@ public class EmailUtils {
             email.setAuthentication(emailConfig.getSendAddress(), emailConfig.getAuthorizationCode()); // 此处填写邮箱地址和客户端授权码
             email.setSubject(title); // 此处填写邮件名，邮件名可任意填写
             email.setMsg(content); // 此处填写邮件内容
+            if (file != null) {
+                email.attach(file); // 添加附件
+            }
             email.send();
             return true;
         } catch(Exception e){
@@ -59,16 +64,17 @@ public class EmailUtils {
      * @param emailAddress 收件地址
      * @param title 邮件标题
      * @param templateFilePath 模板文件路径
+     * @param file 附件的文件流（若无附件，则可直接为null）
      * @return 是否发送成功
      * @throws Exception 异常
      */
     public boolean sendTemplateEmail(TestClass testClass, String sendUserName, String emailAddress, String title,
-                                     String templateFilePath) throws Exception {
+                                     String templateFilePath, File file) throws Exception {
         Map<String, Object> map = ObjMapTransformUtil.Obj2Map(testClass);
         Context context = new Context();
         context.setVariables(map);
         // templateFilePath模板文件路径默认是resources/templates/底下的html后缀文件，符合的话甚至可以不用带html后缀
         String content = templateEngine.process(templateFilePath, context);
-        return sendEmail(sendUserName, emailAddress, title, content);
+        return sendEmail(sendUserName, emailAddress, title, content, file);
     }
 }
