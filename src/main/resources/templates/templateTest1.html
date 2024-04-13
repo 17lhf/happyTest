@@ -7,5 +7,6 @@
 <body>
     <div th:text="${num}">default number</div>
     <div th:text="${str}">default string</div>
+    <div th:text="${#dates.format(oneDay, 'yyyy-MM-dd HH:mm:ss')}"></div> <!-- 本质使用的就是 java.util.Date 来格式化时间 -->
 </body>
 </html>

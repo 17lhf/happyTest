@@ -9,6 +9,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.io.File;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -71,6 +72,8 @@ public class EmailUtils {
     public boolean sendTemplateEmail(TestClass testClass, String sendUserName, String emailAddress, String title,
                                      String templateFilePath, File file) throws Exception {
         Map<String, Object> map = ObjMapTransformUtil.Obj2Map(testClass);
+        // 手动设置值
+        map.put("oneDay", new Date());
         Context context = new Context();
         context.setVariables(map);
         // templateFilePath模板文件路径默认是resources/templates/底下的html后缀文件，符合的话甚至可以不用带html后缀
