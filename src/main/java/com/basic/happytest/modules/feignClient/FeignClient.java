@@ -15,7 +15,8 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 伪装客户端访问其他服务
+ * 伪装客户端访问其他服务 <br />
+ * FeignClient 执行请求时，会先执行请求预处理（见 RequestInterceptor 类的描述），然后就调用 client.execute() 方法开始建立连接发送请求
  * @author lhf
  */
 
@@ -27,7 +28,7 @@ public class FeignClient {
     private final Retryer retryer;
 
     /**
-     * 连接超时时长，单位: s
+     * 建立连接超时时长，单位: s
      */
     private static final long CONNECT_TIMEOUT = 10L;
 
@@ -59,7 +60,7 @@ public class FeignClient {
                 .client(ssLClient())
                 .requestInterceptor(new BeforeRequest("nothingStr"))
                 .options(new Request.Options(CONNECT_TIMEOUT, TimeUnit.SECONDS,
-                        READ_TIMEOUT, TimeUnit.SECONDS, true))
+                        READ_TIMEOUT, TimeUnit.SECONDS, true)) // 这些参数最终会应用到 HttpURLConnection上
                 .target(tClass, rootUri); // 这里rootUri在方法内部会被校验，不允许为空字符串或者null
     }
 
@@ -111,6 +112,17 @@ public class FeignClient {
                 }
             };
             ctx.init(null, new TrustManager[]{tm}, null);
+            // 这里 Default来初始化并使用的话，底层使用的是 sun.net.www.protocol.http.HttpURLConnection 来交互
+            // HttpURLConnection 的底层用的是 sun.net.www.http.HttpClient
+            // HttpURLConnection 里默认每次在 plainConnect0() 会进行 new 一个 HttpClient
+            // HttpClient 构造时，会检测  KeepAliveCache 里有没有存相同URL（含host、port、protocol）的TCP连接
+            // 若有，再检测协议、是否可用等后，能用则复用连接; 若不能复用，则新建连接
+            // 发送请求时，HttpURLConnection.writeRequests() 默认设置请求头为 Connection=keep-alive，这会使得 HttpClient 发现并保持长连接
+            // 同一个URL保持的最大长连接数取决于是否在请求头的Connection里设置，若无，则看有无设置代理（默认没设置），有代理是50，无则为5
+            // 长连接保持的空闲时间超时取决于是否在请求头的Connection里设置，若无，则看有无设置代理（默认没设置），有代理是50s，无则为5s
+            // 新的连接将在外部调用 finished() 方法里判定看是否要存入 KeepAliveCache 中（最多存5个连接）（每五秒检测一次有无空闲时间超时的，超过就关闭掉）
+            // 总结：可以不用去管连接是否长连接或者复用，正常使用Feign就行。
+            // 部分文章有提及：如果要复用连接，弄连接池的话，不建议使用默认的 HttpURLConnection，而是考虑看如何改用其他的连接池
             return new Client.Default(ctx.getSocketFactory(), (hostname, session) -> true);
         } catch (Exception e) {
             e.printStackTrace();
