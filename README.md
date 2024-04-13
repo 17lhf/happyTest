@@ -89,7 +89,7 @@ file lib/ct.sym with class stubs.<br/>
 
 ### (20)email
 **邮箱相关示例**
-简单的发送邮件、利用模板引擎构造邮件内容后发送邮件 <br />
+简单的发送邮件、利用模板引擎（thymeleaf）构造邮件内容后发送邮件 <br />
 - 若使用的是JavaMailSender, @Autowired时会爆红，但是实际运行没问题，其实这个是误报。因为这家伙必须要见到application.properties这个文件里
 有它对应的配置才不会爆红，即便压根就没设置值。但是如果用的是yml弄配置，本身没问题，只是会爆红，如果不想看到爆红，
 所以可以专门弄一个application.properties文件，里面放上空值的JavaMailSender相关配置。
@@ -113,7 +113,8 @@ file lib/ct.sym with class stubs.<br/>
 **不知道咋归类的都丢这里** <br />
 - 关于List.subList的坑的测试<br />
 - 关于数组的一些测试(按数组下标取值是引用取值，如果是对象，改属性值将影响原数组的相应元素)<br />
-- SerializationUtils.clone(obj); 深度拷贝，实际上此类更多时候是用于序列化和反序列化。此用法执行速度慢，不适用于对执行速度要求高的项目。（无测试方法）<br />
+- SerializationUtils.clone(obj); 深度拷贝，实际上此类更多时候是用于序列化和反序列化。
+此用法执行速度慢，不适用于对执行速度要求高的项目。（无测试方法，CustomConfig.java中使用）<br />
 
 ### (n+1) 补充
 Spring Boot文档：https://springdoc.cn/spring-boot/index.html  
