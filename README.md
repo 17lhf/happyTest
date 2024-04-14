@@ -100,6 +100,7 @@ file lib/ct.sym with class stubs.<br/>
 ### (22)objectUtils
 **对象相关的一些工具方法** <br />
 - 对象和Map键值对之间通过反射进行相互转换<br />
+- 字符串转列表<br />
 
 ### (23)jaCoCo
 **关于JaCoCo代码覆盖率的使用测试**
