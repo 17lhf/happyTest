@@ -116,6 +116,7 @@ file lib/ct.sym with class stubs.<br/>
 - 关于数组的一些测试(按数组下标取值是引用取值，如果是对象，改属性值将影响原数组的相应元素)<br />
 - SerializationUtils.clone(obj); 深度拷贝，实际上此类更多时候是用于序列化和反序列化。
 此用法执行速度慢，不适用于对执行速度要求高的项目。（无测试方法，CustomConfig.java中使用）<br />
+- 浮点计算精度误差和strictfp的使用
 
 ### (n+1) 补充
 Spring Boot文档：https://springdoc.cn/spring-boot/index.html  
