@@ -824,7 +824,7 @@ public class AsymmetricUtils {
      * 获取证书请求中包含的一些信息
      * @param csr 证书请求对象
      */
-    public static void getCsrMsg(PKCS10CertificationRequest csr) {
+    public static void getCsrInfo(PKCS10CertificationRequest csr) {
         System.out.println("---------------begin get csr message---------------");
         SubjectPublicKeyInfo subjectPublicKeyInfo = csr.getSubjectPublicKeyInfo();
         AlgorithmIdentifier algorithmIdentifier = subjectPublicKeyInfo.getAlgorithm();
@@ -1319,7 +1319,7 @@ public class AsymmetricUtils {
      * @param x509Certificate 证书对象
      * @throws Exception 异常
      */
-    public static void getCertMsg(X509Certificate x509Certificate) throws Exception{
+    public static void getCertInfo(X509Certificate x509Certificate) throws Exception{
         System.out.println("---------------begin get certificate message---------------");
         // 证书版本，现在一般用的是v1或者v3
         System.out.println("Cert version is: " + x509Certificate.getVersion());
@@ -1524,9 +1524,9 @@ public class AsymmetricUtils {
         System.out.println("---------------end generate P12---------------");
         // 验证
         if(rootCert != null || StringUtils.isNotBlank(rootCertAlias)){
-            AsymmetricUtils.getCertMsg((X509Certificate) keyStore.getCertificate(rootCertAlias));
+            AsymmetricUtils.getCertInfo((X509Certificate) keyStore.getCertificate(rootCertAlias));
         }
-        AsymmetricUtils.getCertMsg((X509Certificate) keyStore.getCertificate(prvKeyAndSubCertAlias));
+        AsymmetricUtils.getCertInfo((X509Certificate) keyStore.getCertificate(prvKeyAndSubCertAlias));
     }
 
     /**
@@ -1556,11 +1556,11 @@ public class AsymmetricUtils {
         System.out.println("Private key algorithm is: " + privateKey.getAlgorithm());
         System.out.println("Private key be created to this object date is: " + keyStore.getCreationDate(prvKeyAlias).toString());
         X509Certificate subCert = (X509Certificate) keyStore.getCertificate(subCertAlias);
-        AsymmetricUtils.getCertMsg(subCert);
+        AsymmetricUtils.getCertInfo(subCert);
         System.out.println("SubCert be created to this object date is: " + keyStore.getCreationDate(subCertAlias));
         if(StringUtils.isNotBlank(rootCertAlias)){
             X509Certificate rootCert = (X509Certificate) keyStore.getCertificate(rootCertAlias);
-            AsymmetricUtils.getCertMsg(rootCert);
+            AsymmetricUtils.getCertInfo(rootCert);
         }
         System.out.println("SubCert alias is: " + keyStore.getCertificateAlias(subCert));
         System.out.println("---------------begin parse P12---------------");

@@ -140,8 +140,8 @@ class AsymmetricUtilsTest {
     }
 
     @Test
-    void getCertMsg() throws Exception {
-        AsymmetricUtils.getCertMsg(AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(RSA_CERT_PEM), EncodeTypeEnum.PEM.getType()));
+    void getCertInfo() throws Exception {
+        AsymmetricUtils.getCertInfo(AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(RSA_CERT_PEM), EncodeTypeEnum.PEM.getType()));
     }
 
     @Test
@@ -169,7 +169,7 @@ class AsymmetricUtilsTest {
     }
 
     @Test
-    void getCsrMsg() throws Exception {
+    void getCsrInfo() throws Exception {
         CsrInfos csrInfos = new CsrInfos();
         csrInfos.setCountry("CN");
         csrInfos.setState("FuJian");
@@ -180,7 +180,7 @@ class AsymmetricUtilsTest {
         csrInfos.setEmailAddress("lhf@qq.com");
         KeyPair rsaKeyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
         PKCS10CertificationRequest csr = AsymmetricUtils.generateP10CertRequest(KeyAlgorithmEnum.RSA.getAlgorithm(), rsaKeyPair, csrInfos);
-        AsymmetricUtils.getCsrMsg(csr);
+        AsymmetricUtils.getCsrInfo(csr);
     }
 
     @Test
@@ -301,7 +301,7 @@ class AsymmetricUtilsTest {
         KeyPair rsaKeyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
         PKCS10CertificationRequest csr = AsymmetricUtils.generateAttachExtensionsP10Csr(KeyAlgorithmEnum.RSA.getAlgorithm(), rsaKeyPair, csrInfos);
         // Cryptology.csr2PemFile(csr, FileIO.getAbsolutePath(STORE_PATH) + "/");
-        AsymmetricUtils.getCsrMsg(csr);
+        AsymmetricUtils.getCsrInfo(csr);
     }
 
     @Test
@@ -321,7 +321,7 @@ class AsymmetricUtilsTest {
         AsymmetricUtils.cert2PemFile(x509Certificate,
                 System.currentTimeMillis() + "_cert.crt",
                 FileIO.getResourceAbsolutePath(STORE_PATH) + "/");
-        AsymmetricUtils.getCertMsg(x509Certificate);
+        AsymmetricUtils.getCertInfo(x509Certificate);
     }
 
     @Test
@@ -364,7 +364,7 @@ class AsymmetricUtilsTest {
         X509Certificate x509Certificate = AsymmetricUtils.issueAttachExtensionsCert(csr, issuerCertPath, issuerKeyPath,
                 3650, true, 1, alo);
         AsymmetricUtils.cert2PemFile(x509Certificate, System.currentTimeMillis() + "_cert.crt", baseDir);
-        AsymmetricUtils.getCertMsg(x509Certificate);
+        AsymmetricUtils.getCertInfo(x509Certificate);
     }
     @Test
     void issueAttachExtensionsCert() throws Exception {
@@ -390,7 +390,7 @@ class AsymmetricUtilsTest {
         X509Certificate x509Certificate = AsymmetricUtils.issueAttachExtensionsCert(csr, issuerCertPath, issuerKeyPath,
                 3650, false, 0, alo);
         AsymmetricUtils.cert2PemFile(x509Certificate, System.currentTimeMillis() + "_cert.crt", baseDir);
-        AsymmetricUtils.getCertMsg(x509Certificate);
+        AsymmetricUtils.getCertInfo(x509Certificate);
     }
 
     @Test
