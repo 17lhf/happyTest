@@ -38,9 +38,9 @@ class ASN1UtilsTest {
     @Test
     void oid2DERString() throws GSSException, IOException {
         List<String> oidList = new ArrayList<>();
-        oidList.add("1.3.6.1.5.5.7.3.8");
+        oidList.add("1.3.6.1.5.5.7.3.8"); // 增强型密钥用法里的时间戳
         oidList.add("1.3.6.1.5.5.7.3.8");
         // 3014 06082b06010505070308 06082b06010505070308
-        System.out.println(ASN1Utils.oid2DERString(oidList));
+        System.out.println(Hex.toHexString(ASN1Utils.oid2DERString(oidList)));
     }
 }

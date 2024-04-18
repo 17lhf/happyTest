@@ -162,17 +162,18 @@ public class ASN1Utils {
     }
 
     /**
-     * OID转DER格式字符串
+     * OID转DER格式字符串 <br />
+     * 目前作者实际应用，更多是在手动设置 增强型密钥用法 的值的时候
      * @param oidList 多个oid
-     * @return 十六进制串形式的DER格式内容
+     * @return DER格式内容
      */
-    public static String oid2DERString(List<String> oidList) throws GSSException, IOException {
+    public static byte[] oid2DERString(List<String> oidList) throws GSSException, IOException {
         ASN1EncodableVector asn1EncodableVector = new ASN1EncodableVector();
         for (String oid : oidList) {
             Oid oid1 = new Oid(oid);
             asn1EncodableVector.add(ASN1ObjectIdentifier.getInstance(oid1.getDER()));
         }
         DERSequence derSequence = new DERSequence(asn1EncodableVector);
-        return Hex.toHexString(derSequence.getEncoded());
+        return derSequence.getEncoded();
     }
 }
