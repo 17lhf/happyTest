@@ -13,6 +13,8 @@ public class TestClass extends SubTestClass {
 
     final private String str;
 
+    private static Integer staticNum = 2;
+
     public TestClass () {
         super(1, 2);
         System.out.println("use testClass construct1 method");

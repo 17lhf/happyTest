@@ -15,7 +15,16 @@ public class FTestClass {
      */
     private Integer ftNum;
 
-    FTestClass(final Integer ftNum) {
+    public FTestClass(final Integer ftNum) {
         this.ftNum = ftNum;
+    }
+
+    public static void printOneStr() {
+        System.out.println("FTestClass static method: getOneStr");
+    }
+
+    public void printAnotherStr() {
+        printOneStr();
+        System.out.println("FTestClass method: printAnotherStr");
     }
 }

@@ -18,7 +18,7 @@ public class ObjMapTransformUtil {
      * @return Map键值对
      * @throws Exception 异常
      */
-    public static<T> Map<String, Object> Obj2Map(final T obj) throws Exception {
+    public static<T> Map<String, Object> obj2Map(final T obj) throws Exception {
         Map<String, Object> map = new HashMap<>();
         if (obj != null) {
             Class<?> clazz = obj.getClass();

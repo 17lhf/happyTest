@@ -17,7 +17,7 @@ class ObjMapTransformUtilTest {
     void obj2Map() throws Exception {
         TestClass testClass = new TestClass();
         testClass.pubFloat = 3.1f;
-        Map<String, Object> map = ObjMapTransformUtil.Obj2Map(testClass);
+        Map<String, Object> map = ObjMapTransformUtil.obj2Map(testClass);
         System.out.println(map);
     }
 
@@ -30,6 +30,6 @@ class ObjMapTransformUtilTest {
         map.put("ftNum", 20);
         map.put("subNum", 30);
         TestClass testClass = ObjMapTransformUtil.map2Obj(map, TestClass.class);
-        System.out.println(ObjMapTransformUtil.Obj2Map(testClass));
+        System.out.println(ObjMapTransformUtil.obj2Map(testClass));
     }
 }

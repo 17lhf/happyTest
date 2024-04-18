@@ -71,7 +71,7 @@ public class EmailUtils {
      */
     public boolean sendTemplateEmail(TestClass testClass, String sendUserName, String emailAddress, String title,
                                      String templateFilePath, File file) throws Exception {
-        Map<String, Object> map = ObjMapTransformUtil.Obj2Map(testClass);
+        Map<String, Object> map = ObjMapTransformUtil.obj2Map(testClass);
         // 手动设置值
         map.put("oneDay", new Date());
         Context context = new Context();
