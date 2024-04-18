@@ -110,6 +110,9 @@ file lib/ct.sym with class stubs.<br/>
 事件监听器不应该运行潜在耗时的任务，因为它们默认是在同一个线程中执行。 考虑使用 ApplicationRunner 和 CommandLineRunner 代替。<br />
 如果执行的时机在bean可以开始实例化前（比如BeanDefined都还没开始），请不要使用@Autowired等方式注入bean依赖项，因为你会获得null。<br />
 
+### (25)multiThread
+**关于带返回值的线程**
+
 ### (n)others
 **不知道咋归类的都丢这里** <br />
 - 关于List.subList的坑的测试<br />
@@ -118,6 +121,7 @@ file lib/ct.sym with class stubs.<br/>
 此用法执行速度慢，不适用于对执行速度要求高的项目。（无测试方法，CustomConfig.java中使用）<br />
 - 浮点计算精度误差和strictfp的使用
 - null和字符串转换的情况
+- 字符串常量池（string pool）测试
 
 ### (n+1) 补充
 Spring Boot文档：https://springdoc.cn/spring-boot/index.html  
@@ -148,6 +152,9 @@ kill -9 jar包对应的进程编号
 **6.Spring Boot的Application执行**  
 注意：JUnit测试时，如果使用的是@SpringBootTest @ExtendWith(SpringExtension.class) 注解，则是不会启动Tomcat和WebApplicationContext，
 这意味着相关的监听器都会监听不到东西。
+
+**7.查看Java编译后的Class文件字节码内容**
+命令： javap -v xxx.class
 
 
 

@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 class TimeUtilsTest {
 
@@ -119,9 +120,14 @@ class TimeUtilsTest {
     }
 
     @Test
-    void printTimeIntervalJava8() {
+    public void printTimeIntervalJava8() {
         Date date = new Date();
         Date date1 = TimeUtils.addDays(date, 365);
         TimeUtils.printTimeIntervalJava8(date, date1);
+    }
+
+    @Test
+    public void transform() {
+        System.out.println(TimeUnit.DAYS.toHours(1)); // 把一天转换为小时数返回
     }
 }
