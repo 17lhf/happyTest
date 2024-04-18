@@ -1,8 +1,17 @@
 package com.basic.happytest.modules.cryptology;
 
 import com.basic.happytest.modules.math.RadixUtils;
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.util.encoders.Hex;
+import org.ietf.jgss.GSSException;
+import org.ietf.jgss.Oid;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.util.List;
 
 /**
  * ASN.1处理
@@ -10,6 +19,7 @@ import java.math.BigInteger;
  */
 
 public class ASN1Utils {
+
     /**
      * 解析并打印ASN1格式的RSA公钥信息
      * @param pubKeyHex ASN1格式公钥的十六进制保存字符串
@@ -149,5 +159,20 @@ public class ASN1Utils {
         String exponent = pubKeyHex.substring(nowIndex, nowIndex + exponentLenDigital * 2);
         // nowIndex += 2 * exponentLenDigital;
         System.out.println("模，十六进制表示为：" + exponent + "，十进制表示为：" + new BigInteger(exponent, 16).toString(10));
+    }
+
+    /**
+     * OID转DER格式字符串
+     * @param oidList 多个oid
+     * @return 十六进制串形式的DER格式内容
+     */
+    public static String oid2DERString(List<String> oidList) throws GSSException, IOException {
+        ASN1EncodableVector asn1EncodableVector = new ASN1EncodableVector();
+        for (String oid : oidList) {
+            Oid oid1 = new Oid(oid);
+            asn1EncodableVector.add(ASN1ObjectIdentifier.getInstance(oid1.getDER()));
+        }
+        DERSequence derSequence = new DERSequence(asn1EncodableVector);
+        return Hex.toHexString(derSequence.getEncoded());
     }
 }
