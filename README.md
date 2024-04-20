@@ -117,6 +117,9 @@ file lib/ct.sym with class stubs.<br/>
 ### (25)multiThread
 **关于带返回值的线程**
 
+### (26)regexSamples
+**正则表达式应用的一些实例**
+
 ### (n)others
 **不知道咋归类的都丢这里** <br />
 - 关于List.subList的坑的测试<br />
