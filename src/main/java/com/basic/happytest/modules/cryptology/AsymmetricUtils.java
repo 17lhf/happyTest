@@ -16,6 +16,11 @@ import org.bouncycastle.cert.X509v1CertificateBuilder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
+import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
+import org.bouncycastle.crypto.params.RSAKeyParameters;
+import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
@@ -115,6 +120,66 @@ public class AsymmetricUtils {
         }
         System.out.println("---------------end generate key pair---------------");
         System.out.println();
+        return keyPair;
+    }
+
+    /**
+     * 依据密钥长度和公钥指数来生成RSA密钥对
+     * @param keySize 密钥长度
+     * @param pubKeyExponent 公钥指数
+     * @return 密钥对
+     */
+    public static KeyPair generateRSAKeyPairSpecifiesPubKeyExp(int keySize, BigInteger pubKeyExponent) throws Exception {
+        System.out.println("---------------begin generate RSA key pair through specifies public key exponent---------------");
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        keyPairGenerator.initialize(new RSAKeyGenParameterSpec(keySize, pubKeyExponent));
+        System.out.println("Provider: " + keyPairGenerator.getProvider());
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        printRSAPubKeyInformation(keyPair.getPublic());
+        printRSAPrvKeyInformation(keyPair.getPrivate());
+        System.out.println("---------------end generate RSA key pair through specifies public key exponent---------------");
+        return keyPair;
+    }
+
+    /**
+     * 基于BC库生成RSA密钥对
+     * @param pubExp 公钥指数(十六进制串，通常是 10001)
+     * @param keySize 密钥长度
+     * @param secureRandomAlgo 随机数生成器算法（{@link com.basic.happytest.modules.cryptology.enums.SecureRandomAlgorithmEnum}）
+     * @param certainty RSA密钥生成需要素数。但是，不可能生成绝对质数。像任何其他加密库一样，BC使用可能的质数。
+     *                  确定性表示您希望数字是质数的确定性。任何高于80的值都会大大减慢密钥生成的速度。
+     *                  请注意，在素数不是真素数的情况下，由于BC检查相对素数，因此RSA算法仍然可以使用。
+     *                  80 表示质数的概率将超过（1 - 1/2的80次幂），已经很接近1了
+     * @return RSA密钥对
+     * @throws Exception 异常
+     */
+    public static AsymmetricCipherKeyPair generateRSAKeyPairByBC(String pubExp, int keySize, String secureRandomAlgo,
+                                                                 int certainty) throws Exception {
+        System.out.println("---------------begin generate RSA key pair by BouncyCastle ---------------");
+        RSAKeyPairGenerator generator = new RSAKeyPairGenerator();
+        // 相关链接：https://stackoverflow.com/questions/3087049/bouncy-castle-rsa-keypair-generation-using-lightweight-api
+        // 相关链接：https://crypto.stackexchange.com/questions/3114/what-is-the-correct-value-for-certainty-in-rsa-key-pair-generation
+        RSAKeyGenerationParameters parameters = new RSAKeyGenerationParameters(
+                        new BigInteger(pubExp, 16),     // 公钥指数
+                        SecureRandom.getInstance(secureRandomAlgo),    // prng，伪随机数生成器(Pseudo-random Number Generator)
+                        keySize, // 密钥长度
+                        certainty
+        );
+        generator.init(parameters);
+        AsymmetricCipherKeyPair keyPair = generator.generateKeyPair();
+        // 转Java常用的对象来解析
+        KeyFactory kf = KeyFactory.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
+        RSAKeyParameters pubKeyParameters = (RSAKeyParameters) keyPair.getPublic();
+        PublicKey publicKey = kf.generatePublic(new RSAPublicKeySpec(pubKeyParameters.getModulus(), pubKeyParameters.getExponent()));
+        printRSAPubKeyInformation(publicKey);
+        RSAPrivateCrtKeyParameters privateCrtKeyParameters = (RSAPrivateCrtKeyParameters) keyPair.getPrivate();
+        PrivateKey privateKey = kf.generatePrivate(new RSAPrivateCrtKeySpec(privateCrtKeyParameters.getModulus(),
+                privateCrtKeyParameters.getPublicExponent(), privateCrtKeyParameters.getExponent(),
+                privateCrtKeyParameters.getP(), privateCrtKeyParameters.getQ(),
+                privateCrtKeyParameters.getDP(), privateCrtKeyParameters.getDQ(),
+                privateCrtKeyParameters.getQInv()));
+        printRSAPrvKeyInformation(privateKey);
+        System.out.println("---------------end generate RSA key pair by BouncyCastle ---------------");
         return keyPair;
     }
 
@@ -509,24 +574,6 @@ public class AsymmetricUtils {
         printRSAPrvKeyInformation(privateKey);
         System.out.println("---------------end load private key by exponent and modules---------------");
         return privateKey;
-    }
-
-    /**
-     * 依据密钥长度和公钥指数来生成RSA密钥对
-     * @param keySize 密钥长度
-     * @param pubKeyExponent 公钥指数
-     * @return 密钥对
-     */
-    public static KeyPair generateRSAKeyPairSpecifiesPubKeyExp(int keySize, BigInteger pubKeyExponent) throws Exception {
-        System.out.println("---------------begin generate RSA key pair specifies public key exponent---------------");
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KeyAlgorithmEnum.RSA.getAlgorithm());
-        keyPairGenerator.initialize(new RSAKeyGenParameterSpec(keySize, pubKeyExponent));
-        System.out.println("Provider: " + keyPairGenerator.getProvider());
-        KeyPair keyPair = keyPairGenerator.generateKeyPair();
-        printRSAPubKeyInformation(keyPair.getPublic());
-        printRSAPrvKeyInformation(keyPair.getPrivate());
-        System.out.println("---------------end generate RSA key pair specifies public key exponent---------------");
-        return keyPair;
     }
 
     /**

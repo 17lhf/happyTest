@@ -504,4 +504,11 @@ class AsymmetricUtilsTest {
             System.out.println("New PKCS8 Public Key 2 != Original PKCS8 Public Key");
         }
     }
+
+    @Test
+    void generateRSAKeyPairByBC() throws Exception {
+        AsymmetricUtils.generateRSAKeyPairByBC("10001", KeyLengthEnums.RSA_2048.getLength(), SecureRandomAlgorithmEnum.DEFAULT.getAlgo(), 80);
+        AsymmetricUtils.generateRSAKeyPairByBC("10001", KeyLengthEnums.RSA_2048.getLength(), SecureRandomAlgorithmEnum.NONCEANDIV.getAlgo(), 80);
+        AsymmetricUtils.generateRSAKeyPairByBC("10001", KeyLengthEnums.RSA_2048.getLength(), SecureRandomAlgorithmEnum.SHA1PRNG.getAlgo(), 80);
+    }
 }

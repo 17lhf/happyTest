@@ -13,4 +13,9 @@ class CommonUtilsTest {
     void showProviders() {
         CommonUtils.showProviders();
     }
+
+    @Test
+    void keyAloSupportedInSunLibrary() {
+        CommonUtils.keyAloSupportedInSunLibrary();
+    }
 }

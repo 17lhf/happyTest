@@ -2,6 +2,7 @@ package com.basic.happytest.modules.cryptology;
 
 import com.basic.happytest.modules.cryptology.enums.ProviderEnums;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import sun.security.provider.Sun;
 
 import java.security.Provider;
 import java.security.Security;
@@ -27,6 +28,16 @@ public class CommonUtils {
      */
     public static void keyAloSupportedInBCLibrary() {
         Provider provider = new org.bouncycastle.jce.provider.BouncyCastleProvider();
+        for (Provider.Service service : provider.getServices()) {
+            System.out.println(service.getType() + ": " + service.getAlgorithm());
+        }
+    }
+
+    /**
+     * 获取JAVA默认支持的算法(SUN库)
+     */
+    public static void keyAloSupportedInSunLibrary() {
+        Provider provider = new Sun();
         for (Provider.Service service : provider.getServices()) {
             System.out.println(service.getType() + ": " + service.getAlgorithm());
         }
