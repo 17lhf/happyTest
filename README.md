@@ -129,6 +129,7 @@ file lib/ct.sym with class stubs.<br/>
 - 浮点计算精度误差和strictfp的使用
 - null和字符串转换的情况
 - 字符串常量池（string pool）测试
+- 带标签的循环（Labeled loop）（给循环命名）
 
 ### (n+1) 补充
 Spring Boot文档：https://springdoc.cn/spring-boot/index.html  
