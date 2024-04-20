@@ -35,4 +35,14 @@ public class SystemOperation {
     public static void printProjectRootDir() {
         System.out.println(System.getProperty("user.dir"));
     }
+
+    /**
+     * 打印当前可用于 Java 虚拟机的处理器数
+     * 取决于运行的设备，会受到超线程的影响 <br />
+     * 对于创建线程池，设计最佳性能会用到 <br />
+     */
+    public static void printAvailableProcessors() {
+        // 在虚拟机的特定调用期间，此值可能会更改。因此，对可用处理器数敏感的应用程序应偶尔轮询此属性，并适当调整其资源使用情况。
+        System.out.println(Runtime.getRuntime().availableProcessors());
+    }
 }

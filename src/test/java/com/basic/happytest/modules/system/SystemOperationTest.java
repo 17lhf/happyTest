@@ -20,4 +20,9 @@ class SystemOperationTest {
     void printProjectRootDir() {
         SystemOperation.printProjectRootDir();
     }
+
+    @Test
+    void printAvailableProcessors() {
+        SystemOperation.printAvailableProcessors();
+    }
 }

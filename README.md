@@ -83,6 +83,7 @@ file lib/ct.sym with class stubs.<br/>
 - 判定当前所处的系统环境
 - 打印Spring或Spring Boot版本号
 - 打印工程根目录绝对路径
+- 打印当前可用于 Java 虚拟机的处理器数
 
 ### (18)math
 **一些关于数学的操作（包含但不限于进制转换处理）**
