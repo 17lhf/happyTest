@@ -511,4 +511,11 @@ class AsymmetricUtilsTest {
         AsymmetricUtils.generateRSAKeyPairByBC("10001", KeyLengthEnums.RSA_2048.getLength(), SecureRandomAlgorithmEnum.NONCEANDIV.getAlgo(), 80);
         AsymmetricUtils.generateRSAKeyPairByBC("10001", KeyLengthEnums.RSA_2048.getLength(), SecureRandomAlgorithmEnum.SHA1PRNG.getAlgo(), 80);
     }
+
+    @Test
+    void pem2Object() throws Exception {
+        PrivateKey privateKey = AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
+        String prvKeyInPem = AsymmetricUtils.der2pem(Hex.toHexString(privateKey.getEncoded()), DataTypeEnum.PRV_KEY.getType());
+        AsymmetricUtils.pem2Object(prvKeyInPem, DataTypeEnum.PRV_KEY.getType(), KeyAlgorithmEnum.RSA.getAlgorithm());
+    }
 }

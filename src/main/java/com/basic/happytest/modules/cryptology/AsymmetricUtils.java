@@ -1312,6 +1312,7 @@ public class AsymmetricUtils {
             PKCS8EncodedKeySpec prvKeySpec = new PKCS8EncodedKeySpec(Hex.decode(der));
             KeyFactory factory = KeyFactory.getInstance(keyAlo, BouncyCastleProvider.PROVIDER_NAME);
             PrivateKey privateKey = factory.generatePrivate(prvKeySpec);
+            System.out.println("Private Key format: " + prvKeySpec.getFormat());
             System.out.println("Private Key: " + privateKey.getAlgorithm());
         } else {
             X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Hex.decode(der));
