@@ -15,4 +15,9 @@ class SystemOperationTest {
     void printSpringVersion() {
         SystemOperation.printSpringVersion();
     }
+
+    @Test
+    void printProjectRootDir() {
+        SystemOperation.printProjectRootDir();
+    }
 }

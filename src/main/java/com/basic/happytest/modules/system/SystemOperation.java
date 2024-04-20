@@ -28,4 +28,11 @@ public class SystemOperation {
         System.out.println("Spring version: " + SpringVersion.getVersion());
         System.out.println("Spring Boot version: " + SpringBootVersion.getVersion());
     }
+
+    /**
+     * 打印工程根目录绝对路径（即 pom.xml 所在的目录）
+     */
+    public static void printProjectRootDir() {
+        System.out.println(System.getProperty("user.dir"));
+    }
 }

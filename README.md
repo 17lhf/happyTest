@@ -79,7 +79,10 @@ file lib/ct.sym with class stubs.<br/>
 **关于模拟客户端向其他服务发送请求的示例**（使用openfeign）
 
 ### (18)system
-**一些关于系统的操作（例如判定当前所处的系统环境、打印Spring或Spring Boot版本号）**
+**一些关于系统的操作**
+- 判定当前所处的系统环境
+- 打印Spring或Spring Boot版本号
+- 打印工程根目录绝对路径
 
 ### (18)math
 **一些关于数学的操作（包含但不限于进制转换处理）**
