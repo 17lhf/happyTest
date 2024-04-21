@@ -19,7 +19,7 @@ mybatis-plus:
   mapperLocations: classpath:/mapper/*/*.xml
   typeAliasesPackage: com.basic.happytest.mudules.*.entity
   Configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 使得sql语句和查询的结果都打印到控制台，不配置就不打印
 
 # actuator 配置
 management:

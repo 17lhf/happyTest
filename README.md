@@ -164,5 +164,9 @@ kill -9 jar包对应的进程编号
 **7.查看Java编译后的Class文件字节码内容**
 命令： javap -v xxx.class
 
-
+**8. 特殊的注释标签**
+- todo 说明文字：待实现的内容
+- fixme 说明文字：待修复问题的内容
+- xxx 说明文字 ：待商榷的内容
+- &lt;editor-fold&gt; 和 &lt;/editor-fold&gt; ：idea提供的一种能够给我们的代码块进行归纳的标签
 
