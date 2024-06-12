@@ -875,8 +875,11 @@ public class AsymmetricUtils {
         System.out.println("---------------begin get csr message---------------");
         SubjectPublicKeyInfo subjectPublicKeyInfo = csr.getSubjectPublicKeyInfo();
         AlgorithmIdentifier algorithmIdentifier = subjectPublicKeyInfo.getAlgorithm();
+        // RSA Encryption (and signing) OID: 1.2.840.113549.1.1.1
+        // ECC Public Key OID: 1.2.840.10045.2.1
         System.out.println("Public key algorithm identifier is : " + algorithmIdentifier.getAlgorithm().toString());
         System.out.println("Csr signature is : " + Hex.toHexString(csr.getSignature()));
+        // getRequestedExtensions() 在BC v1.67版本中没有，但是可以直接拷贝1.70里的这个方法源码出来用
         Extensions extensions = csr.getRequestedExtensions();
         // 其实挺多时候用纯软生成证书请求时，没有设置扩展字段
         if(extensions != null) {
@@ -891,6 +894,17 @@ public class AsymmetricUtils {
             ASN1ObjectIdentifier[] nonCriticalExtensionOIDs = extensions.getNonCriticalExtensionOIDs();
             for (int i = 0; i < nonCriticalExtensionOIDs.length; i++) {
                 System.out.println("NonCriticalExtensionOIDs[" + i + "]: " + nonCriticalExtensionOIDs[i]);
+            }
+
+            KeyUsage keyUsage = KeyUsage.fromExtensions(extensions);
+            if (keyUsage != null) {
+                System.out.println("Key Usage: " + keyUsage); // 这里输出的是十六进制值
+            }
+            ExtendedKeyUsage extendedKeyUsage = ExtendedKeyUsage.fromExtensions(extensions);
+            if (extendedKeyUsage != null) {
+                for (KeyPurposeId keyPurposeId : extendedKeyUsage.getUsages()) {
+                    System.out.println("Extended Key Usage: " + keyPurposeId.getId());
+                }
             }
         }
         X500Name x500Name = csr.getSubject();

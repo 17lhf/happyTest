@@ -178,8 +178,13 @@ class AsymmetricUtilsTest {
         csrInfos.setOrganizationUnit("Organization Unit");
         csrInfos.setCommonName("lhf");
         csrInfos.setEmailAddress("lhf@qq.com");
-        KeyPair rsaKeyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
-        PKCS10CertificationRequest csr = AsymmetricUtils.generateP10CertRequest(KeyAlgorithmEnum.RSA.getAlgorithm(), rsaKeyPair, csrInfos);
+//        String keyAlgorithm = KeyAlgorithmEnum.RSA.getAlgorithm();
+//        Integer keySize = KeyLengthEnums.RSA_2048.getLength();
+//        KeyPair keyPair = AsymmetricUtils.generateKeyPair(keyAlgorithm, keySize);
+        String keyAlgorithm = KeyAlgorithmEnum.EC.getAlgorithm();
+        Integer keySize = KeyLengthEnums.EC_256.getLength();
+        KeyPair keyPair = AsymmetricUtils.generateECCKeyPair(keySize);
+        PKCS10CertificationRequest csr = AsymmetricUtils.generateP10CertRequest(keyAlgorithm, keyPair, csrInfos);
         AsymmetricUtils.getCsrInfo(csr);
     }
 
