@@ -1500,7 +1500,15 @@ public class AsymmetricUtils {
             }
             System.out.println();
         }
-        // todo 获取自身的认证标识（X509v3 Subject Key Identifier）, 暂时没找到怎么获取
+        // 获取自身的认证标识（X509v3 Subject Key Identifier）
+        byte[] extensionValue = x509Certificate.getExtensionValue(Extension.subjectKeyIdentifier.getId());
+        if (extensionValue != null) {
+            ASN1OctetString octetString = ASN1OctetString.getInstance(extensionValue);
+            // todo AI说这里应该就是直接打印出来使用者密钥标识了的，但是实际上会多出一个0414的前缀，不知道为什么
+            System.out.println("X509v3 Subject Key Identifier（error）: " + Hex.toHexString(octetString.getOctets()));
+            SubjectKeyIdentifier subjectKeyIdentifier = SubjectKeyIdentifier.getInstance(octetString.getOctets());
+            System.out.println("X509v3 Subject Key Identifier（right）: " + Hex.toHexString(subjectKeyIdentifier.getKeyIdentifier()));
+        }
         // 获取扩展密钥用途（X509v3 Extended Key Usage）
         List<String> extendedKeyUsage = x509Certificate.getExtendedKeyUsage();
         if(extendedKeyUsage == null){
