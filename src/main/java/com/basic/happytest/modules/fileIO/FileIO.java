@@ -7,6 +7,7 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 一系列的关于文件和流的操作
@@ -63,14 +64,23 @@ public class FileIO {
     /**
      * 读取指定文件的内容并返回(最大允许文件大小为20kb)
      * @param filePath 文件绝对路径
-     * @return 文件内容（字符串形式）
+     * @return 文件内容（字符串形式，以UTF-8编码）
      */
     public static String getFileContent(String filePath) throws Exception {
+        String encoding = StandardCharsets.UTF_8.name();
+        return new String(getFileContentBytes(filePath), encoding);
+    }
+
+    /**
+     * 读取指定文件的内容并返回(最大允许文件大小为20kb)
+     * @param filePath 文件绝对路径
+     * @return 文件内容, byte数组形式
+     */
+    public static byte[] getFileContentBytes(String filePath) throws Exception {
         File file = new File(filePath);
         if (!file.exists()){
             throw new FileNotFoundException();
         }
-        String encoding = "UTF-8";
         long fileLen = file.length();
         System.out.println("File length is: " + fileLen);
         if(fileLen > 20 * 1024) {
@@ -82,8 +92,9 @@ public class FileIO {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new String(fileContent, encoding);
+        return fileContent;
     }
+
 
     /**
      * 依据提供的路径，生成文件夹
