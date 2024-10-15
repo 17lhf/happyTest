@@ -120,6 +120,9 @@ file lib/ct.sym with class stubs.<br/>
 ### (26)regexSamples
 **正则表达式应用的一些实例**
 
+### (27)enumsUtils
+**通用检测入参是否为枚举值的属性的方法**
+
 ### (n)others
 **不知道咋归类的都丢这里** <br />
 - 关于List.subList的坑的测试<br />
