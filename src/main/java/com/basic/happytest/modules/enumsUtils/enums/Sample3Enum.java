@@ -21,4 +21,14 @@ public enum Sample3Enum {
         this.str = str;
         this.numStr = numStr;
     }
+
+    /**
+     * 比较逻辑
+     * @param str 待比较属性1
+     * @param numStr 待比较属性2
+     * @return 若两个属性恰好是枚举值的属性，则返回true，否则返回false
+     */
+    public boolean isAttributeEquals(String str, String numStr) {
+        return this.getStr().equals(str) && this.getNumStr().equals(numStr);
+    }
 }

@@ -1,6 +1,7 @@
 package com.basic.happytest.modules.enumsUtils;
 
 import com.basic.happytest.modules.enumsUtils.enums.Sample2Enum;
+import com.basic.happytest.modules.enumsUtils.enums.Sample3Enum;
 import com.basic.happytest.modules.enumsUtils.enums.SampleEnum;
 import org.junit.jupiter.api.Test;
 
@@ -35,5 +36,6 @@ class EnumUtilsTest {
         System.out.println(EnumUtils.isValidEnumAttribute(Sample2Enum.class, x -> x.isAttributeEquals2("a")));
         System.out.println(EnumUtils.isValidEnumAttribute(Sample2Enum.class, x -> x.isAttributeEquals2("b")));
         System.out.println(EnumUtils.isValidEnumAttribute(Sample2Enum.class, x -> x.isAttributeEquals3("b")));
+        System.out.println(EnumUtils.isValidEnumAttribute(Sample3Enum.class, x -> x.isAttributeEquals("a", "b")));
     }
 }
