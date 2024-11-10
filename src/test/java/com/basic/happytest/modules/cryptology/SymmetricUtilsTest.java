@@ -35,4 +35,25 @@ class SymmetricUtilsTest {
         String standardKey = SymmetricUtils.get2DESStandardKey(key);
         System.out.println(standardKey);
     }
+
+    @Test
+    void hex2Key() throws Exception {
+        String alo1 = KeyAlgorithmEnum.AES.getAlgorithm();
+        Key key1 = SymmetricUtils.generateKey(alo1, KeyLengthEnums.AES_128.getLength());
+        SymmetricUtils.hex2Key(SymmetricUtils.key2Hex(key1, alo1), alo1);
+        Key key2 = SymmetricUtils.generateKey(alo1, KeyLengthEnums.AES_192.getLength());
+        SymmetricUtils.hex2Key(SymmetricUtils.key2Hex(key2, alo1), alo1);
+        Key key3 = SymmetricUtils.generateKey(alo1, KeyLengthEnums.AES_256.getLength());
+        SymmetricUtils.hex2Key(SymmetricUtils.key2Hex(key3, alo1), alo1);
+
+        String alo2 = KeyAlgorithmEnum.DES.getAlgorithm();
+        Key key4 = SymmetricUtils.generateKey(alo2, KeyLengthEnums.DES_56.getLength());
+        SymmetricUtils.hex2Key(SymmetricUtils.key2Hex(key4, alo2), alo2);
+
+        String alo3 = KeyAlgorithmEnum.TDES.getAlgorithm();
+        Key key5 = SymmetricUtils.generateKey(alo3, KeyLengthEnums.TDES_112.getLength());
+        SymmetricUtils.hex2Key(SymmetricUtils.key2Hex(key5, alo3), alo3);
+        Key key6 = SymmetricUtils.generateKey(alo3, KeyLengthEnums.TDES_168.getLength());
+        SymmetricUtils.hex2Key(SymmetricUtils.key2Hex(key6, alo3), alo3);
+    }
 }

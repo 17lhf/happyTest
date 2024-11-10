@@ -43,7 +43,7 @@ public class SymmetricUtils {
 
     /**
      * 生成对称密钥
-     * @param algorithm 算法
+     * @param algorithm 算法 {@link KeyAlgorithmEnum}
      * @param keySize 密钥长度
      * @param provider 算法提供者(SUN时不适用于生成2DES, BC时可以，但是128长的DES不能用SUN库进行加解密操作)
      * @return 密钥
@@ -69,7 +69,7 @@ public class SymmetricUtils {
     /**
      * 打印密钥的信息
      * @param key 密钥
-     * @param algorithm 密钥的算法
+     * @param algorithm 密钥的算法 {@link KeyAlgorithmEnum}
      */
     public static void printSecretKeyMessage(Key key, String algorithm) {
         // 将密钥对象转换为SecretKeySpec类型
@@ -78,6 +78,17 @@ public class SymmetricUtils {
         System.out.println("Key(Hex): " + Hex.toHexString(secretKeySpec.getEncoded()));
         System.out.println("Key format: " + secretKeySpec.getFormat());
         System.out.println("Key length: " + secretKeySpec.getEncoded().length * 8 + " bits");
+    }
+
+    /**
+     * 获取密钥的Hex-String形式
+     * @param key 密钥
+     * @param algorithm 算法 {@link KeyAlgorithmEnum}
+     * @return 密钥的Hex-String形式
+     */
+    public static String key2Hex(Key key, String algorithm) {
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key.getEncoded(), algorithm);
+        return Hex.toHexString(secretKeySpec.getEncoded());
     }
 
     /**
@@ -95,5 +106,19 @@ public class SymmetricUtils {
         String standardKey = Hex.toHexString(bytes);
         System.out.println("2DES standard key(Hex): " + standardKey);
         return standardKey;
+    }
+
+    /**
+     * 将Hex-String字符串转为对称密钥
+     * @param hexKey 对称密钥的Hex-String形式
+     * @param algorithm 对称密钥算法 {@link KeyAlgorithmEnum}
+     * @return 对称密钥对象
+     * @throws Exception 异常
+     */
+    public static Key hex2Key(String hexKey, String algorithm) throws Exception {
+        SecretKeySpec secretKeySpec = new SecretKeySpec(Hex.decode(hexKey), algorithm);
+        System.out.println("Key algorithm: " + secretKeySpec.getAlgorithm());
+        System.out.println("Key format: " + secretKeySpec.getFormat());
+        return secretKeySpec;
     }
 }
