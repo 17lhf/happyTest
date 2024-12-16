@@ -1,11 +1,7 @@
 package com.basic.happytest.modules.cryptology;
 
-import com.basic.happytest.modules.cryptology.enums.DigestTypeEnum;
-import com.basic.happytest.modules.cryptology.enums.EncryptAlgorithmEnums;
-import com.basic.happytest.modules.cryptology.enums.KeyAlgorithmEnum;
-import com.basic.happytest.modules.cryptology.enums.SignAlgorithmEnum;
+import com.basic.happytest.modules.cryptology.enums.*;
 import com.basic.happytest.modules.fileIO.FileIO;
-import com.sun.crypto.provider.SunJCE;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +35,7 @@ class SignAndVerifyUtilsTest {
         System.out.println(Hex.toHexString(res1).equals(Hex.toHexString(res2)));
         PublicKey publicKey = AsymmetricUtils.loadPublicKey(FileIO.getResourceAbsolutePath(RSA_PUB_KEY));
         System.out.println();
-        String sunJCEName = new SunJCE().getName();
+        String sunJCEName = ProviderEnums.SUN.getProvider();
         EncAndDecUtils.decryptData(publicKey, EncryptAlgorithmEnums.RSA.getAlgorithm(), res1, sunJCEName);
         System.out.println();
         EncAndDecUtils.decryptData(publicKey, EncryptAlgorithmEnums.RSA.getAlgorithm(), res2, sunJCEName);

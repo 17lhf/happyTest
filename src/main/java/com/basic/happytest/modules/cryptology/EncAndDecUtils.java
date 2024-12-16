@@ -1,7 +1,6 @@
 package com.basic.happytest.modules.cryptology;
 
 import com.basic.happytest.modules.cryptology.enums.ProviderEnums;
-import com.sun.crypto.provider.SunJCE;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
 
@@ -171,7 +170,7 @@ public class EncAndDecUtils {
         if(provider == null){
             // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
             cipher = Cipher.getInstance(alo);
-        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(new SunJCE().getName())){
+        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(ProviderEnums.SUN.getProvider())){
             // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE
             cipher = Cipher.getInstance(alo, provider);
         } else {
@@ -215,7 +214,7 @@ public class EncAndDecUtils {
         if(provider == null){
             // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
             cipher = Cipher.getInstance(alo);
-        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(new SunJCE().getName())){
+        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(ProviderEnums.SUN.getProvider())){
             // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE
             cipher = Cipher.getInstance(alo, provider);
         } else {
@@ -287,7 +286,7 @@ public class EncAndDecUtils {
         if(provider == null){
             // 一旦类有引入BC provider，则即便这里没有指定使用BC库，一旦使用的算法Sun原生库不支持，则会自动调用BC库
             cipher = Cipher.getInstance(alo);
-        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(new SunJCE().getName())){
+        } else if(provider.equals(BouncyCastleProvider.PROVIDER_NAME) || provider.equals(ProviderEnums.SUN.getProvider())){
             // 输入“BC”表示强制使用BC库，输入“SunJCE”表示强制使用SunJCE库
             cipher = Cipher.getInstance(alo, provider);
         } else {

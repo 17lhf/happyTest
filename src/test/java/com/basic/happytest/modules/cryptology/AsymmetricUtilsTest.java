@@ -3,7 +3,6 @@ package com.basic.happytest.modules.cryptology;
 import com.basic.happytest.modules.cryptology.entity.CsrInfos;
 import com.basic.happytest.modules.cryptology.enums.*;
 import com.basic.happytest.modules.fileIO.FileIO;
-import com.sun.crypto.provider.SunJCE;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -404,7 +403,7 @@ class AsymmetricUtilsTest {
                 AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(AsymmetricUtilsTest.RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         PublicKey publicKey = AsymmetricUtils.loadRSAPubKeyByPriKey(privateKey);
         String s = "abc";
-        String sunJCEName = new SunJCE().getName();
+        String sunJCEName = ProviderEnums.SUN.getProvider();
         byte[] encData = EncAndDecUtils.encryptData(publicKey, KeyAlgorithmEnum.RSA.getAlgorithm(), s.getBytes(StandardCharsets.UTF_8), sunJCEName);
         byte[] decData = EncAndDecUtils.decryptData(privateKey, KeyAlgorithmEnum.RSA.getAlgorithm(), encData, sunJCEName);
         System.out.println("解密结果：" + new String(decData));

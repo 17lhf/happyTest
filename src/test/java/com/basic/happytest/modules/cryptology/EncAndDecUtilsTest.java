@@ -4,7 +4,6 @@ import com.basic.happytest.modules.cryptology.enums.EncryptAlgorithmEnums;
 import com.basic.happytest.modules.cryptology.enums.KeyAlgorithmEnum;
 import com.basic.happytest.modules.cryptology.enums.KeyLengthEnums;
 import com.basic.happytest.modules.cryptology.enums.ProviderEnums;
-import com.sun.crypto.provider.SunJCE;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
@@ -71,7 +70,7 @@ class EncAndDecUtilsTest {
         }
         String alo = KeyAlgorithmEnum.RSA.getAlgorithm();
         Integer size = KeyLengthEnums.RSA_2048.getLength();
-        String sunJCEName = new SunJCE().getName();
+        String sunJCEName = ProviderEnums.SUN.getProvider();
         KeyPair keyPair = AsymmetricUtils.generateKeyPair(alo, size);
         /*KeyFactory keyFactory = KeyFactory.getInstance(alo);
         RSAPublicKeySpec pubKeySpec = keyFactory.getKeySpec(keyPair.getPublic(), RSAPublicKeySpec.class);
@@ -136,7 +135,7 @@ class EncAndDecUtilsTest {
         for (int i = 0; i < data.length; i++) {
             data[i] = '1';
         }
-        String sunJCEName = new SunJCE().getName();
+        String sunJCEName = ProviderEnums.SUN.getProvider();
         // 生成密钥对，用于加解密
         KeyPair keyPair = AsymmetricUtils.generateKeyPair(KeyAlgorithmEnum.RSA.getAlgorithm(), KeyLengthEnums.RSA_2048.getLength());
         // 公钥加密
