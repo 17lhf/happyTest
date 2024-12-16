@@ -6,6 +6,7 @@ import com.basic.happytest.modules.fileIO.FileIO;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.pkcs.*;
+import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -16,6 +17,7 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v1CertificateBuilder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
@@ -307,20 +309,37 @@ public class AsymmetricUtils {
         privateKeyPem = privateKeyPem.replace(PEM_RSA_PRIVATE_START, "").replace(PEM_RSA_PRIVATE_END, "");
         privateKeyPem = privateKeyPem.replaceAll("\\s", "");
         // 开始通过流来读取
-        DerInputStream derReader = new DerInputStream(Base64.getDecoder().decode(privateKeyPem));
-        DerValue[] seq = derReader.getSequence(0);
-        if (seq.length < 9) {
+        /*
+            // 使用 sun.security.util.DerInputStream 无法保障向后兼容
+            DerInputStream derReader = new DerInputStream(Base64.getDecoder().decode(privateKeyPem));
+            DerValue[] seq = derReader.getSequence(0);
+            if (seq.length < 9) {
+                throw new GeneralSecurityException("Could not parse a PKCS1 private key.");
+            }
+            // skip version seq[0];
+            BigInteger modulus = seq[1].getBigInteger();
+            BigInteger publicExp = seq[2].getBigInteger();
+            BigInteger privateExp = seq[3].getBigInteger();
+            BigInteger prime1 = seq[4].getBigInteger();
+            BigInteger prime2 = seq[5].getBigInteger();
+            BigInteger exp1 = seq[6].getBigInteger();
+            BigInteger exp2 = seq[7].getBigInteger();
+            BigInteger crtCoef = seq[8].getBigInteger();
+        */
+        ASN1InputStream derReader = new ASN1InputStream(Base64.getDecoder().decode(privateKeyPem));
+        ASN1Sequence seq = (ASN1Sequence) derReader.readObject();
+        if (seq.size() < 9) {
             throw new GeneralSecurityException("Could not parse a PKCS1 private key.");
         }
         // skip version seq[0];
-        BigInteger modulus = seq[1].getBigInteger();
-        BigInteger publicExp = seq[2].getBigInteger();
-        BigInteger privateExp = seq[3].getBigInteger();
-        BigInteger prime1 = seq[4].getBigInteger();
-        BigInteger prime2 = seq[5].getBigInteger();
-        BigInteger exp1 = seq[6].getBigInteger();
-        BigInteger exp2 = seq[7].getBigInteger();
-        BigInteger crtCoef = seq[8].getBigInteger();
+        BigInteger modulus = ((ASN1Integer)seq.getObjectAt(1)).getValue();
+        BigInteger publicExp = ((ASN1Integer)seq.getObjectAt(2)).getValue();
+        BigInteger privateExp = ((ASN1Integer)seq.getObjectAt(3)).getValue();
+        BigInteger prime1 = ((ASN1Integer)seq.getObjectAt(4)).getValue();
+        BigInteger prime2 = ((ASN1Integer)seq.getObjectAt(5)).getValue();
+        BigInteger exp1 = ((ASN1Integer)seq.getObjectAt(6)).getValue();
+        BigInteger exp2 = ((ASN1Integer)seq.getObjectAt(7)).getValue();
+        BigInteger crtCoef = ((ASN1Integer)seq.getObjectAt(8)).getValue();
         // 这里的keySpec是以PCKS1标准定义的
         RSAPrivateCrtKeySpec keySpec = new RSAPrivateCrtKeySpec(modulus, publicExp, privateExp, prime1,
                 prime2, exp1, exp2, crtCoef);
@@ -1270,9 +1289,14 @@ public class AsymmetricUtils {
             crtStr = crtStr.replaceAll("\n", "");
             // 去掉某些平台带有的回车
             crtStr = crtStr.replaceAll("\r", "");
-            x509Certificate = new X509CertImpl(Base64.getDecoder().decode(crtStr));
+            // sun.security.x509.X509CertImpl 不保障向后兼容，所以不推荐使用
+            // x509Certificate = new X509CertImpl(Base64.getDecoder().decode(crtStr));
+            CertificateFactory certificateFactory = CertificateFactory.getInstance(CertTypeEnum.X509.getType());
+            x509Certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(crtStr)));
         } else { // der格式
-            x509Certificate = new X509CertImpl(bytes);
+            // x509Certificate = new X509CertImpl(bytes);
+            CertificateFactory certificateFactory = CertificateFactory.getInstance(CertTypeEnum.X509.getType());
+            x509Certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(bytes));
         }
         System.out.println("Cert subject: " + x509Certificate.getSubjectX500Principal().getName());
         System.out.println("---------------end load CERT from file(" + certEncodeType + ")---------------");
@@ -1347,7 +1371,10 @@ public class AsymmetricUtils {
             PKCS10CertificationRequest pkcs10Csr = new PKCS10CertificationRequest(Hex.decode(der));
             System.out.println("Certificate Request: " + pkcs10Csr.getSubject());
         } else if (DataTypeEnum.CERT.getType().equals(type)) {
-            X509Certificate cert = new X509CertImpl(Hex.decode(der));
+            // sun.security.x509.X509CertImpl 不保障向后兼容，所以不推荐使用
+            // X509Certificate cert = new X509CertImpl(Hex.decode(der));
+            CertificateFactory certificateFactory = CertificateFactory.getInstance(CertTypeEnum.X509.getType());
+            X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(Hex.decode(der)));
             System.out.println("Certificate: " + cert.getSubjectDN());
         } else if (DataTypeEnum.PRV_KEY.getType().equals(type)) {
             PKCS8EncodedKeySpec prvKeySpec = new PKCS8EncodedKeySpec(Hex.decode(der));
@@ -1421,7 +1448,9 @@ public class AsymmetricUtils {
         // 证书签名值
         System.out.println("Cert sign value is: " + Hex.toHexString(x509Certificate.getSignature()));
         // 颁发者的subject各个信息获取方式同自身，所以这里不做重复
-        sun.security.x509.X500Name issuerX500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getIssuerX500Principal());
+        // 使用 sun.security.x509.X500Name 无法保障向后兼容，所以这里不推荐使用
+        // sun.security.x509.X500Name issuerX500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getIssuerX500Principal());
+        X500Name issuerX500Name = new JcaX509CertificateHolder(x509Certificate).getSubject();
         System.out.println("Issuer is: " + issuerX500Name.toString());
         // 证书有效期
         Date notBefore = x509Certificate.getNotBefore();
@@ -1439,6 +1468,8 @@ public class AsymmetricUtils {
         // 证书拥有者信息
         System.out.println("Subject: " + x509Certificate.getSubjectX500Principal().getName());
         System.out.println("Issuer subject: " + x509Certificate.getIssuerX500Principal().getName());
+        /*
+        // 使用 sun.security.x509.X500Name 无法保障向后兼容，所以这里不推荐使用
         sun.security.x509.X500Name x500Name = sun.security.x509.X500Name.asX500Name(x509Certificate.getSubjectX500Principal());
         System.out.println("Common Name(CN): " + x500Name.getCommonName());
         System.out.println("Country(C): " + x500Name.getCountry());
@@ -1447,11 +1478,36 @@ public class AsymmetricUtils {
         System.out.println("Organization(O): " + x500Name.getOrganization());
         System.out.println("Organization Unit(OU): " + x500Name.getOrganizationalUnit());
         // ava[]这里面包含了所有subject信息，也可以通过这里一个一个获取信息。这里只是举例获取emailAddress
+        // sun.security.x509.AVA 类无法保障向后兼容，所以这里不推荐使用
         for (AVA ava: x500Name.allAvas()){
             if(ava.getObjectIdentifier().toString().equals(BCStyle.EmailAddress.toString())){
                 System.out.println("EmailAddress(E): " + ava.getValueString());
             }
         }
+        */
+        X500Name x500Name = new JcaX509CertificateHolder(x509Certificate).getSubject();
+        RDN[] rdns = x500Name.getRDNs();
+        for (RDN rdn : rdns) {
+            AttributeTypeAndValue atv = rdn.getFirst();
+            ASN1ObjectIdentifier attributeType = atv.getType();
+            String attributeValue = atv.getValue().toString();
+            if (BCStyle.C.equals(attributeType)) {
+                System.out.println("Country (C): " + attributeValue);
+            } else if (BCStyle.ST.equals(attributeType)) {
+                System.out.println("State or Province Name (S): " + attributeValue);
+            } else if (BCStyle.L.equals(attributeType)) {
+                System.out.println("Locality Name (L): " + attributeValue);
+            } else if (BCStyle.O.equals(attributeType)) {
+                System.out.println("Organization Name (O): " + attributeValue);
+            } else if (BCStyle.OU.equals(attributeType)) {
+                System.out.println("Organizational Unit Name (OU): " + attributeValue);
+            } else if (BCStyle.E.equals(attributeType)) {
+                System.out.println("Email Address (E): " + attributeValue);
+            } else {
+                System.out.println("Other Attribute (" + attributeType + "): " + attributeValue);
+            }
+        }
+
         // 获取基本约束字段（ X509v3 Basic Constraints），主要就是看是不是CA证书
         // 方法介绍：从关键的 BasicConstraints扩展（OID = 2.5.29.19）获取证书约束路径长度
         int allowChainLength = x509Certificate.getBasicConstraints();

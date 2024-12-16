@@ -521,6 +521,14 @@ class AsymmetricUtilsTest {
         PrivateKey privateKey = AsymmetricUtils.loadPrivateKey(FileIO.getResourceAbsolutePath(RSA_PRV_KEY_PKCS8_NO_ENCRYPT));
         String prvKeyInPem = AsymmetricUtils.der2pem(Hex.toHexString(privateKey.getEncoded()), DataTypeEnum.PRV_KEY.getType());
         AsymmetricUtils.pem2Object(prvKeyInPem, DataTypeEnum.PRV_KEY.getType(), KeyAlgorithmEnum.RSA.getAlgorithm());
+
+        PublicKey publicKey = AsymmetricUtils.loadPublicKey(FileIO.getResourceAbsolutePath(RSA_PUB_KEY));
+        String pubKeyInPem = AsymmetricUtils.der2pem(Hex.toHexString(publicKey.getEncoded()), DataTypeEnum.PUB_KEY.getType());
+        AsymmetricUtils.pem2Object(pubKeyInPem, DataTypeEnum.PUB_KEY.getType(), KeyAlgorithmEnum.RSA.getAlgorithm());
+
+        X509Certificate x509Certificate = AsymmetricUtils.loadCertFromFile(FileIO.getResourceAbsolutePath(RSA_CERT_PEM), DataTypeEnum.CERT.getType());
+        String certInPem = AsymmetricUtils.der2pem(Hex.toHexString(x509Certificate.getEncoded()), DataTypeEnum.CERT.getType());
+        AsymmetricUtils.pem2Object(certInPem, DataTypeEnum.CERT.getType(), null);
     }
 
     @Test

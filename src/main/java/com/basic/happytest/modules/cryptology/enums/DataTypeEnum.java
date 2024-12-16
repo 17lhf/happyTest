@@ -7,7 +7,7 @@ package com.basic.happytest.modules.cryptology.enums;
 
 public enum DataTypeEnum {
 
-    PUB_EY("PUB_KEY"),
+    PUB_KEY("PUB_KEY"),
 
     PRV_KEY("PRV_KEY"),
 
