@@ -34,7 +34,8 @@ public class CommonUtils {
     }
 
     /**
-     * 获取JAVA默认支持的算法(SUN库)
+     * 获取JAVA默认支持的算法(SUN库) <br />
+     * 需要注意的是，后续JAVA版本 Sun库 就不能这样直接用了
      */
     public static void keyAloSupportedInSunLibrary() {
         Provider provider = new Sun();
