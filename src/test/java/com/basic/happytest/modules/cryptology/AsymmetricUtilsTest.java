@@ -523,4 +523,15 @@ class AsymmetricUtilsTest {
         String prvKeyInPem = AsymmetricUtils.der2pem(Hex.toHexString(privateKey.getEncoded()), DataTypeEnum.PRV_KEY.getType());
         AsymmetricUtils.pem2Object(prvKeyInPem, DataTypeEnum.PRV_KEY.getType(), KeyAlgorithmEnum.RSA.getAlgorithm());
     }
+
+    @Test
+    void getEccPubKeyCompressed() {
+        try {
+            KeyPair keyPair = AsymmetricUtils.generateECCKeyPair(KeyLengthEnums.EC_256.getLength());
+            PublicKey publicKey = keyPair.getPublic();
+            AsymmetricUtils.getEccPubKeyCompressed(publicKey);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

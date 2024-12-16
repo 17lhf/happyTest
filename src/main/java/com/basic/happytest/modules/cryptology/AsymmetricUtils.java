@@ -11,6 +11,7 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.asn1.x9.*;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v1CertificateBuilder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -18,11 +19,11 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
-import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
+import org.bouncycastle.crypto.params.*;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.spec.ECNamedCurveSpec;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.PKCS8Generator;
@@ -260,6 +261,32 @@ public class AsymmetricUtils {
         System.out.println("私钥：k=" + ecPrivateKey.getS());
         System.out.println("---------------end generate ECC key pair---------------");
         return keyPair;
+    }
+
+    /**
+     * 获取压缩后ECC公钥Base64编码的字符串 <br />
+     * 注意：从JDK16开始SunJCE不支持解析压缩后的ECC公钥 <br />
+     * 若在JDK16及以后版本的环境下，要解析压缩的ECC公钥，则需要使用BCProvider提供的方法
+     * @param publicKey ECC公钥
+     * @return 压缩后的ECC公钥Base64编码的字符串
+     */
+    public static String getEccPubKeyCompressed(PublicKey publicKey) throws Exception {
+        System.out.println("原始公钥：");
+        System.out.println(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
+        // 获取EC点
+        org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey bcPublicKey =
+                (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) publicKey;
+        org.bouncycastle.math.ec.ECPoint q = bcPublicKey.getQ();
+        // 转换为压缩格式
+        byte[] compressedPublicKey = q.getEncoded(true);
+        // 输出压缩格式的公钥
+        ASN1ObjectIdentifier namedCurveOid = ECUtil.getNamedCurveOid(((ECNamedCurveSpec) bcPublicKey.getParams()).getName());
+        AlgorithmIdentifier algId = new AlgorithmIdentifier(X9ObjectIdentifiers.id_ecPublicKey, namedCurveOid);
+        SubjectPublicKeyInfo info = new SubjectPublicKeyInfo(algId, compressedPublicKey);
+        System.out.println("新公钥：");
+        String compressedKey = Base64.getEncoder().encodeToString(info.getEncoded());
+        System.out.println(compressedKey);
+        return compressedKey;
     }
 
     /**
@@ -1330,6 +1357,8 @@ public class AsymmetricUtils {
             System.out.println("Private Key: " + privateKey.getAlgorithm());
         } else {
             X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Hex.decode(der));
+            // todo 使用 KeyFactory（基于SunJCE） 加载基点压缩过的ECC公钥，有出现过报错：only uncompressed point format supported。实测jdk8没问题，jdk17就报错。
+            // todo 具体原因不明确(后续用相同密钥/生成压缩后的公钥均无法复现)，所以这里建议使用 BC库，以确保向后兼容
             KeyFactory factory2 = KeyFactory.getInstance(keyAlo, BouncyCastleProvider.PROVIDER_NAME);
             PublicKey publicKey = factory2.generatePublic(pubKeySpec);
             System.out.println("Public Key: " + publicKey.getAlgorithm());
