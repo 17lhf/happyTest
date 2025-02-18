@@ -1,9 +1,16 @@
 package com.basic.happytest;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.AsyncAppenderBase;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.metrics.buffering.BufferingApplicationStartup;
+
+import java.util.Iterator;
 
 @SpringBootApplication
 public class HappyTestApplication {
@@ -19,6 +26,19 @@ public class HappyTestApplication {
 
         // 这是使用默认的SpringApplication
         // SpringApplication.run(HappyTestApplication.class, args);
+
+        // 打印日志框架配置的情况
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        for (ch.qos.logback.classic.Logger logger : context.getLoggerList()) {
+            for (Iterator<Appender<ILoggingEvent>> it = logger.iteratorForAppenders(); it.hasNext(); ) {
+                Appender<ILoggingEvent> appender = it.next();
+                if (appender instanceof AsyncAppenderBase) {
+                    System.out.println("AsyncAppender found: " + appender.getName());
+                } else {
+                    System.out.println("Sync Appender found: " + appender.getName());
+                }
+            }
+        }
     }
 
 }

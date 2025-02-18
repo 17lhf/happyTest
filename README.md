@@ -78,12 +78,15 @@ file lib/ct.sym with class stubs.<br/>
 ### (17)feignClient
 **关于模拟客户端向其他服务发送请求的示例**（使用openfeign）
 
-### (18)system
-**一些关于系统的操作**
+### (18)system  
+**一些关于系统的操作**  
 - 判定当前所处的系统环境
 - 打印Spring或Spring Boot版本号
 - 打印工程根目录绝对路径
-- 打印当前可用于 Java 虚拟机的处理器数
+- 打印当前可用于 Java 虚拟机的处理器数  
+
+**Tomcat**
+- 打印当前Tomcat的一些信息
 
 ### (18)math
 **一些关于数学的操作（包含但不限于进制转换处理）**
@@ -122,6 +125,10 @@ file lib/ct.sym with class stubs.<br/>
 
 ### (27)enumsUtils
 **通用检测入参是否为枚举值的属性的方法**
+
+### (28)performance
+** 关于性能测试 **<br/>
+- System.out、System.err、log.info 的性能测试
 
 ### (n)others
 **不知道咋归类的都丢这里** <br />

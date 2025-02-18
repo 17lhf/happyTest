@@ -41,6 +41,8 @@ import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.security.util.DerInputStream;
 import sun.security.util.DerValue;
 import sun.security.x509.AVA;
@@ -73,12 +75,14 @@ import java.util.*;
 
 public class AsymmetricUtils {
 
+    private static final Logger logger = LoggerFactory.getLogger(AsymmetricUtils.class);
+
     // 解决报错：no such provider: BC
     static {
         try {
             Security.addProvider(new BouncyCastleProvider());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("BCProvider add failed", e);
         }
     }
 
