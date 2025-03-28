@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 无界符和通配符的区别
  * @author lhf
- * 参考阅读：https://www.zhihu.com/question/31429113
+ * 参考阅读：https://blog.csdn.net/qq_25308331/article/details/127539187
  */
 
 public class UnboundedWildcardsAndGenericsTest {
@@ -21,6 +21,8 @@ public class UnboundedWildcardsAndGenericsTest {
         box.setList2(list);
         System.out.println(box.getList().get(0));
         System.out.println(box.getList2().get(0));
+        Object o = box.getList2().get(0); // 通配符读出来的值是Object类型
+        // box.getList2().add(o); // 通配符定义的容器，不支持写入
 
         System.out.println("=======================");
 
