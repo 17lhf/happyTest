@@ -130,6 +130,9 @@ file lib/ct.sym with class stubs.<br/>
 ** 关于性能测试 **<br/>
 - System.out、System.err、log.info 的性能测试
 
+### (29)stream
+**关于流相关的使用体验**
+
 ### (n)others
 **不知道咋归类的都丢这里** <br />
 - 关于List.subList的坑的测试<br />
