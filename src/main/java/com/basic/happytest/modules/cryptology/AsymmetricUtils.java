@@ -1398,7 +1398,7 @@ public class AsymmetricUtils {
     }
 
     /**
-     * 从PEM格式（为方便传输，一般der格式内容会转为十六进制字符串来传递）转成对象
+     * 从PEM格式转成对象
      * @param pem 一个pem格式的内容
      * @param type 数据类型，支持“CSR","CERT","PRV_KEY","PUB_KEY"
      * @param keyAlo 密钥算法，支持“RSA",若不是密钥时可为null
